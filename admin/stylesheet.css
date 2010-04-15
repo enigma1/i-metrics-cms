@@ -1,0 +1,370 @@
+/*
+  $Id: stylesheet.css,v 1.26 2003/06/30 20:03:50 hpdl Exp $
+
+  osCommerce, Open Source E-Commerce Solutions
+  http://www.oscommerce.com
+
+  Copyright (c) 2002 osCommerce
+
+//----------------------------------------------------------------------------
+// Modifications by Asymmetrics
+// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Admin: Main Stylesheet
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// - Added CSS classes
+// - Moved CSS styles from individual scripts into this one
+// - Relocated stylesheet to the root folder
+// - Removed unused styles
+// - Changed template tags to support the new layout
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
+*/
+body { font-family: Verdana, Arial, sans-serif; font-size: 10px; background-color: #ffffff; color: #000000; margin: 0; padding: 0; }
+h1,h2,h3 {margin:0; padding:0;}
+img { border: 0; padding: 0; margin: 0}
+a {color: #000000; text-decoration: none;}
+a:hover {text-decoration: underline;}
+table {border: 0;}
+th {text-align:left;}
+
+#wrapper {
+  margin: 0px auto 0px auto;
+  text-align: left;
+  overflow: hidden;
+  position: relative;
+}
+#wrapper > div {position: relative;}
+
+#header {
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 4px 0px;
+  background: #646C79;
+  border-bottom: 2px ridge #FFF;
+}
+
+#header .innerheader {
+  margin: 0px 0px 0px 0px; 
+  clear: both;
+}
+
+#leftpane {
+  float: left;
+  width: 160px;
+
+  background-color: #646C79;
+  color: #FFF;
+  padding: 0px 0px 30000px 0px;
+  margin: 0px 0px -30000px -2px; 
+  border-right: 2px ridge #FFF;
+}
+
+#mainpane {
+  margin-left: 160px;
+}
+
+.maincell {
+  float: left;
+  width: 80%;
+  padding: 0px 0px 30000px 0px;
+  margin: 0px 0px -30000px 0px; 
+  background: #C7CED6;
+  color: #000;
+}
+
+.rightcell {
+  float: left;
+  width: 20%;
+  padding: 0px 0px 30000px 0px;
+  margin: 0px -2px -30000px 0px; 
+  border-left: 2px ridge #FFF;
+  background: #C7CED6;
+}
+
+#footer {
+  margin: 0px 0px 0px 0px;
+  padding: 10px 0px 10px 0px;
+  text-align: center;
+  font-size: 10px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  line-height: 1.5em;
+  background: #646C79;
+  color: #CCCCCC;
+  clear:both;
+}
+
+#footer a {
+  color: #C2D3F6;
+  text-decoration: none;
+}
+
+#footer a:hover {
+  color: #FFF;
+}
+
+/* Text Pages Dedicated Styles */
+.tabledata {width: 100%;} 
+.tabledata td, .tabledata th{padding: 3px;}
+.tabledata th, .tabledata th a { color: #C2D3F6; font-weight: bold; }
+.tabledata td a:hover {color: #F2F6AF;}
+.oddrow {background: #F2F6AF;}
+.altrow {background: #B2F6AF;}
+
+.boxsep {
+  padding: 2px;
+}
+
+.splitLine {
+  line-height: 24px;
+  font-family: Verdana, Arial, sans-serif; 
+  font-size: 10px; 
+  padding: 0px 4px 0px 4px;
+  clear: both;
+  overflow: hidden;
+}
+
+#breadcrumb {
+  margin: 0;
+  font-weight: bold;
+  padding: 0px 0px 0px 8px;
+  background: #000;
+  color: #FFA;
+  border-bottom: 1px solid #FFF;
+}
+#breadcrumb a {
+  font-weight: bold;
+  color: #FFA;
+}
+
+/* menu box */
+.menuBoxHeading { 
+  font-family: Verdana, Arial, sans-serif; 
+  font-size: 10px; 
+  font-weight: bold;
+  color: #C2D3F6;
+  border-bottom: 1px solid #EEE;
+  width: 100%;
+}
+
+.menuBoxHeading a { 
+  font-weight: bold;
+  text-decoration: none;
+  color: #C2D3F6;
+  display: block; 
+  padding: 4px 2px 4px 8px;
+}
+
+.menuBoxHeading a:hover {
+  color: #FFFFFF;
+  background: #000;
+}
+
+.menuBoxLit a {
+  background: #000;
+  color: #CFC;
+}
+
+.menuBoxContent { 
+  font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #616060; 
+  background-color: #C7CED6;
+  padding: 0px 0px 2px 8px;
+}
+
+.altBoxHeading { 
+  font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #EEE;
+  border-bottom: 1px solid #EEE; 
+  color: #C2D3F6;
+  background-color: #770000;
+  padding: 4px;
+  font-weight: bold;
+}
+
+.altBoxHeading a { 
+  color: #C2D3F6;
+}
+
+.altBoxContent { 
+  font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #616060; 
+  background-color: #C7CED6;
+  padding: 0px 8px 4px 8px;
+}
+
+/* page */
+.headerBar { background-color: #646C79; }
+.headerBarContent { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #ffffff; font-weight: bold; padding: 2px; }
+.columnLeft { }
+a.pageHeading, .pageHeading, h1 { font-family: Verdana, Arial, sans-serif; font-size: 18px; color: #727272; font-weight: bold; }
+
+.pageHeading h1 {
+  margin: 0;
+  padding: 0;
+}
+
+a.pageSub, .pageSub, h2 { font-family: Verdana, Arial, sans-serif; font-size: 14px; color: #727272; font-weight: bold; }
+
+.comboHeading {
+  padding: 10px 4px 10px 4px;
+  background: #C7CED6;
+  border-bottom: 2px ridge #FFF;
+  clear: both;
+  overflow: hidden;
+}
+
+
+/* data table */
+.dataTableHeadingRow { background-color: #545E74; }
+
+.dataTableHeadingContent, .dataTableHeadingContent a { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #C2D3F6; font-weight: bold; }
+.dataTableHeadingContent a {color: #C2D3F6; text-decoration: none; }
+.dataTableHeadingContent a:hover {color: #FFF;}
+
+.dataTableRow { background-color: #E3E3E3 }
+.dataTableRowAlt { background-color: #C3C3CF;}
+.dataTableRowAlt2 { background-color: #CFCFC3;}
+.dataTableRowAlt3 { background-color: #C3DFDF;}
+.dataTableRowAlt4 { background-color: #CFC3C3;}
+.dataTableRowAlt5 { background-color: #CFC3CF;}
+.dataTableRowSelected { background-color: #646C79; color: #D2E3FF;}
+.dataTableRowOver { background-color:  #C7CED6; cursor: pointer; }
+/*.dataTableContent { font-family: Verdana, Arial, sans-serif; font-size: 10px; }*/
+
+/* info box */
+.infoBoxHeading { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #ffffff; background-color: #646C79; padding: 4px;}
+.infoBoxContent { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #000000; background-color: #C7CED6; padding: 4px; }
+
+/* message box */
+
+.messageBox { font-family: Verdana, Arial, sans-serif; font-size: 10px; }
+
+/* forms */
+CHECKBOX, INPUT, RADIO, SELECT, TEXTAREA, FILE { font-family: Verdana, Arial, sans-serif; font-size: 11px; }
+FORM { display: inline; }
+
+/* account */
+.formArea { 
+  background-color: #E3E3E3; 
+  border-bottom: 1px solid #646C79;
+  overflow: auto;
+  clear: both;
+}
+
+.formButtons {
+  color: #C2D3F6;
+  background: #747E94;
+  padding: 4px 0px 2px 4px;
+  clear: both;
+  overflow: hidden;
+}
+
+.linebutton {
+  float: left;
+  padding: 2px;
+}
+
+.textInfo {
+  padding: 4px;
+}
+
+.listArea { 
+  background-color: #FFF; 
+  border-bottom: 1px solid #646C79;
+  overflow: auto;
+  clear: both;
+}
+
+.formAreaRow { background-color: #E2F3C6; }
+.formAreaTitle { font-family: Tahoma, Verdana, Arial, sans-serif; font-size: 12px; font-weight: bold; }
+
+/* miscellaneous */
+.fieldRequired { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #ff0000; }
+.smallText { font-family: Verdana, Arial, sans-serif; font-size: 10px; }
+.main { font-family: Verdana, Arial, sans-serif; font-size: 12px; }
+.errorText { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #ff0000; }
+
+.dataTableRowHighBorder { background-color: #FFCFCF; border-color: #3F3F3F; border-style: solid; border-width: 1px; font-size: 10px; }
+.dataTableRowImpactBorder { background-color: #FF9F9F; border-color: #3F3F3F; border-style: solid; border-width: 1px; font-size: 10px; }
+.dataTableRowGreenBorder { background-color: #EFFFEF; border-color: #3F3F3F; border-style: solid; border-width: 1px; font-size: 10px; }
+.dataTableRowHigh { background-color: #FFCFCF; }
+.dataTableRowImpact { background-color: #FF9F9F; }
+.dataTableRowGrey { background-color: #BFBFBF; }
+.dataTableRowGreen { background-color: #7FEE7F; }
+.dataTableRowGreenLite { background-color: #EFFFEF; }
+.dataTableRowYellow { background-color: #FFFFEB; }
+.dataTableRowYellowLow { background-color: #FFFFD0; }
+.dataTableContentRed { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #CC0000; }
+.dataTableContentGreen { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #00CC00; }
+.dataTableContentRedAlert { font-family: Verdana, Arial, sans-serif; font-size: 10px; color: #FF0000; font-weight: bold; }
+.formAreaBorder { border-color: #7b9ebd; border-style: solid; border-width: 1px; }
+
+.dataTableRowHigh:hover,
+.dataTableRowAlt:hover,
+.dataTableRowAlt2:hover,
+.dataTableRowAlt3:hover,
+.dataTableRowAlt4:hover,
+.dataTableRowAlt5:hover,
+.dataTableRow:hover,
+.dataTableRowGreen:hover,
+.dataTableRowImpact:hover,
+.dataTableRowYellow:hover,
+.dataTableRowYellowLow:hover { 
+  background-color: #979E96; 
+  color: #FFF;
+  cursor: pointer;
+}
+
+.dataTableContent a:hover {
+  color: #FFF;
+}
+
+.dataTableRowSelected a {
+  color: #FFF;
+}
+
+.pad_tb2 {
+  padding: 2px 0px 2px 0px;
+}
+
+.pad_b2 {
+  padding-bottom: 2px;
+}
+
+.messageStackError, .messageStackWarning, .messageStackSuccess { font-family: Arial, Verdana, sans-serif; font-size: 11px; font-weight: bold; padding: 0px 0px 0px 20px; border-bottom: 1px solid #CCC; }
+.messageStackError a, .messageStackWarning a, .messageStackSuccess a { color: #FFA; }
+.messageStackError  { color: #EEE; background: #FF0000 url(images/icons/error.gif) no-repeat 5px center; }
+.messageStackWarning { color: #EEE; background: #AA6600 url(images/icons/warning.gif) no-repeat 5px center; }
+.messageStackSuccess { color: #000; background: #77EE00 url(images/icons/success.gif) no-repeat 5px center; }
+
+
+/* Common Names to Combine and Override */
+.floater { float:left; }
+.floatend { float:right; }
+.cleaner { clear:both; }
+.scroller { overflow: auto; width: 100%; }
+.lalign { text-align: left; }
+.calign { text-align: center; }
+.ralign { text-align: right; }
+.hspacer { margin: 0px 4px; }
+.vspacer { height: 8px; }
+.bspacer { margin-bottom: 8px; }
+.tspacer { margin-top: 8px; }
+.rspacer { margin-right: 8px; }
+.blocker { display: block; }
+.blocker:hover{text-decoration: none;}
+.charsep { padding: 0 4px; }
+.wider { width: 100%; }
+.bounder { width: 100%; height: 100%; overflow:hidden; }
+.balancer {margin: 0px auto 0px auto;}
+.vlinepad {padding: 4px 0px;}
+.tinysep img { padding: 0 2px; }
+img.dflt, input.dflt { margin: 0; padding: 2px; }
+
+.colorblock { 
+  margin: 4px; 
+  padding: 16px;
+  border: 1px solid #555;
+}

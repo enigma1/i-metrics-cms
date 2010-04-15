@@ -1,0 +1,2 @@
+<p>The comments system binds a comments form with a text page or a site collection page. When activated it appears as an additional module at the end of the page on your website.</p>
+<p>On the administration a comments listing system displays the comments submitted from visitors to a specific page, collection or plain text page, along with their rating, visitor's IP address, visitor's name and visitor's URL. Configuration switches allow this plugin to operate on certain content type as well as auto-activate comments display or wait for admin manual approval.</p>

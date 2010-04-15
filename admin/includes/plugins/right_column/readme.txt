@@ -1,0 +1,1 @@
+The right column plugin dynamically changes the content of the right navigation column

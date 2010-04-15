@@ -1,0 +1,1 @@
+The left column plugin dynamically changes the content of the left navigation column.

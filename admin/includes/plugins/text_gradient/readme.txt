@@ -1,0 +1,1 @@
+<p>The text gradient plugin applies a gradient effect into specific CSS tags. Enclosed text appears with a gradient effect. Requires javascript to be enabled on the web-front to see the gradient effect.</p><p>The plugin can be configured so the effect is applied on different selectors and different gradient colors.</p>

@@ -1,0 +1,2 @@
+The voting system appears as an additional box on your website. 
+On the administration a vote listing page displays the votes submitted from visitors to a specific page, along with their rating and the visitors IP address. The votes listing page should appear under the site content section following successful installation. The configuration options include collection type to cast votes on as well as the number of selection steps for the vote system. A higher step selection provides better resolution for the visitor when he casts a vote.
