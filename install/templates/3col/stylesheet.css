@@ -1,0 +1,418 @@
+/*
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Author: Mark Samios
+// http://www.asymmetrics.com
+//----------------------------------------------------------------------------
+// Front: Main Stylesheet
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Script is intended to be used with:
+// osCommerce, Open Source E-Commerce Solutions
+// http://www.oscommerce.com
+// Copyright (c) 2003 osCommerce
+------------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
+// CSS reset - use only in development
+* {padding: 0; margin: 0;}
+*/
+/* Template Defaults */
+body {font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #333333; margin:0; padding:0; }
+h1,h2,h3 {margin:0; padding:0; overflow: hidden; }
+form {margin:0; padding:0;}
+fieldset{ margin: 0; }
+img { border: 0; padding: 0; margin: 0}
+div { position: relative; margin:0; padding:0; }
+a { color: #330077; font-weight: bold; text-decoration: none; }
+a:hover { color: #6C0902; }
+table {border: 0;}
+th {text-align: left;}
+
+/* CSS Template Main Tags and Overrides */
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  color: #990000;
+  font-weight: normal;
+}
+
+h2 {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #424336;
+}
+
+h3 {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  color: #424336;
+}
+
+h2 a:hover {
+  color: #545E74;
+}
+
+legend {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  color: #545E74;
+  padding: 0px 8px;
+}
+
+fieldset {
+  border: 1px solid #A2A69F;
+  background: #E2E6DF;
+  padding: 8px;
+}
+
+/* Template Design Classes */
+
+#header {
+  padding-top: 0px;
+  margin-top: 10px;
+  color: #FFC;
+}
+#header a {
+  color: #FFC;
+}
+#header a:hover {
+  text-decoration: underline;
+}
+
+.leftlogo {
+  height: 59px;
+  width: 225px;
+}
+
+.mainlogo {
+  background: #D6DED4;
+  height: 28px;
+  padding: 16px;
+}
+
+.quicksearch {
+  padding: 0px 10px 0px 0px;
+  margin: 8px 0px -8px 0px;
+  height: 30px;
+}
+
+input.search {
+  background: #EFEFEF;
+  margin: -2px;
+  padding: 2px;
+}
+
+#footer {
+  font-size: 10px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  line-height: 1.5em;
+  background: #000;
+  color: #CCCCCC;
+  padding: 10px 0px 10px 0px;
+}
+
+#footer a {
+  color: #EFEFEF;
+}
+
+#footer a:hover {
+  text-decoration: underline;
+}
+
+#footer h3 {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#leftpane {
+  background: #4D625D;
+}
+
+#leftcontent {
+  padding: 0px 4px 10px 4px;
+}
+
+#midpane {
+  background: #D6DED4;
+}
+
+#midcontent {
+  padding: 0px 8px 10px 8px;
+}
+
+#rightpane {
+  color: #2C3952;
+  background: #4D625D;
+}
+
+#rightcontent {
+  padding: 0px 0px 0px 0px;
+}
+
+.breadcrumb {
+  color: #EFEFCF;
+  background: #660000;
+  font-size: 9px;
+  line-height: 15px;
+  height: 15px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+}
+
+.breadcrumb a {color: #EFEFCF;}
+.breadcrumb a:hover {color: #FFF;}
+
+/* Boxes */
+.contentBoxHeading, .infoBoxHeading {
+  background: #000066;
+  line-height: 24px;
+  color: #EEC;
+  font-weight: bold;
+}
+.boxpadding {padding: 0px 10px;}
+
+.infoBoxContents {
+  color: #EEE;
+}
+.infoBoxContents {
+  background: #6D827D;
+}
+.infoBoxContentsAlt {
+  background: #4D625D;
+}
+.contentBoxHeading a, .infoBoxHeading a {
+  padding: 0px 10px 0px 10px;
+  color: #EEC;
+  display: block;
+  width: 100%;
+}
+
+.contentBoxHeading a:hover, .infoBoxHeading a:hover {
+  color: #FFF;
+  background: #660000;
+}
+
+.infoBoxContents {
+  padding: 2px 8px 4px 8px;
+}
+
+.contentBoxContents {
+  padding: 2px 4px 4px 4px;
+}
+
+.contentBoxContentsAlt {
+  color: #eee;
+  background: #6D827D;
+}
+
+.contentBoxContents a, .infoBoxContents a {
+  display: inline-block;
+  margin: 0px 0px 0px -4px;
+  padding: 0px 4px 0px 4px;
+  color: #EE9;
+}
+
+.contentBoxContents a:hover, .infoBoxContents a:hover {
+  background: #545E74;
+  color: #EEE;
+}
+
+.contentBoxContents p, .infoBoxContents p {
+  margin: 0px;
+  padding: 0px;
+}
+
+/* Text Pages Dedicated Styles */
+.colsplit {
+  margin-right: 4px;
+  width: 244px;
+}
+
+.textdata {width: 100%;} .textdata td{padding: 4px;}
+.oddrow {background: #F2F6CF;}
+.altrow {background: #B2F6CF;}
+
+/* Error Display */
+.messageStackError, .messageStackWarning, .messageStackSuccess{ font-family: Arial, Verdana, sans-serif; font-size: 11px; font-weight: bold; padding: 0px 0px 0px 20px; border-bottom: 1px outset #FFF; overflow: hidden; }
+.messageStackError  { color: #EEE; background: #FF0000 url(design/error.gif) no-repeat 5px center; }
+.messageStackWarning { color: #EEE; background: #AA6600 url(design/warning.gif) no-repeat 5px center; }
+.messageStackSuccess { color: #000; background: #77EE00 url(design/success.gif) no-repeat 5px center; }
+
+/* Rest of Tags*/
+.formButtons {
+  padding: 8px 8px 8px 8px;
+  overflow: hidden;
+  border: 2px outset #CCC;
+  background: #C2C6BF;
+}
+
+.blocklink {
+  margin: 0px 2px 0px 0px;
+  background: #B2B6BF;
+  border: 1px solid #777;
+}
+
+.blocklink a {
+  padding-left: 4px;
+  display: block;
+}
+
+.blocklink a:hover {
+  background: #545E74;
+  color: #EEE;
+}
+
+.imagelink {
+  border: 2px outset #EEE; background: #EFEFEF;
+}
+
+.imagelink a {
+  display: block;
+  margin: -2px 0px 0px -2px;
+}
+
+.imagelink a:hover {
+  background: #545E74;
+  color: #EEE;
+}
+
+.desc a {
+  font-weight: bold;
+  display: inline-block;
+  padding: 0px 3px 0px 3px;
+  margin: 0px -3px 0px -3px;
+}
+
+.desc a:hover {
+  color: #EEE;
+  background: #545E74;
+}
+
+div.splitColumn {
+  background: #EFEFEF; 
+  overflow: hidden; 
+  border: 2px outset #EEE; 
+  margin: 0px 0px 8px 0px; 
+  padding: 0px 6px 4px 6px;
+}
+
+div.splitLine {
+  line-height: 19px;
+  font-family: Verdana, Arial, sans-serif; 
+  font-size: 10px;
+  padding: 3px 4px 3px 4px;
+  clear: both;
+  overflow: hidden;
+  background: #7A808C;
+  border: 2px outset #777;
+  color: #EEE;
+}
+
+form.post_result {
+  float: left;
+}
+
+div.splitLine div.right_split, div.splitLine div.right_split b, div.splitLine div.right_split span, div.right_split input {
+  float: left;
+  overflow: hidden;
+}
+
+input.inputResults {
+  background: #EFEFEF;
+  font-family: Verdana, Arial, sans-serif; 
+  font-size: 10px;
+  font-weight: bold;
+}
+
+form.post_result input.inputResults {
+  margin-right: 1px;
+}
+
+input.inputResults:hover {
+  cursor: pointer;
+}
+
+.pageResults {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  margin: 0px 2px 0px 2px;
+  padding: 3px 4px 3px 4px;
+  color: #EFEFEF;
+  background: #545E74;
+}
+a.pageResults {
+  background: #9C3932;
+}
+a.pageResults:hover {
+  color: #EFEF9F;
+  background: #7C1912;
+}
+
+.form_texta, .form_input {
+  margin: 0px 0px 4px 0px;
+}
+
+.form_label {
+  font-weight: bold;
+  color: #545E74;
+  margin: 0px 0px 0px 0px;
+}
+
+.colorinvert {
+  color: #FFC;
+  line-height: 45px;
+}
+
+.colorinvert a {
+  color: #FFC;
+  display: block;
+  font-size: 16px;
+}
+
+.colorinvert a:hover {
+  background: #303C7C;
+}
+
+.textimage {
+  border: 2px outset #EEE; background: #EFEFEF;
+  padding: 6px;
+  margin-right: 6px;
+}
+
+a.pg_link {
+  display: inline;
+  padding: 0;
+  margin: 0;
+}
+
+a.pg_link:hover {
+  background: transparent;
+}
+
+/* Common Names to Combine */
+.totalsize {width: 875px;}
+.leftsize {width: 180px;}
+.midsize {width: 515px;}
+.rightsize {width: 180px;}
+.floater { float:left; }
+.floatend { float:right; }
+.cleaner { clear:both; }
+.scroller { overflow: auto; width: auto; }
+.hideflow {float: left; overflow: hidden;}
+.negate {float: left; margin-bottom: -30000px;}
+.extend {float: left; padding-bottom: 30000px; margin-bottom: -30000px;}
+.lalign { text-align: left; }
+.ralign { text-align: right; }
+.calign { text-align: center; }
+.bspacer { margin-bottom: 8px; }
+.vspacer { margin: 8px 0px; }
+.wider { width: 100%; }
+.charsep { padding: 0 4px; }
+.lcharsep { padding-left: 12px; }
+.bounder { width: 100%; height: 100%; overflow:hidden; }
+.balancer {margin: 0px auto 0px auto;}
+.heavy {font-weight: bold;}

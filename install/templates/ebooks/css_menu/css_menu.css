@@ -1,0 +1,69 @@
+/*
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Front: Plugin CSS Menu stylesheet
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Script is intended to be used with:
+// osCommerce, Open Source E-Commerce Solutions
+// Copyright (c) 2003 osCommerce
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
+*/
+#menucontainer {
+  height: 28px;
+  margin: 80px 0px 0px 0px;
+  background: transparent;
+  color: #EEEEEE;
+}
+
+.css_menu {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 28px;
+  color: #EEEEEE;
+  font-weight: bold;
+  background: #004C92;
+}
+
+.css_menu a {
+  font-weight: bold;
+  text-decoration: none;
+  color: #EEEEEE;
+  letter-spacing: -0.05em;
+  display: block;
+}
+
+.css_menu .css_section {
+  position: absolute;
+  visibility: hidden;
+  background: inherit;
+  text-align: left;
+}
+
+.css_top:hover .css_section .css_sub {
+  visibility: visible;
+}
+.css_sep {
+  background: transparent;
+  padding: 8px 0px 0px 0px;
+  height: 20px;
+}
+
+.css_sub {
+  border-bottom: 1px solid #9CAC9C;
+  border-left: 3px outset #0D4600;
+  background: url(back.png);
+}
+
+.css_sub a {
+  padding: 0px 0px 0px 16px;
+}
+.css_menu :hover > a {
+  color: #FFC;
+  background: #3D7600;
+}
