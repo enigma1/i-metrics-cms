@@ -31,7 +31,7 @@
     }
 
     function get_entries($zone, $tflag=true, $dflag = true, $raw = false) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $this->text_array = array();
       $zone_id = $this->get_zone($zone);
@@ -47,45 +47,36 @@
         $select_string .= ', gt.gtext_description, gt.date_added';
       }
 
+      $this->text_string = "select gt.gtext_id" . $select_string . " from " . TABLE_GTEXT . " gt left join " . TABLE_GTEXT_TO_DISPLAY . " gt2d on (gt.gtext_id=gt2d.gtext_id) where gt2d.abstract_zone_id = '" . (int)$zone_id . "' and gt.status= '1' order by gt2d.sequence_order";
       if( $raw ) {
-        $this->text_string = "select gt.gtext_id" . $select_string . " from " . TABLE_GTEXT . " gt left join " . TABLE_GTEXT_TO_DISPLAY . " gt2d on (gt.gtext_id=gt2d.gtext_id) where gt2d.abstract_zone_id = '" . (int)$zone_id . "' and gt.status= '1' order by gt2d.sequence_order";
         return $this->text_string;
       } else {
-        $zone_query = $g_db->query("select gt.gtext_id" . $select_string . " from " . TABLE_GTEXT . " gt left join " . TABLE_GTEXT_TO_DISPLAY . " gt2d on (gt.gtext_id=gt2d.gtext_id) where gt2d.abstract_zone_id = '" . (int)$zone_id . "' and gt.status= '1' order by gt2d.sequence_order");
-        if( !$g_db->num_rows($zone_query) ) {
+        $tmp_array = $db->query_to_array($this->text_string, 'gtext_id');
+        if( !count($tmp_array) ) {
           return $this->text_array;
         }
-        while( $zone = $g_db->fetch_array($zone_query) ) {
-          $this->text_array[$zone['gtext_id']] = $zone;
-        }
+        $this->text_array = $tmp_array;
         return $this->text_array;
       }
     }
 
     function get_zone_entries($gtext_id, $tflag=true, $dflag = true, $visible=true, $limit=0) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $result_array = array();
       if( $gtext_id <= 0 ) return $result_array;
 
       $type_id = $this->get_zone_class_id('generic_zones');
       $zones_query_raw = "select abstract_zone_id from " . TABLE_GTEXT_TO_DISPLAY . " where gtext_id= '" . (int)$gtext_id . "'";
-      $zones_array = $g_db->query_to_array($zones_query_raw, 'abstract_zone_id');
+      $zones_array = $db->query_to_array($zones_query_raw, 'abstract_zone_id');
       $result_array = $this->get_zone_multi_data(array_keys($zones_array), $tflag, $dflag, $visible, $limit);
       return $result_array;
     }
 
 
-    function get_comments($gtext_id) {
-      global $g_db;
-
-      $comments_query_raw = "select comments_author, comments_url, comments_rating, gtext_comments, date_added from " . TABLE_GTEXT_COMMENTS . " where gtext_id = '" . (int)$gtext_id . "' and status_id='1' order by comments_id desc";
-      $comments_array = $g_db->query_to_array($comments_query_raw);
-      return $comments_array;
-    }
-
     function get_gtext_ids($zone) {
-      global $g_db;
+      extract(tep_load('database'));
+
       $this->text_ids_array = array();
       $zone_id = $this->get_zone($zone);
       if( !$zone_id) {
@@ -93,7 +84,7 @@
       }
 
       $gtext_query_raw = "select gtext_id " . TABLE_GTEXT_TO_DISPLAY . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order";
-      $this->text_ids_array = $g_db->query_to_array($gtext_query_raw);
+      $this->text_ids_array = $db->query_to_array($gtext_query_raw);
       return $this->text_ids_array;
     }
 

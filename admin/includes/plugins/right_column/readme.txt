@@ -1,1 +1,2 @@
-The right column plugin dynamically changes the content of the right navigation column
+<p>The right column plugin dynamically changes the content of the right navigation column by utilizing the built-in collection system of the I-Metrics CMS.</p>
+<p>It allows the administrator to select which collections to display on the right side of the website's template.</p>

@@ -19,7 +19,6 @@
 
   require('includes/application_top.php');
 
-  $action = (isset($_GET['action']) ? $g_db->prepare_input($_GET['action']) : '');
   $gID = (isset($_GET['gID']) ? (int)$_GET['gID'] : '');
   $newID = (isset($_GET['newID']) ? (int)$_GET['newID'] : '');
 
@@ -40,7 +39,7 @@
         $g_db->query("alter table " . TABLE_CONFIGURATION . " drop configuration_id");
         $g_db->query("alter table " . TABLE_CONFIGURATION . " add configuration_id INT( 11 ) not null auto_increment first, add primary key (configuration_id)");
       }
-      tep_redirect(tep_href_link(basename($PHP_SELF)));
+      tep_redirect(tep_href_link($g_script));
       break;
     case 'modify':
       if( $_POST['sort_duplicates'] == '0' && $_POST['sort_config'] == '0' ) {
@@ -53,7 +52,7 @@
       $check_array = $g_db->fetch_array($check_query);
       if( !$check_array['total'] ) {
         $messageStack->add_session(ERROR_CFG_ID_INVALID);
-        tep_redirect(tep_href_link(basename($PHP_SELF)));
+        tep_redirect(tep_href_link($g_script));
         break;
       }
     case 'insert_switch_confirm':
@@ -72,12 +71,13 @@
         $error = true;
       }
 
+      $tmp_array = tep_load('config');
+      $cfg =& $tmp_array['cfg'];
+
       $set_function = $g_db->prepare_input($_POST['set_function']);
-      $pos = strpos($set_function,'(');
-      if( $pos && !function_exists(substr($set_function, 0, $pos)) ) {
-        $messageStack->add(ERROR_CFG_SET_FUNCTION_INVALID);
-        $error = true;
-      } elseif( !$pos && !empty($set_function) ) {
+      $tmp_array = explode('::', $set_function);
+
+      if( !empty($set_function) && (count($tmp_array) < 2 || !method_exists($cfg, $tmp_array[1])) ) {
         $messageStack->add(ERROR_CFG_SET_FUNCTION_INVALID);
         $error = true;
       } elseif( strlen($set_function) > 255 ) {
@@ -88,7 +88,8 @@
       }
 
       $use_function = $g_db->prepare_input($_POST['use_function']);
-      if( !empty($use_function) && !function_exists(substr($use_function, 0, $pos)) ) {
+      $tmp_array = explode('::', $use_function);
+      if( !empty($use_function) && ( count($tmp_array) < 2 || !method_exists($cfg, $tmp_array[1])) ) {
         $messageStack->add(ERROR_CFG_USE_FUNCTION_INVALID);
         $error = true;
       } elseif( strlen($use_function) > 255 ) {
@@ -97,6 +98,7 @@
       } else {
         $use_function = trim($use_function);
       }
+      unset($cfg);
 
       $configuration_title = $g_db->prepare_input($_POST['configuration_title']);
       if( empty($configuration_title) ) {
@@ -144,17 +146,18 @@
         $configuration_group_id = $custom_group_id;
       }
 
-      $sql_data_array = array('configuration_title' => $configuration_title,
-                              'configuration_description' => $configuration_description,
-                              'configuration_group_id' => $configuration_group_id,
-                              'configuration_key' => $configuration_key,
-                              'configuration_value' => $configuration_value,
-                              'use_function' => $use_function,
-                              'set_function' => $set_function,
-                              'sort_order' => (int)$_POST['sort_order'],
-                              'date_added' => 'now()',
-                              'last_modified' => 'now()',
-                             );
+      $sql_data_array = array(
+        'configuration_title' => $configuration_title,
+        'configuration_description' => $configuration_description,
+        'configuration_group_id' => $configuration_group_id,
+        'configuration_key' => $configuration_key,
+        'configuration_value' => $configuration_value,
+        'use_function' => $use_function,
+        'set_function' => $set_function,
+        'sort_order' => (int)$_POST['sort_order'],
+        'date_added' => 'now()',
+        'last_modified' => 'now()',
+      );
 
       if( $action == 'insert_switch_confirm' ) {
         $g_db->perform(TABLE_CONFIGURATION, $sql_data_array);
@@ -164,7 +167,7 @@
         $g_db->perform(TABLE_CONFIGURATION, $sql_data_array, 'update', "configuration_id = '" . (int)$cID . "'");
         $messageStack->add_session(SUCCESS_CFG_SWITCH_UPDATED, 'success');
       }
-      tep_redirect(tep_href_link(basename($PHP_SELF), 'gID=' . $configuration_group_id . '&cID=' . $cID));
+      tep_redirect(tep_href_link($g_script, 'gID=' . $configuration_group_id . '&cID=' . $cID));
       break;
 
     case 'update_group_confirm':
@@ -201,11 +204,12 @@
         break;
       }
 
-      $sql_data_array = array('configuration_group_title' => $configuration_group_title,
-                              'configuration_group_description' => $configuration_group_description,
-                              'sort_order' => (int)$_POST['sort_order'],
-                              'visible' => (int)$visible,
-                             );
+      $sql_data_array = array(
+        'configuration_group_title' => $configuration_group_title,
+        'configuration_group_description' => $configuration_group_description,
+        'sort_order' => (int)$_POST['sort_order'],
+        'visible' => (int)$visible,
+      );
 
       if( $action == 'insert_group_confirm') {
         $g_db->perform(TABLE_CONFIGURATION_GROUP, $sql_data_array);
@@ -228,14 +232,13 @@
         }
         $messageStack->add_session(SUCCESS_GROUP_UPDATED, 'success');
       }
-      tep_redirect(tep_href_link(basename($PHP_SELF), 'gID=' . $configuration_group_id));
-
+      tep_redirect(tep_href_link($g_script, 'gID=' . $configuration_group_id));
       break;
 
     case 'delete_confirm':
       $cID = (isset($_GET['cID']) ? $_GET['cID'] : '');
       $g_db->query("delete from " . TABLE_CONFIGURATION . " where configuration_id = '" . (int)$cID ."'");
-      tep_redirect(tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'cID'))));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'cID')) );
       break;
     case 'delete_group_confirm':
       $whole = isset($_POST['whole'])?1:0;
@@ -244,7 +247,7 @@
       }
       $g_db->query("delete from " . TABLE_CONFIGURATION_GROUP . " where configuration_group_id = '" . (int)$gID ."'");
       $messageStack->add_session(WARNING_GROUP_DELETED, 'warning');
-      tep_redirect(tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'gID', 'cID'))));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'gID', 'cID') ));
       break;
 
     default:
@@ -253,11 +256,8 @@
 
   $cfg_group_query = $g_db->query("select distinct configuration_group_id as id, CONCAT('Group','-',configuration_group_id) as text from " . TABLE_CONFIGURATION . " order by configuration_group_id");
   $group_array = array(
-                       array('id' => '0', 'text' => 'Show All')
-                      );
-
-  //while($group_array[]=$g_db->fetch_array($cfg_group_query));
-  //array_pop($group_array);
+    array('id' => '0', 'text' => 'Show All')
+  );
 
   while( $group = $g_db->fetch_array($cfg_group_query)) {
     $group_array[$group['id']] = $group;
@@ -278,24 +278,24 @@
     }
   }
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php 
-  $set_focus = true;
-  require('includes/objects/html_start_sub2.php'); 
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
+<?php
   if( $action == 'insert') {
 ?>
-          <div class="maincell" style="width: 100%;">
-            <div class="comboHeading">
-              <div class="pageHeading"><h1><?php echo HEADING_INSERT; ?></h1></div>
+          <div class="maincell wider">
+            <div class="comboHeadingTop">
+              <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=insert') . '" class="heading_help" title="' . HEADING_INSERT . '" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', HEADING_INSERT) . '</a>'; ?></div>
+              <div><h1><?php echo HEADING_INSERT; ?></h1></div>
             </div>
 <?php
     if( $newID == 1 ) {
     $group_array[0]['text'] = 'Custom';
 ?>
             <div class="comboHeading">
-              <div class="smallText"><?php echo TEXT_INFO_INSERT_SWITCH; ?></div>
+              <div><?php echo TEXT_INFO_INSERT_SWITCH; ?></div>
             </div>
-            <div class="formArea"><?php echo tep_draw_form('insert_form', basename($PHP_SELF), tep_get_all_get_params(array('action', 'gID')) . 'action=insert_switch_confirm') ?><table border="0" width="100%" cellspacing="1" cellpadding="3">
+            <div class="formArea"><?php echo tep_draw_form('insert_form', $g_script, tep_get_all_get_params('action', 'gID') . 'action=insert_switch_confirm') ?><table border="0" width="100%" cellspacing="1" cellpadding="3">
               <tr>
                 <td class="main"><table border="0" cellspacing="0" cellpadding="2">
                   <tr>
@@ -308,7 +308,7 @@
                   </tr>
                   <tr>
                     <td><?php echo TEXT_INFO_CFG_DESCRIPTION; ?></td>
-                    <td><?php echo tep_draw_textarea_field('configuration_description', 'soft', 20, 5); ?></td>
+                    <td><?php echo tep_draw_textarea_field('configuration_description', 20, 5); ?></td>
                   </tr>
                 </table></td>
                 <td><table border="0" cellspacing="0" cellpadding="2">
@@ -339,7 +339,7 @@
                 </table></td>
               </tr>
               <tr>
-                <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link(basename($PHP_SELF)) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_CONFIG_INSERT); ?></td>
+                <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($g_script) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_CONFIG_INSERT); ?></td>
               </tr>
             </table></form></div>
 <?php
@@ -348,12 +348,12 @@
             <div class="comboHeading">
               <div><?php echo TEXT_INFO_INSERT_GROUP; ?></div>
             </div>
-            <div class="formArea"><?php echo tep_draw_form('insert_form', basename($PHP_SELF), tep_get_all_get_params(array('action', 'gID')) . 'action=insert_group_confirm') ?><table border="0" width="100%" cellspacing="1" cellpadding="3">
+            <div class="formArea"><?php echo tep_draw_form('insert_form', $g_script, tep_get_all_get_params('action', 'gID') . 'action=insert_group_confirm') ?><table border="0" width="100%" cellspacing="1" cellpadding="3">
               <tr>
                 <td><table border="0" cellspacing="0" cellpadding="2">
                   <tr>
                     <td><?php echo TEXT_INFO_GROUP_DESCRIPTION; ?></td>
-                    <td><?php echo tep_draw_textarea_field('configuration_group_description', 'soft', 20, 3); ?></td>
+                    <td><?php echo tep_draw_textarea_field('configuration_group_description', 20, 3); ?></td>
                   </tr>
                 </table></td>
                 <td><table border="0" cellspacing="0" cellpadding="2">
@@ -372,7 +372,7 @@
                 </table></td>
               </tr>
               <tr>
-                <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link(basename($PHP_SELF)) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_GROUP_INSERT); ?></td>
+                <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($g_script) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_GROUP_INSERT); ?></td>
               </tr>
             </table></form></div>
 <?php
@@ -383,11 +383,12 @@
   // Modify/Confirm screen
   } elseif($action == 'modify' && $gID == 0) {
 ?>
-          <div class="maincell" style="width: 100%;">
-            <div class="comboHeading">
-              <div class="pageHeading"><h1><?php echo HEADING_CONFIRM; ?></h1></div>
+          <div class="maincell wider">
+            <div class="comboHeadingTop">
+              <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=modify') . '" class="heading_help" title="' . HEADING_CONFIRM . '" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', HEADING_CONFIRM) . '</a>'; ?></div>
+              <div><h1><?php echo HEADING_CONFIRM; ?></h1></div>
             </div>
-            <div class="formArea"><?php echo tep_draw_form('global_form', basename($PHP_SELF), tep_get_all_get_params(array('action', 'gID')) . 'action=modify_confirm', 'post') ?><table border="0" width="100%" cellspacing="0" cellpadding="0">
+            <div class="formArea"><?php echo tep_draw_form('global_form', $g_script, tep_get_all_get_params('action', 'gID') . 'action=modify_confirm', 'post') ?><table border="0" width="100%" cellspacing="0" cellpadding="0">
 <?php
     if($_POST['sort_duplicates'] == 'on') {
 ?>
@@ -398,10 +399,10 @@
                 <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '8'); ?></td>
               </tr>
               <tr>
-                <td valign="top"><table border="0" width="100%" cellspacing="0" cellpadding="2">
+                <td valign="top"><table class="tabledata">
                   <tr class="dataTableHeadingRow">
-                    <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></td>
-                    <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></td>
+                    <th><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></th>
+                    <th><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></th>
                   </tr>
 <?php
       $duplicates_query = $g_db->query("select configuration_key, configuration_id, count(*) as total from " . TABLE_CONFIGURATION . " group by configuration_key having count(*) > 1");
@@ -413,8 +414,8 @@
       foreach($duplicates_array as $key => $value) {
 ?>
                   <tr class="dataTableRow">
-                    <td class="dataTableContent"><?php echo $value['configuration_id']; ?></td>
-                    <td class="dataTableContent"><?php echo $value['configuration_key'];; ?></td>
+                    <td><?php echo $value['configuration_id']; ?></td>
+                    <td><?php echo $value['configuration_key'];; ?></td>
                   </tr>
 <?php
       }
@@ -429,7 +430,7 @@
     if($_POST['sort_config'] == 'on') {
 ?>
               <tr>
-                <td class="smallText"><b><?php echo TEXT_INFO_CONFIRM_CONFIG; ?></b></td>
+                <td><b><?php echo TEXT_INFO_CONFIRM_CONFIG; ?></b></td>
               </tr>
 <?php
     }
@@ -441,7 +442,7 @@
                 <td><?php echo tep_draw_separator('pixel_trans.gif', '100%', '6'); ?></td>
               </tr>
               <tr>
-                <td class="main"><?php echo tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_MYSQL) . ' <a href="' . tep_href_link(basename($PHP_SELF)) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>'; ?></td>
+                <td class="main"><?php echo tep_image_submit('button_confirm.gif', TEXT_INFO_CONFIRM_MYSQL) . ' <a href="' . tep_href_link($g_script) .'">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>'; ?></td>
               </tr>
             </table></form></div>
           </div>
@@ -449,14 +450,15 @@
   // Show them all
   } elseif($gID == 0) {
 ?>
-          <div class="maincell" style="width: 100%;">
-            <div class="comboHeading">
-              <div class="pageHeading"><h1><?php echo HEADING_ALL; ?></h1></div>
+          <div class="maincell wider">
+            <div class="comboHeadingTop">
+              <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=all') . '" class="heading_help" title="' . HEADING_ALL . '" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', HEADING_ALL) . '</a>'; ?></div>
+              <div><h1><?php echo HEADING_ALL; ?></h1></div>
             </div>
             <div class="comboHeading">
               <div class="floater">
 <?php
-    echo tep_draw_form('group', basename($PHP_SELF), '', 'get');
+    echo tep_draw_form('group', $g_script, '', 'get');
     echo TEXT_INFO_SELECT_GROUP . '&nbsp;' . tep_draw_pull_down_menu('gID', $group_array, $gID, 'onchange="this.form.submit();"');
     echo '</form>';
 ?>
@@ -464,35 +466,35 @@
             </div>
 <?php
     $insert_array = array(
-                          array('id' => 1, 'text' => 'Configuration Switch'),
-                          array('id' => 2, 'text' => 'Configuration Group'),
-                         );
+      array('id' => 1, 'text' => 'Configuration Switch'),
+      array('id' => 2, 'text' => 'Configuration Group'),
+    );
 ?>
-            <div class="comboHeading"><?php echo tep_draw_form('insertid', basename($PHP_SELF), '', 'get'); ?><table border="0" cellspacing="0" cellpadding="2">
+            <div class="comboHeading"><?php echo tep_draw_form('insertid', $g_script, '', 'get'); ?><table border="0" cellspacing="0" cellpadding="2">
               <tr>
                 <td><?php echo TEXT_INFO_INSERT_ENTRY . '&nbsp;' . tep_draw_pull_down_menu('newID', $insert_array) . '&nbsp;'; ?></td>
                 <td><?php echo tep_draw_hidden_field('action', 'insert') . tep_image_submit('button_insert.gif', 'Process Global Options'); ?></td>
               </tr>
             </table></form></div>
             <div class="comboHeading">
-              <div class="smallText"><b><?php echo TABLE_HEADING_OPTIMIZE; ?></b></div>
-              <div class="smallText"><?php echo TEXT_INFO_OPERATION ?></div>
+              <div><b><?php echo TABLE_HEADING_OPTIMIZE; ?></b></div>
+              <div><?php echo TEXT_INFO_OPERATION ?></div>
             </div>
-            <div class="formArea"><?php echo tep_draw_form('global_form', basename($PHP_SELF), 'action=modify', 'post') ?><table border="0" cellspacing="0" cellpadding="2">
+            <div class="formArea"><?php echo tep_draw_form('global_form', $g_script, 'action=modify', 'post') ?><table border="0" cellspacing="0" cellpadding="2">
               <tr>
                 <td><table border="0" cellspacing="0" cellpadding="2">
                   <tr>
-                    <td class="smallText">&nbsp;<?php echo 'No Changes&nbsp;' . tep_draw_radio_field('sort_config', '0', true); ?></td>
-                    <td class="smallText"><?php echo 'Enable&nbsp;' . tep_draw_radio_field('sort_config', 'on', false); ?></td>
-                    <td class="smallText"><b><?php echo TEXT_INFO_OPTIMIZE_SORT; ?></b></td>
+                    <td>&nbsp;<?php echo 'No Changes&nbsp;' . tep_draw_radio_field('sort_config', '0', true); ?></td>
+                    <td><?php echo 'Enable&nbsp;' . tep_draw_radio_field('sort_config', 'on', false); ?></td>
+                    <td><b><?php echo TEXT_INFO_OPTIMIZE_SORT; ?></b></td>
                   </tr>
                   <tr>
-                    <td class="smallText">&nbsp;<?php echo 'No Changes&nbsp;' . tep_draw_radio_field('sort_duplicates', '0', true); ?></td>
-                    <td class="smallText"><?php echo 'Enable&nbsp;' . tep_draw_radio_field('sort_duplicates', 'on', false); ?></td>
-                    <td class="smallText"><b><?php echo TEXT_INFO_OPTIMIZE_DUPLICATES; ?></b></td>
+                    <td>&nbsp;<?php echo 'No Changes&nbsp;' . tep_draw_radio_field('sort_duplicates', '0', true); ?></td>
+                    <td><?php echo 'Enable&nbsp;' . tep_draw_radio_field('sort_duplicates', 'on', false); ?></td>
+                    <td><b><?php echo TEXT_INFO_OPTIMIZE_DUPLICATES; ?></b></td>
                   </tr>
                 </table></td>
-                <td class="smallText"><?php echo tep_image_submit('button_submit.gif', 'Process Global Options'); ?></td>
+                <td><?php echo tep_image_submit('button_submit.gif', 'Process Global Options'); ?></td>
               </tr>
             </table></form></div>
 <?php
@@ -508,34 +510,24 @@
       }
 ?>
             <div class="comboHeading">
-              <div class="pageHeading"><h1><?php echo $value['id'] . '.&nbsp;' . $group_name; ?></h1></div>
+              <div><h1><?php echo $value['id'] . '.&nbsp;' . $group_name; ?></h1></div>
             </div>
-            <div class="listArea"><table border="0" width="100%" cellspacing="1" cellpadding="3">
+            <div class="listArea"><table class="tabledata">
               <tr class="dataTableHeadingRow">
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_TITLE; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_VALUE; ?></td>
-                <td class="dataTableHeadingContent" align="center"><?php echo TABLE_HEADING_ACTION; ?></td>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_TITLE; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_VALUE; ?></th>
+                <th class="calign"><?php echo TABLE_HEADING_ACTION; ?></th>
               </tr>
 <?php
+      $rows = 0;
       $configuration_query = $g_db->query("select c.configuration_id, c.configuration_group_id, c.configuration_key, c.configuration_title, c.configuration_value, c.use_function from " . TABLE_CONFIGURATION . " c where c.configuration_group_id = '" . (int)$value['id'] . "' order by c.configuration_key");
-      while ($configuration = $g_db->fetch_array($configuration_query)) {
-        if (tep_not_null($configuration['use_function'])) {
-          $use_function_check = $configuration['use_function'];
-          if (ereg('->', $use_function_check)) {
-            $class_method = explode('->', $use_function_check);
-            if (!is_object(${$class_method[0]})) {
-              include(DIR_WS_CLASSES . $class_method[0] . '.php');
-              ${$class_method[0]} = new $class_method[0]();
-            }
-            $cfgValue = tep_call_function($class_method[1], $configuration['configuration_value'], ${$class_method[0]});
-          } else {
-            $cfgValue = tep_call_function($use_function_check, $configuration['configuration_value']);
-          }
-        } else {
-          $cfgValue = $configuration['configuration_value'];
-        }
+      while( $configuration = $g_db->fetch_array($configuration_query) ) {
+        $rows++;
+        $row_class = ($rows%2)?'dataTableRow':'dataTableRowAlt';
+
+        $cfgValue = tep_cfg_value($configuration);
 
         if ((!isset($_GET['cID']) || (isset($_GET['cID']) && ($_GET['cID'] == $configuration['configuration_id']))) && !isset($cInfo) && (substr($action, 0, 3) != 'new')) {
           $cfg_extra_query = $g_db->query("select configuration_key, configuration_description, date_added, last_modified, use_function, set_function from " . TABLE_CONFIGURATION . " where configuration_id = '" . (int)$configuration['configuration_id'] . "'");
@@ -546,21 +538,21 @@
         }
 
         if ( (isset($cInfo) && is_object($cInfo)) && ($configuration['configuration_id'] == $cInfo->configuration_id) ) {
-          echo '                  <tr id="defaultSelected" class="dataTableRowSelected" onclick="document.location.href=\'' . tep_href_link(basename($PHP_SELF), 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $cInfo->configuration_id . '&action=edit') . '\'">' . "\n";
+          echo '                  <tr class="dataTableRowSelected row_link" href="' . tep_href_link($g_script, 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $cInfo->configuration_id . '&action=edit') . '">' . "\n";
         } else {
-          echo '                  <tr class="dataTableRow" onclick="document.location.href=\'' . tep_href_link(basename($PHP_SELF), 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $configuration['configuration_id']) . '\'">' . "\n";
+          echo '                  <tr class="dataTableRow row_link" href="' . tep_href_link($g_script, 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $configuration['configuration_id']) . '">' . "\n";
         }
 ?>
-                <td class="dataTableContent"><?php echo $configuration['configuration_id']; ?></td>
-                <td class="dataTableContent"><?php echo $configuration['configuration_key']; ?></td>
-                <td class="dataTableContent"><?php echo $configuration['configuration_title']; ?></td>
-                <td class="dataTableContent"><?php echo $cfgValue; ?></td>
-                <td class="dataTableContent" align="center">
+                <td><?php echo $configuration['configuration_id']; ?></td>
+                <td><?php echo $configuration['configuration_key']; ?></td>
+                <td><?php echo $configuration['configuration_title']; ?></td>
+                <td><?php echo $cfgValue; ?></td>
+                <td class="calign">
 <?php 
         if( isset($cInfo) && is_object($cInfo) && $configuration['configuration_id'] == $cInfo->configuration_id ) { 
           echo tep_image(DIR_WS_ICONS . 'icon_arrow_right.png', IMAGE_SELECT); 
         } else { 
-          echo '<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $configuration['configuration_id'] . '&action=edit') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', IMAGE_ICON_INFO) . '</a>';
+          echo '<a href="' . tep_href_link($g_script, 'gID=' . $configuration['configuration_group_id'] . '&cID=' . $configuration['configuration_id'] . '&action=edit') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', IMAGE_ICON_INFO) . '</a>';
         } 
 ?>
                 </td>
@@ -578,46 +570,38 @@
   } else {
 ?>
           <div class="maincell">
-            <div class="comboHeading">
-              <div class="pageHeading"><h1><?php echo HEADING_TITLE . '&nbsp;&raquo;&nbsp;' . $group_name; ?></h1></div>
+            <div class="comboHeadingTop">
+              <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=list') . '" class="heading_help" title="' . HEADING_TITLE . ' [' . $group_name . ']' . '" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', HEADING_TITLE . ' [' . $group_name . ']') . '</a>'; ?></div>
+              <div><h1><?php echo HEADING_TITLE . ' [' . $group_name . ']'; ?></h1></div>
             </div>
             <div class="comboHeading">
               <div class="smallText" style="float: left;">
 <?php
-    echo tep_draw_form('group', basename($PHP_SELF), '', 'get');
+    echo tep_draw_form('group', $g_script, '', 'get');
     echo TEXT_INFO_SELECT_GROUP . '&nbsp;' . tep_draw_pull_down_menu('gID', $group_array, $gID, 'onchange="this.form.submit();"');
     echo '</form>';
 ?>
               </div>
-              <div style="float: left; padding-left: 10px;"><?php echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action')) . 'action=delete_group') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', IMAGE_DELETE . '&nbsp;' . $group_name) . '</a>'; ?></div>
-              <div style="float: left; padding-left: 10px;"><?php echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action')) . 'action=edit_group') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', IMAGE_EDIT . '&nbsp;' . $group_name) . '</a>'; ?></div>
+              <div style="float: left; padding-left: 10px;"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action') . 'action=delete_group') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', IMAGE_DELETE . '&nbsp;' . $group_name) . '</a>'; ?></div>
+              <div style="float: left; padding-left: 10px;"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action') . 'action=edit_group') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', IMAGE_EDIT . '&nbsp;' . $group_name) . '</a>'; ?></div>
             </div>
-            <div class="listArea"><table border="0" width="100%" cellspacing="1" cellpadding="3">
+            <div class="listArea"><table class="tabledata">
               <tr class="dataTableHeadingRow">
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_TITLE; ?></td>
-                <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_CONFIGURATION_VALUE; ?></td>
-                <td class="dataTableHeadingContent" align="center"><?php echo TABLE_HEADING_ACTION; ?></td>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_ID; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_KEY; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_TITLE; ?></th>
+                <th><?php echo TABLE_HEADING_CONFIGURATION_VALUE; ?></th>
+                <th class="calign"><?php echo TABLE_HEADING_ACTION; ?></th>
               </tr>
 <?php
+    $rows = 0;
+
     $configuration_query = $g_db->query("select configuration_id, configuration_key, configuration_title, configuration_value, use_function from " . TABLE_CONFIGURATION . " c where c.configuration_group_id = '" . (int)$gID . "' order by configuration_key");
     while ($configuration = $g_db->fetch_array($configuration_query)) {
-      if (tep_not_null($configuration['use_function'])) {
-        $use_function_check = $configuration['use_function'];
-        if (ereg('->', $use_function_check)) {
-          $class_method = explode('->', $use_function_check);
-          if (!is_object(${$class_method[0]})) {
-            include(DIR_WS_CLASSES . $class_method[0] . '.php');
-            ${$class_method[0]} = new $class_method[0]();
-          }
-          $cfgValue = tep_call_function($class_method[1], $configuration['configuration_value'], ${$class_method[0]});
-        } else {
-          $cfgValue = tep_call_function($use_function_check, $configuration['configuration_value']);
-        }
-      } else {
-        $cfgValue = $configuration['configuration_value'];
-      }
+      $rows++;
+      $row_class = ($rows%2)?'dataTableRow':'dataTableRowAlt';
+
+      $cfgValue = tep_cfg_value($configuration);
 
       if( (!isset($_GET['cID']) || (isset($_GET['cID']) && ($_GET['cID'] == $configuration['configuration_id']))) && !isset($cInfo) && (substr($action, 0, 3) != 'new') ) {
         $cfg_extra_query = $g_db->query("select configuration_description, date_added, last_modified, set_function, sort_order from " . TABLE_CONFIGURATION . " where configuration_id = '" . (int)$configuration['configuration_id'] . "'");
@@ -629,23 +613,23 @@
       }
 
       if ( (isset($cInfo) && is_object($cInfo)) && ($configuration['configuration_id'] == $cInfo->configuration_id) ) {
-        echo '                  <tr id="defaultSelected" class="dataTableRowSelected" onclick="document.location.href=\'' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=edit') . '\'">' . "\n";
+        echo '                  <tr class="dataTableRowSelected row_link" href="' . tep_href_link($g_script, tep_get_all_get_params('gID', 'cID', 'action') . 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=edit') . '">' . "\n";
       } else {
-        echo '                  <tr class="dataTableRow" onclick="document.location.href=\'' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $configuration['configuration_id']) . '\'">' . "\n";
+        echo '                  <tr class="dataTableRow row_link" href="' . tep_href_link($g_script, tep_get_all_get_params('gID','cID') . 'gID=' . $gID . '&cID=' . $configuration['configuration_id']) . '">' . "\n";
       }
 ?>
-                <td class="dataTableContent"><?php echo $configuration['configuration_id']; ?></td>
-                <td class="dataTableContent"><?php echo $configuration['configuration_key']; ?></td>
-                <td class="dataTableContent"><?php echo $configuration['configuration_title']; ?></td>
-                <td class="dataTableContent"><?php echo $cfgValue; ?></td>
-                <td class="dataTableContent" align="center">
+                <td><?php echo $configuration['configuration_id']; ?></td>
+                <td><?php echo $configuration['configuration_key']; ?></td>
+                <td><?php echo $configuration['configuration_title']; ?></td>
+                <td><?php echo $cfgValue; ?></td>
+                <td class="calign">
 <?php 
-      echo '<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $configuration['configuration_id'] . '&action=delete') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE . ' ' . $configuration['configuration_title']) . '</a>&nbsp;';
-      echo '<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $configuration['configuration_id'] . '&action=edit') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', TEXT_EDIT . ' ' . $configuration['configuration_title']) . '</a>&nbsp;';
+      echo '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $configuration['configuration_id'] . '&action=delete') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE . ' ' . $configuration['configuration_title']) . '</a>&nbsp;';
+      echo '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $configuration['configuration_id'] . '&action=edit') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', TEXT_EDIT . ' ' . $configuration['configuration_title']) . '</a>&nbsp;';
       if( isset($cInfo) && is_object($cInfo) && $configuration['configuration_id'] == $cInfo->configuration_id ) { 
         echo tep_image(DIR_WS_ICONS . 'icon_arrow_right.png', ''); 
       } else { 
-        echo '<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $configuration['configuration_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>';
+        echo '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $configuration['configuration_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>';
       } 
 ?>
                 </td>
@@ -663,38 +647,41 @@
       case 'edit':
         if (isset($cInfo) && is_object($cInfo)) {
           $heading[] = array('text' => '<b>' . $cInfo->configuration_title . '</b>');
-          $contents[] = array('form' => tep_draw_form('configuration', basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=update_switch_confirm'));
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'update_entry.png', IMAGE_EDIT) );
-          $contents[] = array('text' => TEXT_INFO_EDIT_INTRO);
+          $contents[] = array('form' => tep_draw_form('configuration', $g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=update_switch_confirm'));
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'update_entry.png', IMAGE_EDIT) );
+          $contents[] = array('class' => 'infoBoxSection', 'text' => TEXT_INFO_EDIT_INTRO);
+          $contents[] = array('class' => 'rpad', 'section' => '<div>');
           $contents[] = array('text' => TEXT_INFO_CFG_TITLE . '<br />' . tep_draw_input_field('configuration_title', $cInfo->configuration_title) );
           $contents[] = array('text' => TEXT_INFO_CFG_KEY . '<br />' . tep_draw_input_field('configuration_key', $cInfo->configuration_key) );
-          $contents[] = array('text' => TEXT_INFO_CFG_VALUE . '<br />' . tep_draw_textarea_field('configuration_value', 'soft', '', 2, $cInfo->configuration_value) );
+          $contents[] = array('text' => TEXT_INFO_CFG_VALUE . '<br />' . tep_draw_textarea_field('configuration_value', $cInfo->configuration_value , '', 2) );
 
           $contents[] = array('text' => TEXT_INFO_CFG_USE . '<br />' . tep_draw_input_field('use_function', $cInfo->use_function) );
           $contents[] = array('text' => TEXT_INFO_CFG_SET . '<br />' . tep_draw_input_field('set_function', $cInfo->set_function) );
-
+          $contents[] = array('section' => '</div>');
           $contents[] = array('text' => TEXT_INFO_SELECT_GROUP . '<br />' . tep_draw_pull_down_menu('configuration_group_id', $group_array, $gID) );
+          $contents[] = array('class' => 'rpad', 'section' => '<div>');
           $contents[] = array('text' => TEXT_INFO_CFG_CUSTOM . '<br />' . tep_draw_input_field('custom_group_id', $gID) );
-          $contents[] = array('text' => TEXT_INFO_CFG_DESCRIPTION . '<br />' . tep_draw_textarea_field('configuration_description', 'soft', '', 3, $cInfo->configuration_description) );
+          $contents[] = array('text' => TEXT_INFO_CFG_DESCRIPTION . '<br />' . tep_draw_textarea_field('configuration_description', $cInfo->configuration_description, '', 4) );
           $contents[] = array('text' => TEXT_INFO_CFG_SORT . '<br />' . tep_draw_input_field('sort_order', $cInfo->sort_order) );
-          $contents[] = array('align' => 'center', 'text' => tep_image_submit('button_update.gif', IMAGE_UPDATE) . '&nbsp;<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+          $contents[] = array('section' => '</div>');
+          $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_update.gif', IMAGE_UPDATE) . '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         } else { // create generic_text dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
           $contents[] = array('text' => TEXT_NO_GENERIC);
         }
         break;
       case 'delete':
         if (isset($cInfo) && is_object($cInfo)) {
           $heading[] = array('text' => '<b>' . TEXT_DELETE . '&nbsp;' . $cInfo->configuration_title . '</b>');
-          $contents[] = array('form' => tep_draw_form('configuration', basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=delete_confirm'));
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
+          $contents[] = array('form' => tep_draw_form('configuration', $g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=delete_confirm'));
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
           $contents[] = array('text' => sprintf(TEXT_INFO_DELETE_INTRO, '<b>' . $cInfo->configuration_title . '</b>'));
           $contents[] = array('text' => TEXT_INFO_DELETE_GROUP_FINAL);
-          $contents[] = array('align' => 'center', 'text' => tep_image_submit('button_confirm.gif', IMAGE_CONFIRM) . '&nbsp;<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+          $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_confirm.gif', IMAGE_CONFIRM) . '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         } else { // create generic_text dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
           $contents[] = array('text' => TEXT_NO_GENERIC);
         }
         break;
@@ -704,45 +691,47 @@
         $group_array = $g_db->fetch_array($group_query);
 
         $heading[] = array('text' => '<b>' . TEXT_EDIT_GROUP . '&nbsp;' . $group_name . '</b>');
-        $contents[] = array('form' => tep_draw_form('configuration_group', basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cID . '&action=update_group_confirm'));
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'update_entry.png', IMAGE_EDIT) );
+        $contents[] = array('form' => tep_draw_form('configuration_group', $g_script, 'gID=' . $gID . '&cID=' . $cID . '&action=update_group_confirm'));
+        $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'update_entry.png', IMAGE_EDIT) );
 
-        $contents[] = array('text' => TEXT_INFO_EDIT_GROUP_INTRO);
+        $contents[] = array('class' => 'infoBoxSection', 'text' => TEXT_INFO_EDIT_GROUP_INTRO);
+        $contents[] = array('class' => 'rpad', 'section' => '<div>');
         $contents[] = array('text' => TEXT_INFO_GROUP_TITLE . '<br />' . tep_draw_input_field('configuration_group_title', $group_array['configuration_group_title']) );
-        $contents[] = array('text' => TEXT_INFO_GROUP_DESCRIPTION . '<br />' . tep_draw_textarea_field('configuration_group_description', 'soft', '', 3, $group_array['configuration_group_description']) );
+        $contents[] = array('text' => TEXT_INFO_GROUP_DESCRIPTION . '<br />' . tep_draw_textarea_field('configuration_group_description', $group_array['configuration_group_description'], '', 4) );
 
         $contents[] = array('text' => TEXT_INFO_GROUP_ID . '<br />' . tep_draw_input_field('configuration_group_id', $gID) );
         $contents[] = array('text' => TEXT_INFO_GROUP_SORT . '<br />' . tep_draw_input_field('sort_order', $group_array['sort_order']) );
+        $contents[] = array('section' => '</div>');
         $contents[] = array('text' => tep_draw_checkbox_field('visible', $group_array['visible'], ($group_array['configuration_group_title'])?true:false) . '&nbsp;' . TEXT_INFO_GROUP_VISIBLE);
-        $contents[] = array('align' => 'center', 'text' => tep_image_submit('button_update.gif', IMAGE_UPDATE) . '&nbsp;<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+        $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_update.gif', IMAGE_UPDATE) . '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         break;
       case 'delete_group':
         $cID = (isset($_GET['cID']) ? $_GET['cID'] : '');
         $heading[] = array('text' => '<b>' . TEXT_DELETE . '&nbsp;' . $group_name . '</b>');
-        $contents[] = array('form' => tep_draw_form('configuration', basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cID . '&action=delete_group_confirm'));
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
+        $contents[] = array('form' => tep_draw_form('configuration', $g_script, 'gID=' . $gID . '&cID=' . $cID . '&action=delete_group_confirm'));
+        $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
         $contents[] = array('text' => sprintf(TEXT_INFO_DELETE_GROUP_INTRO, '<b>' . $group_name . '</b>'));
         $contents[] = array('text' => TEXT_INFO_DELETE_GROUP_FINAL);
         $contents[] = array('text' => tep_draw_checkbox_field('whole', false, false) . '&nbsp;' . TEXT_INFO_GROUP_INCLUDE_SWITCHES);
-        $contents[] = array('align' => 'center', 'text' => tep_image_submit('button_confirm.gif', IMAGE_CONFIRM) . '&nbsp;<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+        $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_confirm.gif', IMAGE_CONFIRM) . '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         break;
       default:
         if (isset($cInfo) && is_object($cInfo)) {
           $heading[] = array('text' => '<b>' . $cInfo->configuration_title . '</b>');
 
-          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=edit') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a>&nbsp;<a href="' . tep_href_link(basename($PHP_SELF), 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=delete') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
-          $contents[] = array('text' => $cInfo->configuration_description);
+          $contents[] = array('class' => 'calign', 'text' => '<a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=edit') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a><a href="' . tep_href_link($g_script, 'gID=' . $gID . '&cID=' . $cInfo->configuration_id . '&action=delete') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
+          $contents[] = array('class' => 'infoBoxSection', 'text' => $cInfo->configuration_description);
           $contents[] = array('text' => TEXT_INFO_DATE_ADDED . ' ' . tep_date_short($cInfo->date_added));
           if (tep_not_null($cInfo->last_modified)) $contents[] = array('text' => TEXT_INFO_LAST_MODIFIED . ' ' . tep_date_short($cInfo->last_modified));
         } else { // create generic_text dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', TEXT_ERROR) );
           $contents[] = array('text' => TEXT_NO_GENERIC);
         }
         break;
     }
 
-    if ( (tep_not_null($heading)) && (tep_not_null($contents)) ) {
+    if( !empty($heading) && !empty($contents) ) {
       echo '             <div class="rightcell">';
       $box = new box;
       echo $box->infoBox($heading, $contents);
@@ -750,4 +739,4 @@
     }
   }
 ?>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

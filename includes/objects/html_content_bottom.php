@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------------
 */
   $html_content_bottom = array(
-    DIR_WS_TEMPLATE . 'html_content_bottom.tpl'
+    DIR_FS_TEMPLATE . 'html_content_bottom.tpl'
   );
   $g_plugins->invoke('html_content_bottom');
   for($i=0, $j=count($html_content_bottom); $i<$j; $i++) {

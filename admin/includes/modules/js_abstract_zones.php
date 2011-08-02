@@ -18,7 +18,6 @@
 //----------------------------------------------------------------------------
 //
 */
-  $action = (isset($_GET['action']) ? $g_db->prepare_input($_GET['action'], true) : '');
   $gtext_id = (isset($_POST['gtext_id']) ? (int)$_POST['gtext_id'] : '');
 
   switch ($action) {
@@ -44,11 +43,11 @@
         if( !$g_db->num_rows($data_query) ) continue;
         $data_array = $g_db->fetch_array($data_query);
         $sql_data_array = array(
-                                'abstract_zone_id' => (int)$key,
-                                'gtext_id' => (int)$gtext_id,
-                                'gtext_alt_title' => $data_array['gtext_title'],
-                                'sequence_order' => 1,
-                               );
+          'abstract_zone_id' => (int)$key,
+          'gtext_id' => (int)$gtext_id,
+          'gtext_alt_title' => $data_array['gtext_title'],
+          'sequence_order' => 1,
+        );
         $g_db->perform(TABLE_GTEXT_TO_DISPLAY, $sql_data_array);
       }
       break;
@@ -65,10 +64,10 @@
 
       $html_string = '';
       $html_string .= 
-      '          <div class="listArea">' . tep_draw_form("form_assign", basename($PHP_SELF), 'action=assign', 'post', 'id="core_assign_form" enctype="multipart/form-data"') . '<table border="0" width="100%" cellspacing="1" cellpadding="3">' . "\n" . 
+      '          <div class="listArea">' . tep_draw_form("form_assign", $g_script, 'action=assign', 'post', 'id="core_assign_form" enctype="multipart/form-data"') . '<table class="tabledata">' . "\n" . 
       '            <tr class="dataTableHeadingRow">' . "\n" . 
-      '              <td class="dataTableHeadingContent">' . TEXT_PAGE_SELECT . tep_draw_hidden_field('module', 'abstract_zones') . tep_draw_hidden_field('gtext_id', $gtext_id) . '</td>' . "\n" . 
-      '              <td class="dataTableHeadingContent">' . TABLE_HEADING_ABSTRACT_ZONES . '</td>' . "\n" . 
+      '              <th>' . TEXT_PAGE_SELECT . tep_draw_hidden_field('module', 'abstract_zones') . tep_draw_hidden_field('gtext_id', $gtext_id) . '</th>' . "\n" . 
+      '              <th>' . TABLE_HEADING_ABSTRACT_ZONES . '</th>' . "\n" . 
       '            </tr>' . "\n";
 
       $rows = 0;
@@ -90,8 +89,8 @@
         }
         $html_string .= 
         '            <tr class="' . $row_class . '">' . "\n" . 
-        '              <td class="dataTableContent">' . tep_draw_checkbox_field('zone_id[' . $zones['abstract_zone_id'] . ']', 'on', $bCheck) . '</td>' . "\n" . 
-        '              <td class="dataTableContent">' . $zones['abstract_zone_name'] . '</td>' . "\n";
+        '              <td>' . tep_draw_checkbox_field('zone_id[' . $zones['abstract_zone_id'] . ']', 'on', $bCheck) . '</td>' . "\n" . 
+        '              <td>' . $zones['abstract_zone_name'] . '</td>' . "\n";
         '            </tr>' . "\n";
       }
       $html_string .= 
@@ -108,7 +107,6 @@
       $html_string .= '</div>' . "\n";
       echo $html_string;
 ?>
-
 <?php
   } else {
 ?>

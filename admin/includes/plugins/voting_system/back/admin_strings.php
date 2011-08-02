@@ -4,7 +4,7 @@
 // Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
-// Admin Plugin: Right Column Options Strings
+// Admin Plugin: Voting System Strings
 //----------------------------------------------------------------------------
 // I-Metrics CMS
 //----------------------------------------------------------------------------
@@ -16,5 +16,6 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-define('BOX_VOTES', 'Votes');
+$BOX_VOTES             = 'Votes';
+$TEXT_INFO_VOTES       = 'Received Votes';
 ?>

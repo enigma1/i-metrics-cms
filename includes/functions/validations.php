@@ -50,23 +50,23 @@
   ////////////////////////////////////////////////////////////////////////////////////////////////
   function tep_validate_email($email) {
     $valid_address = true;
-
-    $mail_pat = '^(.+)@(.+)$';
+    $mail_pat = '/^(.+)@(.+)$/i';
     $valid_chars = "[^] \(\)<>@,;:\.\\\"\[]";
     $atom = "$valid_chars+";
     $quoted_user='(\"[^\"]*\")';
     $word = "($atom|$quoted_user)";
-    $user_pat = "^$word(\.$word)*$";
-    $ip_domain_pat='^\[([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\]$';
-    $domain_pat = "^$atom(\.$atom)*$";
 
-    if (eregi($mail_pat, $email, $components)) {
+    $user_pat = "/^$word(\.$word)*$/i";
+    $ip_domain_pat='/^\[([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\]$/i';
+    $domain_pat = "/^$atom(\.$atom)*$/i";
+
+    if (preg_match($mail_pat, $email, $components)) {
       $user = $components[1];
       $domain = $components[2];
       // validate user
-      if (eregi($user_pat, $user)) {
+      if( preg_match($user_pat, $user)) {
         // validate domain
-        if (eregi($ip_domain_pat, $domain, $ip_components)) {
+        if (preg_match($ip_domain_pat, $domain, $ip_components)) {
           // this is an IP address
       	  for ($i=1;$i<=4;$i++) {
       	    if ($ip_components[$i] > 255) {
@@ -74,10 +74,9 @@
       	      break;
       	    }
           }
-        }
-        else {
+        } else {
           // Domain is a name, not an IP
-          if (eregi($domain_pat, $domain)) {
+          if (preg_match($domain_pat, $domain)) {
             /* domain name seems valid, but now make sure that it ends in a valid TLD or ccTLD
                and that there's a hostname preceding the domain or country. */
             $domain_components = explode(".", $domain);
@@ -87,7 +86,7 @@
             } else {
               $top_level_domain = strtolower($domain_components[sizeof($domain_components)-1]);
               // Allow all 2-letter TLDs (ccTLDs)
-              if (eregi('^[a-z][a-z]$', $top_level_domain) != 1) {
+              if (preg_match('/^[a-z][a-z]$/i', $top_level_domain) != 1) {
                 $tld_pattern = '';
                 // Get authorized TLDs from text file
                 $tlds = file(DIR_WS_INCLUDES . 'tld.txt');
@@ -96,28 +95,25 @@
                   $words = explode('#', $line);
                   $tld = trim($words[0]);
                   // TLDs should be 3 letters or more
-                  if (eregi('^[a-z]{3,}$', $tld) == 1) {
+                  if (preg_match('/^[a-z]{3,}$/i', $tld) == 1) {
                     $tld_pattern .= '^' . $tld . '$|';
                   }
                 }
                 // Remove last '|'
                 $tld_pattern = substr($tld_pattern, 0, -1);
-                if (eregi("$tld_pattern", $top_level_domain) == 0) {
-                    $valid_address = false;
+                if( preg_match("/$tld_pattern/i", $top_level_domain) == 0) {
+                  $valid_address = false;
                 }
               }
             }
-          }
-          else {
+          } else {
       	    $valid_address = false;
       	  }
       	}
-      }
-      else {
+      } else {
         $valid_address = false;
       }
-    }
-    else {
+    } else {
       $valid_address = false;
     }
     if ($valid_address && ENTRY_EMAIL_ADDRESS_CHECK == 'true') {
@@ -132,17 +128,22 @@
     $result = false;
 
     $url = tep_create_safe_string($url, '', "/[^0-9a-z_\-\.\/\:]+/i");
-    if( !empty($url) ) {
-      $url_array = parse_url($url);
-      if( is_array($url_array) && isset($url_array['host']) && strpos($url_array['host'], '.') ) {
-        $url=(isset($url_array['scheme'])?$url_array['scheme'].'://':'').
-             (isset($url_array['host'])?$url_array['host']:'').
-             (isset($url_array['path'])?$url_array['path']:'').
-             (isset($url_array['query'])?'?'.$url_array['query']:'');
-      } else {
-        $url = '';
-      }
+    if( empty($url) ) return $result;
+
+    $url_array = parse_url($url);
+    if( is_array($url_array) && isset($url_array['host']) && strpos($url_array['host'], '.') ) {
+      $url=(isset($url_array['scheme'])?$url_array['scheme'].'://':'').
+           (isset($url_array['host'])?$url_array['host']:'').
+           (isset($url_array['path'])?$url_array['path']:'').
+           (isset($url_array['query'])?'?'.$url_array['query']:'');
+    } else {
+      $url = '';
     }
     return !empty($url);
+  }
+
+  function tep_check_domain_name($domain) {
+    $phonems = 'aeiouy';
+    $consents = 'bcdfghjklmnpqrstvwxz';
   }
 ?>

@@ -7,16 +7,34 @@
 
   Copyright (c) 2003 osCommerce
 
-  Released under the GNU General Public License
+// Modifications by Asymmetrics
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
+// Author: Mark Samios
+// http://www.asymmetrics.com
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Modifications:
+// - PHP5 Register Globals off and Long Arrays Off support added
+// - Added SEO-G support functions
+// - Changed database, session functions to use the classes
+// - Integrated file as part of a class
+// - Added Plugins Support
+// - Transformed script for CMS, removed unrelated code
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
 //-MS- SEO-G Added
+  global $g_seo_url;
   if( isset($g_seo_url) && is_object($g_seo_url) ) {
     $g_seo_url->cache_urls();
   }
 //-MS- SEO-G Added EOM
 
 // close session (store variables)
-  $g_session->close(false);
+  $cSessions->close(false);
   if( STORE_PAGE_PARSE_TIME == 'true' || DISPLAY_PAGE_PARSE_TIME == 'true') {
     $time_start = explode(' ', PAGE_PARSE_START_TIME);
     $time_end = explode(' ', microtime());
@@ -28,8 +46,8 @@
       echo '<span style="font-size: small;">Parse Time: ' . $parse_time . 's</span>';
     }
   }
-  $g_plugins->invoke('final_terminate');
-  if ( (GZIP_COMPRESSION == 'true') && ($ext_zlib_loaded == true) && ($ini_zlib_output_compression < 1) ) {
+  $cPlug->invoke('final_terminate');
+  if( GZIP_COMPRESSION == 'true' ) {
     include('functions/gzip_compression.php');
     tep_gzip_output(GZIP_LEVEL);
   }

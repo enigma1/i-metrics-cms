@@ -79,8 +79,8 @@
       $height = 240;
     }
 ?>
-        <?php echo tep_draw_form("form_resize", basename($PHP_SELF), 'action=resize', 'post', 'id="core_resize_form" enctype="multipart/form-data"'); ?>
-          <div class="pageHeading"><?php echo TEXT_IMAGE_RESIZE_OPTIONS . '&nbsp;'  . $image; ?></div>
+        <?php echo tep_draw_form("form_resize", $g_script, 'action=resize', 'post', 'id="core_resize_form" enctype="multipart/form-data"'); ?>
+          <div><?php echo TEXT_IMAGE_RESIZE_OPTIONS . '&nbsp;'  . $image; ?></div>
           <div class="vlinepad"><?php echo TEXT_IMAGE_RESIZE_INFO; ?></div>
           <div class="cleaner">
             <div class="floater" style="padding-right: 20px;"><fieldset><legend><b><?php echo TEXT_IMAGE_PARAMETERS; ?></b></legend>

@@ -23,42 +23,34 @@
 //----------------------------------------------------------------------------
 */
   require('includes/application_top.php');
-  require(DIR_WS_CLASSES . FILENAME_SEO_ZONES);
+  require(DIR_FS_CLASSES . FILENAME_SEO_ZONES);
 
-  unset($seozone_script);
-// initialize the abstract zone class for different type support
-  if( isset($_GET['zID']) && !empty($_GET['zID']) ) {
-    $seozone_query = $g_db->query("select seo_types_class, seo_types_name from " . TABLE_SEO_TYPES . " where seo_types_id = '" . (int)$_GET['zID'] . "'");
-    if( $seozone = $g_db->fetch_array($seozone_query) ) {
-      $seozone_script = $seozone['seo_types_class'];
-    }
+  $zone_script = 'seo_zones';
+  $zID = isset($_GET['zID'])?(int)$_GET['zID']:'';
+
+  // initialize the abstract zone class for different type support
+  $zone_query = $g_db->query("select seo_types_class, seo_types_name from " . TABLE_SEO_TYPES . " where seo_types_id = '" . (int)$zID . "'");
+  if( $g_db->num_rows($zone_query) ) {
+    $zone_array = $g_db->fetch_array($zone_query);
+    $zone_script = $zone_array['seo_types_class'];
+    require(DIR_FS_CLASSES . $zone_script . '.php');
   }
 
-  if( isset($seozone_script) && !empty($seozone_script) ) {
-    require(DIR_WS_CLASSES . $seozone_script . '.php');
-  } else {
-    $seozone_script = 'seo_zones';
-  }
-
-  $cSEO = new $seozone_script();
+  $cSEO = new $zone_script();
   $cSEO->process_saction();
   $cSEO->process_action();
-
-  $s_inner_flag = false;
-  if (isset($_GET['zID']) && tep_not_null($_GET['zID']) ) {
-    $s_inner_flag = true;
-  }
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php require('includes/objects/html_start_sub2.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
         <div class="maincell"<?php if(!$cSEO->is_top_level()) echo ' style="width:100%;"';?>>
-          <div class="comboHeading">
-            <div class="pageHeading">
+          <div class="comboHeadingTop">
+            <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&zID=' . $zID) . '" class="' . tep_get_script_name() . '" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', BOX_OTHER_QUICK_HELP) . '</a>'; ?></div>
+            <div class="floater">
 <?php
   echo '<h1>';
   echo HEADING_TITLE; 
-  if( $s_inner_flag ) {
-    echo '&nbsp;&raquo;&nbsp;' . $seozone['seo_types_name'];
+  if( !empty($zID) ) {
+    echo '&nbsp;&raquo;&nbsp;' . $zone_array['seo_types_name'];
   }
   echo '</h1>';
 ?>
@@ -71,4 +63,4 @@
 <?php
   echo $cSEO->display_right_box(); 
 ?>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

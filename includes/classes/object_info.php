@@ -28,10 +28,10 @@
 
 // class constructor
     function objectInfo($object_array, $strip=true) {
-      global $g_db;
+
       foreach($object_array as $key => $value) {
         if( $strip ) {
-          $this->$key = $g_db->prepare_input($value);
+          $this->$key = tep_sanitize_string($value);
         } else {
           $this->$key = $value;
         }
@@ -40,10 +40,19 @@
   }
 
   function tep_get_strings($metrics_file) {
-    if( !file_exists($metrics_file) ) return false;
+    if( !is_file($metrics_file) ) return false;
+
     require($metrics_file);
     $strings = get_defined_vars();
     unset($strings['metrics_file']);
     return new objectInfo($strings, false);
+  }
+
+  function tep_get_strings_array($metrics_file) {
+    if( !is_file($metrics_file) ) return array();
+    require($metrics_file);
+    $strings = get_defined_vars();
+    unset($strings['metrics_file']);
+    return $strings;
   }
 ?>

@@ -30,12 +30,12 @@
     function output($display=false) {
       $html_output = '';
       $html_output .=
-      '  <div><h2><a href="' . tep_href_link(FILENAME_IMAGE_PAGES, 'abz_id=' . $this->zone_id) . '">' . $this->main_array['abstract_zone_name'] . '</a></h2></div>' . "\n" . 
+      '  <div><h2><a href="' . tep_href_link(FILENAME_COLLECTIONS, 'abz_id=' . $this->zone_id) . '">' . $this->main_array['abstract_zone_name'] . '</a></h2></div>' . "\n" . 
       '  <div class="contentBoxContents">' . tep_truncate_string($this->main_array['abstract_zone_desc']) . '</div>' . "\n";
 /*
       foreach( $this->zones_array as $key => $value ) {
         $html_output .= 
-        '  <div class="blocklink"><a href="' . tep_href_link(FILENAME_IMAGE_PAGES, 'gtext_id=' . $key) . '">' . $value['image_alt_title']  . '</a></div>' . "\n";
+        '  <div class="blocklink"><a href="' . tep_href_link(FILENAME_COLLECTIONS, 'gtext_id=' . $key) . '">' . $value['image_alt_title']  . '</a></div>' . "\n";
       }
 */
       if( $display ) echo $html_output;

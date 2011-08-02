@@ -54,45 +54,45 @@
         $error = true;
       }
 
+      if( $error ) break;
+
 	  $email_subject = $subject . ' ' . EMAIL_SUBJECT;
 
-      if( !$error ) {
-        if( tep_validate_email($email) ) {
-          // Help Desk
-          $department_query = $g_db->query("select email_address, name from " . TABLE_HELPDESK_DEPARTMENTS . " where department_id = '" . (int)$_POST['department_id'] . "' and front='1'");
-          if( $g_db->num_rows($department_query) ) {
-            $department = $g_db->fetch_array($department_query);
+      if( tep_validate_email($email) ) {
+        // Help Desk
+        $department_query = $g_db->query("select email_address, name from " . TABLE_HELPDESK_DEPARTMENTS . " where department_id = '" . (int)$_POST['department_id'] . "' and front='1'");
+        if( $g_db->num_rows($department_query) ) {
+          $department = $g_db->fetch_array($department_query);
 
-            require_once(DIR_WS_CLASSES . 'email.php');
-            $mailer = new email();
-            $result = $mailer->send_mail($department['name'], $department['email_address'], $email_subject, $_POST['enquiry'], $_POST['name'], $_POST['email'], '');
-            if( !$result ) {
-              $messageStack->add_session(ERROR_SEND_MAIL);
-            } else {
-              $messageStack->add_session(SUCCESS_ENQUIRY_SENT, 'success');
-            }
-            tep_redirect(tep_href_link(FILENAME_CONTACT_US, 'action=success'));
-            break;
+          require_once(DIR_FS_CLASSES . 'email.php');
+          $mailer = new email();
+          $result = $mailer->send_mail($department['name'], $department['email_address'], $email_subject, $_POST['enquiry'], $_POST['name'], $_POST['email'], '');
+          if( !$result ) {
+            $messageStack->add_session(ERROR_SEND_MAIL);
           } else {
-            $error = true;
-            $messageStack->add(ERROR_EMAIL_ADDRESS);
+            $messageStack->add_session(SUCCESS_ENQUIRY_SENT, 'success');
           }
+          tep_redirect(tep_href_link(FILENAME_CONTACT_US, 'action=success'));
+          break;
         } else {
           $error = true;
           $messageStack->add(ERROR_EMAIL_ADDRESS);
         }
+      } else {
+        $error = true;
+        $messageStack->add(ERROR_EMAIL_ADDRESS);
       }
       break;
     default:
       break;
   }
-  $breadcrumb->add(NAVBAR_TITLE, tep_href_link(basename($PHP_SELF)));
+  $g_breadcrumb->add(NAVBAR_TITLE, tep_href_link($g_script));
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php require('includes/objects/html_start_sub2.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
 <?php
   $heading_row = true;
-  require('includes/objects/html_body_header.php');
+  require(DIR_FS_OBJECTS . 'html_body_header.php');
   if( $action == 'success' ) {
     $gtext_query = $g_db->query("select gtext_title, gtext_description from " . TABLE_GTEXT . " where gtext_id = '" . GTEXT_CONTACT_SUCCESS_ID . "'");
     $gtext_array = $g_db->fetch_array($gtext_query);
@@ -110,7 +110,7 @@
 ?>
         <div><h1><?php echo $gtext_array['gtext_title']; ?></h1></div>
         <div class="contentBoxContents contentBoxContentsAlt"><?php echo $gtext_array['gtext_description']; ?></div>
-        <div class="cleaner"><?php echo tep_draw_form($l_form_name, tep_href_link(basename($PHP_SELF), 'action=send')); ?><fieldset><legend><?php echo TEXT_CONTACT_DETAILS; ?></legend>
+        <div class="cleaner"><?php echo tep_draw_form($l_form_name, tep_href_link($g_script, 'action=send')); ?><fieldset><legend><?php echo TEXT_CONTACT_DETAILS; ?></legend>
 <?php
     $departments_array = array();
     $departments_query = $g_db->query("select department_id, title from " . TABLE_HELPDESK_DEPARTMENTS . " where front='1' order by title desc");
@@ -128,7 +128,7 @@
             <div class="form_label"><?php echo ENTRY_SUBJECT; ?></div>
             <div class="form_input"><?php echo tep_draw_input_field('subject'); ?></div>
             <div class="form_label"><?php echo ENTRY_ENQUIRY; ?></div>
-            <div class="form_texta"><?php echo tep_draw_textarea_field('enquiry', 'soft', '40', '10'); ?></div>
+            <div class="form_texta"><?php echo tep_draw_textarea_field('enquiry', '', '40', '10'); ?></div>
           </div>
 <?php
   $html_lines_array = array();
@@ -139,4 +139,4 @@
 <?php
   }
 ?>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

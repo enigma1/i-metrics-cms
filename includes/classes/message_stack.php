@@ -35,18 +35,14 @@
 
   // Same script posting? Do not include the last argument, messageStack will pick up the current script
 */
-  class messageStack extends noticeBox {
+  class message_stack extends noticeBox {
     var $messages, $script;
 
     // compatibility constructor
-    function messageStack() {
-      global $g_session;
-      $this->script = tep_get_script_name();
+    function message_stack() {
+      extract(tep_load('sessions')); 
 
-      $message_array =& $g_session->register('g_message_stack');
-      if( !$g_session->is_registered('g_message_stack') || !is_array($message_array) ) {
-        $message_array = array();
-      }
+      $message_array =& $cSessions->register('g_message_stack', array());
       $this->messages = array();
 
       for ($i=0, $j=count($message_array); $i<$j; $i++) {
@@ -55,10 +51,19 @@
       $message_array = array();
     }
 
+    function &get() {
+      extract(tep_load('sessions'));
+
+      $message_array =& $cSessions->register('g_message_stack');
+      return $message_array;
+    }
+
     // class methods
     function add($message, $type = 'error', $class='') {
+      extract(tep_load('defs'));
+
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
       if( $type == 'error' ) {
         $this->messages[] = array('params' => 'class="messageStackError"', 'class' => $class, 'text' => $message);
@@ -72,11 +77,11 @@
     }
 
     function add_session($message, $type = 'error', $class='') {
-      global $g_session;
+      extract(tep_load('defs', 'sessions')); 
 
-      $message_array =& $g_session->register('g_message_stack');
+      $message_array =& $cSessions->register('g_message_stack');
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
       $message_array[] = array(
         'text' => $message, 
@@ -90,15 +95,17 @@
     }
 
     function output($class='') {
+      extract(tep_load('defs'));
+
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
 
-      $this->common_parameters = 'class="messageBox"';
+      $this->common_parameters = 'class="messageBox bounder"';
 
       $output = array();
-      for ($i=0, $n=sizeof($this->messages); $i<$n; $i++) {
-        if ($this->messages[$i]['class'] == $class) {
+      for( $i=0, $j=count($this->messages); $i<$j; $i++ ) {
+        if( $this->messages[$i]['class'] == $class ) {
           $this->noticeBox($this->messages[$i]);
         }
       }

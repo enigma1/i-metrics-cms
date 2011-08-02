@@ -73,8 +73,8 @@
 			t.files = {};
 			t.cssFlicker = false;
 			t.counter = 0;
-			t.boxModel = !tinymce.isIE || d.compatMode == "CSS1Compat"; 
-			t.stdMode = d.documentMode === 8;
+			t.stdMode = d.documentMode >= 8;
+			t.boxModel = !tinymce.isIE || d.compatMode == "CSS1Compat" || t.stdMode;
 
 			t.settings = s = tinymce.extend({
 				keep_values : false,
@@ -415,7 +415,8 @@
 					o += ' ' + k + '="' + t.encode(a[k]) + '"';
 			}
 
-			if (tinymce.is(h))
+			// A call to tinymce.is doesn't work for some odd reason on IE9 possible bug inside their JS runtime
+			if (typeof(h) != "undefined")
 				return o + '>' + h + '</' + n + '>';
 
 			return o + ' />';
@@ -425,42 +426,30 @@
 		 * Removes/deletes the specified element(s) from the DOM.
 		 *
 		 * @method remove
-		 * @param {String/Element/Array} n ID of element or DOM element object or array containing multiple elements/ids.
-		 * @param {Boolean} k Optional state to keep children or not. If set to true all children will be placed at the location of the removed element.
+		 * @param {String/Element/Array} node ID of element or DOM element object or array containing multiple elements/ids.
+		 * @param {Boolean} keep_children Optional state to keep children or not. If set to true all children will be placed at the location of the removed element.
 		 * @return {Element/Array} HTML DOM element that got removed or array of elements depending on input.
 		 */
-		remove : function(n, k) {
-			var t = this;
+		remove : function(node, keep_children) {
+			return this.run(node, function(node) {
+				var parent, child;
 
-			return this.run(n, function(n) {
-				var p, g, i;
+				parent = node.parentNode;
 
-				p = n.parentNode;
-
-				if (!p)
+				if (!parent)
 					return null;
 
-				if (k) {
-					for (i = n.childNodes.length - 1; i >= 0; i--)
-						t.insertAfter(n.childNodes[i], n);
-
-					//each(n.childNodes, function(c) {
-					//	p.insertBefore(c.cloneNode(true), n);
-					//});
+				if (keep_children) {
+					while (child = node.firstChild) {
+						// IE 8 will crash if you don't remove completely empty text nodes
+						if (!tinymce.isIE || child.nodeType !== 3 || child.nodeValue)
+							parent.insertBefore(child, node);
+						else
+							node.removeChild(child);
+					}
 				}
 
-				// Fix IE psuedo leak
-				if (t.fixPsuedoLeaks) {
-					p = n.cloneNode(true);
-					k = 'IELeakGarbageBin';
-					g = t.get(k) || t.add(t.doc.body, 'div', {id : k, style : 'display:none'});
-					g.appendChild(n);
-					g.innerHTML = '';
-
-					return p;
-				}
-
-				return p.removeChild(n);
+				return parent.removeChild(node);
 			});
 		},
 
@@ -524,7 +513,7 @@
 		 * @method getStyle
 		 * @param {String/Element} n HTML element or element id string to get style from.
 		 * @param {String} na Style name to return.
-		 * @param {String} c Computed style.
+		 * @param {Boolean} c Computed style.
 		 * @return {String} Current style or computed style value of a element.
 		 */
 		getStyle : function(n, na, c) {
@@ -796,7 +785,7 @@
 					default:
 						// IE has odd anonymous function for event attributes
 						if (n.indexOf('on') === 0 && v)
-							v = ('' + v).replace(/^function\s+\w+\(\)\s+\{\s+(.*)\s+\}$/, '$1');
+							v = tinymce._replace(/^function\s+\w+\(\)\s+\{\s+(.*)\s+\}$/, '$1', '' + v);
 				}
 			}
 
@@ -824,7 +813,6 @@
 					e = t.boxModel ? d.documentElement : d.body;
 					x = t.getStyle(t.select('html')[0], 'borderWidth'); // Remove border
 					x = (x == 'medium' || t.boxModel && !t.isIE6) && 2 || x;
-					n.top += t.win.self != t.win.top ? 2 : 0; // IE adds some strange extra cord if used in a frameset
 
 					return {x : n.left + e.scrollLeft - x, y : n.top + e.scrollTop - x};
 				}
@@ -1031,7 +1019,7 @@
 				// IE 8 has a bug where dynamically loading stylesheets would produce a 1 item remaining bug
 				// This fix seems to resolve that issue by realcing the document ones a stylesheet finishes loading
 				// It's ugly but it seems to work fine.
-				if (isIE && d.documentMode) {
+				if (isIE && d.documentMode && d.recalc) {
 					link.onload = function() {
 						d.recalc();
 						link.onload = null;
@@ -1090,8 +1078,10 @@
 					e.className = v;
 
 					// Empty class attr
-					if (!v)
+					if (!v) {
 						e.removeAttribute('class');
+						e.removeAttribute('className');
+					}
 
 					return v;
 				}
@@ -1236,7 +1226,7 @@
 						// So if we replace the p elements with divs and mark them and then replace them back to paragraphs
 						// after we use innerHTML we can fix the DOM tree
 						h = h.replace(/<p ([^>]+)>|<p>/ig, '<div $1 _mce_tmp="1">');
-						h = h.replace(/<\/p>/g, '</div>');
+						h = h.replace(/<\/p>/gi, '</div>');
 
 						// Set the new HTML with DIVs
 						set();
@@ -1305,8 +1295,8 @@
 				h = h.replace(/\s+(disabled|checked|readonly|selected)\s*=\s*[\"\']?(false|0)[\"\']?/gi, ''); // IE doesn't handle default values correct
 			}
 
-			// Fix some issues
-			h = h.replace(/<a( )([^>]+)\/>|<a\/>/gi, '<a$1$2></a>'); // Force open
+			// Force tags open, and on IE9 replace $1$2 that got left behind due to bugs in their RegExp engine
+			h = tinymce._replace(/<a( )([^>]+)\/>|<a\/>/gi, '<a$1$2></a>', h); // Force open
 
 			// Store away src and href in _mce_src and mce_href since browsers mess them up
 			if (s.keep_values) {
@@ -1362,7 +1352,7 @@
 					});
 				}
 
-				h = h.replace(/<!\[CDATA\[([\s\S]+)\]\]>/g, '<!--[CDATA[$1]]-->');
+				h = tinymce._replace(/<!\[CDATA\[([\s\S]+)\]\]>/g, '<!--[CDATA[$1]]-->', h);
 
 				// This function processes the attributes in the HTML string to force boolean
 				// attributes to the attr="attr" format and convert style, src and href to _mce_ versions
@@ -1535,27 +1525,25 @@
 		 * Inserts a element after the reference element.
 		 *
 		 * @method insertAfter
-		 * @param {Element} Element to insert after the reference.
-		 * @param {Element/String/Array} r Reference element, element id or array of elements to insert after.
+		 * @param {Element} node Element to insert after the reference.
+		 * @param {Element/String/Array} reference_node Reference element, element id or array of elements to insert after.
 		 * @return {Element/Array} Element that got added or an array with elements. 
 		 */
-		insertAfter : function(n, r) {
-			var t = this;
+		insertAfter : function(node, reference_node) {
+			reference_node = this.get(reference_node);
 
-			r = t.get(r);
+			return this.run(node, function(node) {
+				var parent, nextSibling;
 
-			return this.run(n, function(n) {
-				var p, ns;
+				parent = reference_node.parentNode;
+				nextSibling = reference_node.nextSibling;
 
-				p = r.parentNode;
-				ns = r.nextSibling;
-
-				if (ns)
-					p.insertBefore(n, ns);
+				if (nextSibling)
+					parent.insertBefore(node, nextSibling);
 				else
-					p.appendChild(n);
+					parent.appendChild(node);
 
-				return n;
+				return node;
 			});
 		},
 
@@ -1595,14 +1583,6 @@
 					each(tinymce.grep(o.childNodes), function(c) {
 						n.appendChild(c);
 					});
-				}
-
-				// Fix IE psuedo leak for elements since replacing elements if fairly common
-				// Will break parentNode for some unknown reason
-				if (t.fixPsuedoLeaks && o.nodeType === 1) {
-					o.parentNode.insertBefore(n, o);
-					t.remove(o);
-					return n;
 				}
 
 				return o.parentNode.replaceChild(n, o);
@@ -1724,7 +1704,7 @@
 
 									// Remove everything but class name
 									ov = v;
-									v = v.replace(/.*\.([a-z0-9_\-]+).*/i, '$1');
+									v = tinymce._replace(/.*\.([a-z0-9_\-]+).*/i, '$1', v);
 
 									// Filter classes
 									if (f && !(v = f(v, ov)))
@@ -1871,21 +1851,20 @@
 		 * @return {Number} Index of the specified node.
 		 */
 		nodeIndex : function(node, normalized) {
-			var idx = 0, lastNode, nodeType;
+			var idx = 0, lastNodeType, lastNode, nodeType;
 
 			if (node) {
-				for (node = node.previousSibling, lastNode = node; node; node = node.previousSibling) {
+				for (lastNodeType = node.nodeType, node = node.previousSibling, lastNode = node; node; node = node.previousSibling) {
 					nodeType = node.nodeType;
 
-					// Text nodes needs special treatment if the normalized argument is specified
+					// Normalize text nodes
 					if (normalized && nodeType == 3) {
-						// Checks if the current node has contents and that the last node is a non text node or empty
-						if (node.nodeValue.length > 0 && (lastNode.nodeType != nodeType || lastNode.nodeValue.length === 0))
-							idx++;
-					} else
-						idx++;
+						if (nodeType == lastNodeType || !node.nodeValue.length)
+							continue;
+					}
 
-					lastNode = node;
+					idx++;
+					lastNodeType = nodeType;
 				}
 			}
 
@@ -1925,8 +1904,11 @@
 
 				if (node.nodeType != 9) {
 					// Keep non whitespace text nodes
-					if (node.nodeType == 3 && node.nodeValue.length > 0)
-						return;
+					if (node.nodeType == 3 && node.nodeValue.length > 0) {
+						// If parent element isn't a block or there isn't any useful contents for example "<p>   </p>"
+						if (!t.isBlock(node.parentNode) || tinymce.trim(node.nodeValue).length > 0)
+							return;
+					}
 
 					if (node.nodeType == 1) {
 						// If the only child is a bookmark then move it up

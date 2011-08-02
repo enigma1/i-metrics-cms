@@ -1,0 +1,3 @@
+<p>The download system offers your visitors the ability to download static files from your site.</p>
+<p>On the administrator end, files can be uploaded and attached to a specific text page, sorted in a specific way. This can be achieved by duplicating entries of the same text page or collection so the downloads appear as a series of files within the same section.</p>
+Depending on the download method used, the operator may have the ability to monitor the number of downloads. The download system can be setup to show on a specific location in the web-front and can be enabled for collections of pages or individual text pages.<br />The download system supports different methods to downloads files via a direct link or a posted form.</p>

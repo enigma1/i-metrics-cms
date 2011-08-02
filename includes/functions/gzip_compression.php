@@ -7,30 +7,38 @@
 
   Copyright (c) 2003 osCommerce
 
-  Released under the GNU General Public License
+//----------------------------------------------------------------------------
+// Modifications by Asymmetrics
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
+// Author: Mark Samios
+// http://www.asymmetrics.com
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// - Added fixes in the compression code
+// - Removed zlib dependencies
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
 
   function tep_check_gzip() {
-    if (headers_sent() || connection_aborted()) {
+    if (headers_sent() || connection_aborted() || !isset($_SERVER['HTTP_ACCEPT_ENCODING']) ) {
       return false;
     }
-
     if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) return 'x-gzip';
     if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'],'gzip') !== false) return 'gzip';
     return false;
   }
 
-/* $level = compression level 0-9, 0=none, 9=max */
   function tep_gzip_output($level = 5) {
-    if ($encoding = tep_check_gzip()) {
+    if( $encoding = tep_check_gzip() ) {
       $contents = ob_get_contents();
+      $size = ob_get_length();
       ob_end_clean();
-
       header('Content-Encoding: ' . $encoding);
 
-      $size = strlen($contents);
       $crc = crc32($contents);
-
       $contents = gzcompress($contents, $level);
       $contents = substr($contents, 0, strlen($contents) - 4);
 

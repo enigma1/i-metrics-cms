@@ -25,4 +25,8 @@ define('TABLE_HEADING_HOST', 'Host');
 define('TABLE_HEADING_COOKIE', 'Cookies');
 define('TEXT_SHOPPING_CART_SUBTOTAL', 'Subtotal');
 define('TEXT_NUMBER_OF_CUSTOMERS', 'Currently there are %s customers online');
+
+define('TEXT_INFO_LISTED_IN', 'Listed In');
+define('TEXT_INFO_CHECK_IP', 'Check IP:');
+define('TEXT_INFO_NOTHING_FOUND', 'Nothing Found');
 ?>

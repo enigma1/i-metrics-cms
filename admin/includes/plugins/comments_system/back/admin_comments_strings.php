@@ -60,9 +60,9 @@ define('TEXT_INFO_NO_COMMENTS', 'There are no comments to display yet or no vali
 define('TEXT_INFO_NO_COMMENTS_FOUND', 'The database contains no comments at this time.');
 
 define('TEXT_INFO_MODE_COLLECTIONS_INCLUSIVE', 'Currently, Collections operate in <b>Inclusive Mode</b>. Only Selected/Marked entries listed here <b>will accept comments</b> from visitors.');
-define('TEXT_INFO_MODE_COLLECTIONS_EXCLUSIVE', 'Currently, Collections operate in <b>Exclusive Mode</b>. Selected/Marked entries listed here <b>will not accept comments</b> from visitors, while entries <b>not listed</b> here will accept comments from visitors');
+define('TEXT_INFO_MODE_COLLECTIONS_EXCLUSIVE', 'Currently, Collections operate in <b>Exclusive Mode</b>. Selected/Marked entries listed here <b>will not accept comments</b> from visitors, while entries <b>unmarked</b> here will accept comments from visitors');
 define('TEXT_INFO_MODE_TEXT_INCLUSIVE', 'Text pages operate in <b>Inclusive Mode</b>. Selected/Marked entries here <b>will accept comments</b> from visitors.');
-define('TEXT_INFO_MODE_TEXT_EXCLUSIVE', 'Text pages operate in <b>Exclusive Mode</b>. Selected/Marked entries here <b>will not accept comments</b> from visitors, while entries <b>not listed</b> here will accept comments from visitors');
+define('TEXT_INFO_MODE_TEXT_EXCLUSIVE', 'Text pages operate in <b>Exclusive Mode</b>. Selected/Marked entries here <b>will not accept comments</b> from visitors, while entries <b>unmarked</b> here will accept comments from visitors');
 define('TEXT_INFO_MODE_MORE', 'To reconfigure the mode of operations go to the plugin page and review the configuration setting of the comments system.');
 
 define('TEXT_INFO_GUEST', 'Guest');
@@ -71,6 +71,7 @@ define('ERROR_NOTHING_SELECTED', 'No entries selected. Use the checkboxes to mar
 define('ERROR_COMMENT_BODY_EMPTY', 'The comment message cannot be empty');
 define('ERROR_COMMENT_EMAIL_EMPTY', 'The comment email cannot be empty');
 define('ERROR_COMMENT_AUTHOR_EMPTY', 'The comment\'s poster field cannot be empty');
+define('WARNING_COMMENT_REMOVED', 'Comment was removed');
 define('SUCCESS_ENTRY_REMOVED', 'Selected Comments Removed');
 define('SUCCESS_COMMENT_UPDATED', 'Comment is updated');
 define('SUCCESS_REMOVE_ASSIGNED', 'Selected content entries removed');

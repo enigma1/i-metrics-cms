@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -19,7 +19,6 @@
 */
   require('includes/application_top.php');
 
-  $action = (isset($_GET['action']) ? $g_db->prepare_input($_GET['action']) : '');
   $gtID = (isset($_GET['gtID']) ? (int)$_GET['gtID'] : '');
 
   if( $gtID > 0 ) {
@@ -42,17 +41,23 @@
   );
 
   if( !empty($_POST) ) {
-    $g_db->query("truncate table " . TABLE_SEO_CACHE . "");
+    $g_db->query("truncate table " . TABLE_SEO_CACHE);
   }
+  $template_content = '';
 
   switch( $action ) {
+    case 'change_wp':
+      $g_wp_ifc = (isset($_GET['wp']) && $_GET['wp'] == 1)?true:false;
+      $messageStack->add_session(WARNING_WP_CHANGED, 'warning');
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'wp') . 'action=new_generic_text'));
+      break;
     case 'setflag':
       tep_set_generic_text_status($gtID, $_GET['flag']);
-      tep_redirect(tep_href_link($g_script, tep_get_all_get_params(array('action', 'flag'))));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'flag')));
       break;
     case 'setsub':
       tep_set_generic_sub_status($gtID, $_GET['sub']);
-      tep_redirect(tep_href_link($g_script, tep_get_all_get_params(array('action', 'sub'))));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'sub')));
       break;
     case 'delete_generic_text_confirm':
       if( isset($_POST['gtext_id']) && !empty($_POST['gtext_id']) ) {
@@ -63,7 +68,7 @@
         $g_db->query("delete from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$gtext_id . "'");
         $messageStack->add_session(WARNING_TEXT_PAGE_REMOVED, 'warning');
       }
-      tep_redirect(tep_href_link($g_script));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') ));
       break;
     case 'insert_generic_text':
     case 'update_generic_text':
@@ -78,6 +83,9 @@
         break;
       }
 
+      require_once(DIR_FS_CLASSES . 'seo_url.php');
+      $cLink = new seoURL;
+
       $sql_data_array = array(
         'gtext_title' => $g_db->prepare_input($_POST['gtext_title']),
         'gtext_description' => $g_db->prepare_input($_POST['gtext_description']),
@@ -90,7 +98,7 @@
         $gtext_id = $gtID;
         $messageStack->add_session(SUCCESS_TEXT_PAGE_UPDATED, 'success');
       } elseif($action == 'insert_generic_text') {
-        $g_db->perform(TABLE_GTEXT, $sql_data_array);
+        $result = $g_db->perform(TABLE_GTEXT, $sql_data_array);
         $gtext_id = $g_db->insert_id();
         $messageStack->add_session(SUCCESS_TEXT_PAGE_CREATED, 'success');
       } else {
@@ -105,9 +113,7 @@
         $seo_name = $_POST['gtext_title'];
         $seo_clear = true;
       }
-      require_once(DIR_WS_CLASSES . 'seo_zones.php');
-      $cSEO = new seo_zones();
-      $seo_name = $cSEO->create_safe_string($seo_name);
+      $seo_name = $cLink->create_safe_string($seo_name);
       $seog_array = array('gtext_id' => (int)$gtext_id, 'seo_name' => $g_db->prepare_input($seo_name) );
       //-MS- SEO-G Added EOM
 
@@ -116,10 +122,10 @@
       $metag_keywords_array = $_POST['meta_keywords'];
       $metag_text_array = $_POST['meta_text'];
       $metag_array = array(
-                           'meta_title' => (tep_not_null($metag_title_array) ? $g_db->prepare_input($metag_title_array) : $g_db->prepare_input($_POST['gtext_title'])),
-                           'meta_keywords' => (tep_not_null($metag_keywords_array) ? $g_db->prepare_input($metag_keywords_array) : $g_db->prepare_input($_POST['gtext_title'])),
-                           'meta_text' => (tep_not_null($metag_text_array) ? $g_db->prepare_input($metag_text_array) : $g_db->prepare_input($_POST['gtext_title'])),
-                          );
+        'meta_title' => (tep_not_null($metag_title_array) ? $g_db->prepare_input($metag_title_array) : $g_db->prepare_input($_POST['gtext_title'])),
+        'meta_keywords' => (tep_not_null($metag_keywords_array) ? $g_db->prepare_input($metag_keywords_array) : $g_db->prepare_input($_POST['gtext_title'])),
+        'meta_text' => (tep_not_null($metag_text_array) ? $g_db->prepare_input($metag_text_array) : $g_db->prepare_input($_POST['gtext_title'])),
+      );
       //-MS- META-G Added EOM
 
       $date_added = $g_db->prepare_input($_POST['date_added']);
@@ -140,8 +146,8 @@
 
           //-MS- META-G Added
           $insert_sql_data = array(
-                                   'gtext_id' => (int)$gtext_id,
-                                  );
+            'gtext_id' => (int)$gtext_id,
+          );
 
           $metag_array = array_merge($metag_array, $insert_sql_data);
           $g_db->perform(TABLE_META_GTEXT, $metag_array);
@@ -161,6 +167,11 @@
             unset($seog_array['gtext_id']);
             $g_db->perform(TABLE_SEO_TO_GTEXT, $seog_array, 'update', "gtext_id = '" . (int)$gtext_id . "'");
           }
+          if( isset($_POST['seo_name_force']) ) {
+            if( !$cLink->generate_text_link($gtext_id) ) {
+              $messageStack->add_session(WARNING_SEO_FRIENDLY_FAILED, 'warning');
+            }
+          }
           //-MS- SEO-G Added EOM
 
           //-MS- META-G Added
@@ -177,108 +188,61 @@
           $g_db->query("delete from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$gtext_id . "'");
         }
       }
-      tep_redirect(tep_href_link($g_script, 'gtID=' . $gtext_id));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $gtext_id));
       break;
     case 'copy_to_confirm':
       if( isset($_POST['gtext_id']) && tep_not_null($_POST['gtext_id']) ) {
         $gtext_id = $g_db->prepare_input($_POST['gtext_id']);
-        if( $_POST['copy_as'] == 'duplicate') {
-          $generic_text_query = $g_db->query("select gtext_title, gtext_description from " . TABLE_GTEXT . " where gtext_id = '" . (int)$gtext_id . "'");
-          $generic_text = $g_db->fetch_array($generic_text_query);
-          if( isset($_POST['gtext_title']) && !empty($_POST['gtext_title']) ) {
-            $generic_text['gtext_title'] = $g_db->filter($_POST['gtext_title']);
-          }
-          $sql_data_array = array(
-                                  'gtext_title' => $generic_text['gtext_title'],
-                                  'gtext_description' => $generic_text['gtext_description'],
-                                  'status' => 0,
-                                 );
-
-          $g_db->perform(TABLE_GTEXT, $sql_data_array);
-          $gtext_id = $g_db->insert_id();
+        $generic_text_query = $g_db->query("select gtext_title, gtext_description from " . TABLE_GTEXT . " where gtext_id = '" . (int)$gtext_id . "'");
+        $generic_text = $g_db->fetch_array($generic_text_query);
+        if( isset($_POST['gtext_title']) && !empty($_POST['gtext_title']) ) {
+          $generic_text['gtext_title'] = $g_db->filter($_POST['gtext_title']);
         }
+        $sql_data_array = array(
+          'gtext_title' => $generic_text['gtext_title'],
+          'gtext_description' => $generic_text['gtext_description'],
+          'status' => 0,
+        );
+
+        $g_db->perform(TABLE_GTEXT, $sql_data_array);
+        $gtext_id = $g_db->insert_id();
       }
 
-      tep_redirect(tep_href_link($g_script, 'gtID=' . $gtext_id));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $gtext_id));
       break;
 
     case 'generic_text_preview':
+      break;
+    case 'template_upload':
+      $cFile = new upload('template_file');
+      if( !$cFile->parse() || !tep_read_contents($cFile->tmp_filename, $template_content) ) {
+        $messageStack->add_session(ERROR_TEMPLATE_FILE_READ);
+        tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action') . 'action=new_generic_text'));
+      }
+      $messageStack->add(SUCCESS_TEXT_PAGE_TEMPLATE, 'success');
+      $action = 'new_generic_text';
+      extract(tep_load('defs'));
+      $cDefs->action = 'new_generic_text';
       break;
     default:
       break;
   }
 
-  $g_media[] = '<link rel="stylesheet" type="text/css" href="includes/javascript/jquery/themes/smoothness/ui.all.css">';
-  $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jquery/jquery-1.3.2.js"></script>';
-  $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jquery/jquery.ajaxq.js"></script>';
-  $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jquery/jquery.form.js"></script>';
-  $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jquery/ui/jquery-ui-1.7.2.custom.js"></script>';
-  $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/zones_control.js"></script>';
-  if ($action == 'new_generic_text' || $action == 'update_generic_text') {
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/tiny_mce/tiny_mce.js"></script>';
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/tiny_mce/config.js"></script>';
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/image_control.js"></script>';
-    $g_media[] = '<link rel="stylesheet" type="text/css" href="includes/javascript/jscalendar/calendar-win2k-1.css">';
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jscalendar/calendar.js"></script>';
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jscalendar/lang/calendar-en.js"></script>';
-    $g_media[] = '<script language="javascript" type="text/javascript" src="includes/javascript/jscalendar/calendar-setup.js"></script>';
-  }
-?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php
   if ($action == 'new_generic_text' || $action == 'update_generic_text') {
     $set_calendar = '1';
-?>
-<script language="javascript" type="text/javascript">
-$(document).ready(function(){
-  var jqWrap = tinymce_ifc;
-  // Initialize JS variables with PHP parameters to be passed to the js file
-  jqWrap.TinyMCE = '<?php echo $g_relpath . DIR_WS_INCLUDES . 'javascript/tiny_mce/tiny_mce.js'; ?>';
-  // Point the basefront relative to the admin server to have absolute paths where applicable
-  jqWrap.baseFront = '<?php echo $g_server . DIR_WS_CATALOG; ?>';
-  jqWrap.cssFront = '<?php echo $g_crelpath . 'stylesheet.css'; ?>';
-  jqWrap.baseURL = '<?php echo tep_href_link(FILENAME_JS_MODULES); ?>';
-  jqWrap.areas = 'gtext_description';
-  jqWrap.launch();
-
-  var jqWrap = image_control;
-  jqWrap.editObject = tinyMCE;
-  jqWrap.baseFront = '<?php echo $g_server . DIR_WS_CATALOG; ?>';
-  jqWrap.baseURL = '<?php echo tep_href_link(FILENAME_JS_MODULES); ?>';
-  jqWrap.launch();
-
-  var jqWrap = zones_control;
-  jqWrap.baseURL = '<?php echo tep_href_link(FILENAME_JS_MODULES); ?>';
-  jqWrap.launch();
-});
-</script>
-<script language="javascript" type="text/javascript">
-  function init_calendar() {
-Calendar.setup( { inputField : "date_added", ifFormat : "%m/%d/%Y", button : "start_trigger" } );
-  }
-</script>
-<?php
-  } elseif( empty($action) ) {
-?>
-<script language="javascript" type="text/javascript">
-$(document).ready(function(){
-  var jqWrap = zones_control;
-  jqWrap.baseURL = '<?php echo tep_href_link(FILENAME_JS_MODULES); ?>';
-  jqWrap.launch();
-});
-</script>
-<?php
   }
 ?>
+<?php require(DIR_FS_INCLUDES . 'objects/html_start_sub1.php'); ?>
+<?php require(DIR_FS_INCLUDES . 'objects/html_start_sub2.php'); ?>
 <?php
-  $set_focus = true;
-  require('includes/objects/html_start_sub2.php'); 
-
+  $cPlug = $g_plugins->get();
   if ($action == 'new_generic_text') {
+    $help_title = $cPlug->get_system_help_title('generic_text_edit');
+
     $parameters = array(
       'gtext_id' => '',
       'gtext_title' => '',
-      'gtext_description' => '',
+      'gtext_description' => $template_content,
       'date_added' => '',
       'sub' => '',
       'status' => '',
@@ -290,6 +254,7 @@ $(document).ready(function(){
     if( !empty($gtID) ) {
       $generic_text_query = $g_db->query("select gtext_id, gtext_title, gtext_description, status, date_added, sub from " . TABLE_GTEXT . " where gtext_id = '" . (int)$gtID . "'");
       $generic_text = $g_db->fetch_array($generic_text_query);
+
       //-MS- SEO-G Added
       $seog_query = $g_db->query("select seo_name from " . TABLE_SEO_TO_GTEXT . " where gtext_id = '" . (int)$gtID . "'");
       if( !$g_db->num_rows($seog_query) ) {
@@ -310,11 +275,13 @@ $(document).ready(function(){
       $generic_text = array_merge($generic_text, $metag_array);
       //-MS- META-G Added EOM
 
+      $generic_text['gtext_description'] .= $template_content;
       $gtInfo->objectInfo($generic_text, false);
 
       // Navigation History
       $g_plugins->invoke('add_current_page', $gtInfo->gtext_title, tep_get_all_get_params());
     }
+
     if( empty($gtInfo->status)) $gtInfo->status = '1';
     switch ($gtInfo->status) {
       case '0': $in_status = false; $out_status = true; break;
@@ -329,89 +296,66 @@ $(document).ready(function(){
     }
 ?>
         <div class="maincell wider">
-          <div class="comboHeading">
-            <div class="pageHeading" style="float: left;"><h1><?php echo HEADING_TITLE; ?></h1></div>
+          <div class="comboHeadingTop">
+            <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=generic_text_edit') . '" title="' . $help_title . '" class="heading_help" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', $help_title) . '</a>'; ?></div>
+            <div class="floater"><h1><?php echo HEADING_TITLE; ?></h1></div>
           </div>
 <?php
+    $form_action = $template_action = tep_get_all_get_params('action','gtID');
     if( !empty($gtID) ) {
-      $form_action = 'gtID=' . $gtID . '&action=update_generic_text'; 
+      $form_action .= 'gtID=' . $gtID . '&action=update_generic_text'; 
+      $template_action .= 'gtID=' . $gtID . '&action=template_upload';
     } else {
-      $form_action = 'action=insert_generic_text'; 
+      $form_action .= 'action=insert_generic_text'; 
+      $template_action .= 'action=template_upload';
     }
 ?>
-          <div class="formArea"><?php echo tep_draw_form('form_generic_text', $g_script, $form_action, 'post', 'enctype="multipart/form-data"'); ?><table border="0" width="100%" cellspacing="0" cellpadding="2">
-            <tr>
-              <td><div class="listArea" style="padding-bottom: 8px;"><table border="0" cellspacing="0" cellpadding="2">
-                <tr>
-                  <th colspan="4"><?php echo TEXT_GENERIC_STATUS; ?></th>
-                </tr>
-                <tr>
-                  <td><?php echo tep_draw_radio_field('status', '0', $out_status); ?></td>
-                  <td><?php echo TEXT_GENERIC_NOT_AVAILABLE; ?></td>
-                  <td><?php echo tep_draw_radio_field('status', '1', $in_status); ?></td>
-                  <td><?php echo TEXT_GENERIC_AVAILABLE; ?></td>
-                </tr>
-                <tr>
-                  <th colspan="4"><?php echo TEXT_GENERIC_SUB; ?></th>
-                </tr>
-                <tr>
-                  <td><?php echo tep_draw_radio_field('sub', '0', $out_sub); ?></td>
-                  <td><?php echo TEXT_GENERIC_NOT_AVAILABLE; ?></td>
-                  <td><?php echo tep_draw_radio_field('sub', '1', $in_sub); ?></td>
-                  <td><?php echo TEXT_GENERIC_AVAILABLE; ?></td>
-                </tr>
-              </table></div></td>
-            </tr>
-            <tr>
-              <td><table border="0" cellspacing="0" cellpadding="2">
-                <tr>
-                  <td><?php echo TEXT_DATE_ADDED . '&nbsp;' . ((isset($gtInfo->date_added) && tep_mysql_to_time_stamp($gtInfo->date_added) > 0 )?tep_date_short($gtInfo->date_added):''); ?></td>
-                  <td><?php echo tep_draw_input_field('date_added', (isset($gtInfo->date_added) && tep_mysql_to_time_stamp($gtInfo->date_added) > 0 )?tep_date_short($gtInfo->date_added):'', 'size="12" maxlength="12" id="date_added"'); ?></td>
-                  <td><?php echo '<a href="#">' . tep_image(DIR_WS_ICONS . 'scheduled.gif', 'Date Entry Added', '','','id="start_trigger"') . '</a>'; ?></td>
-                </tr>
-              </table></td>
-            </tr>
-            <tr>
-              <td><table border="0" width="100%" cellspacing="0" cellpadding="2">
-                <tr>
-                  <th><?php echo TEXT_GENERIC_NAME; ?></th>
-                </tr>
-                <tr>
-                  <td class="smallText"><?php echo tep_draw_input_field('gtext_title', (isset($gtext_title)?$gtext_title:$gtInfo->gtext_title), 'size="70"'); ?></td>
-                </tr>
-              </table></td>
-            </tr>
-            <tr>
-              <td><table width="100%" border="0" cellspacing="0" cellpadding="2">
-                <tr>
-                  <th><?php echo TEXT_GENERIC_DESCRIPTION; ?></th>
-                </tr>
-                <tr>
-                  <td><?php echo tep_draw_textarea_field('gtext_description', 'soft', '70', '15', (isset($gtext_description)?$gtext_description:$gtInfo->gtext_description)); ?></td>
-                </tr>
-              </table></td>
-            </tr>
-            <tr>
-              <td><table border="0" cellspacing="0" cellpadding="2">
-                <tr>
-                  <td><b><?php echo TEXT_INFO_INSERT_IMAGES . ':'; ?></b></td>
-                  <td><?php echo '<a href="#" id="image_selection">' . tep_image(DIR_WS_ICONS . 'icon_images_head.png', TEXT_INFO_INSERT_IMAGES) . '</a>'; ?></td>
-                  <td><?php echo tep_draw_separator('pixel_trans.gif', '30', '1'); ?></td>
-                  <td><b><?php echo TEXT_INFO_UPLOAD_IMAGES . ':'; ?></b></td>
-                  <td><?php echo '<a href="#" id="image_upload">' . tep_image(DIR_WS_ICONS . 'icon_upload_head.png', TEXT_INFO_UPLOAD_IMAGES) . '</a>'; ?></td>
-                </tr>
-              </table></td>
-            </tr>
+          <div class="formArea"><?php echo tep_draw_form('form_template_text', $g_script, $template_action, 'post', 'enctype="multipart/form-data"'); ?><fieldset><legend><?php echo HEADING_TITLE_UPLOAD; ?></legend>
+            <div class="bounder infile vmargin">
+              <label class="floater"><?php echo TEXT_INFO_TEMPLATE_FILE; ?></label>
+              <div class="floater lspacer"><?php echo tep_draw_file_field('template_file'); ?></div>
+            </div>
+            <div class="formButtons"><?php echo tep_image_submit('button_upload.gif', IMAGE_UPLOAD); ?></div>
+          </fieldset></form></div>
+          <div class="formArea"><?php echo tep_draw_form('form_generic_text', $g_script, $form_action, 'post', 'enctype="multipart/form-data"'); ?>
+            <div class="mainInput"><fieldset><legend><?php echo HEADING_TEXT_EDIT; ?></legend>
+              <div><label for="gtext_title"><?php echo TEXT_GENERIC_NAME; ?></label></div>
+              <div class="rpad"><?php echo tep_draw_input_field('gtext_title', (isset($gtext_title)?$gtext_title:$gtInfo->gtext_title), 'id="gtext_title"'); ?></div>
+              <div class="tmargin"><label class="floater"><?php echo TEXT_GENERIC_DESCRIPTION; ?></label></div>
+              <div class="floatend">
 <?php
-    if( !empty($gtID) ) {
+    if( $g_session->register('g_wp_ifc') ) {
+      echo '<a class="dataTableContentRed" href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'wp') . 'action=change_wp&wp=0') . '">' . TEXT_INFO_DISABLE_WP . '</a>';
+    } else {
+      echo '<a class="dataTableContentRed" href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'wp') . 'action=change_wp&wp=1') . '">' . TEXT_INFO_ENABLE_WP . '</a>';
+    }
 ?>
-            <tr class="dataTableRowGreenLite">
-              <td><table border="0" cellspacing="0" cellpadding="2">
-                <tr>
-                  <th><?php echo TEXT_GENERIC_ZONES; ?></td>
-                </tr>
-                <tr>
-                  <td><div class="target_abstract_zones">
+              </div>
+              <div class="bounder"><?php echo tep_draw_textarea_field('gtext_description', $gtInfo->gtext_description, '', '15'); ?></div>
+              <div class="formButtons inimg tmargin">
+                <label class="floater"><?php echo TEXT_INFO_INSERT_IMAGES . ':'; ?></label>
+                <div class="floater rspacer"><?php echo '<a href="#" id="image_selection">' . tep_image(DIR_WS_ICONS . 'icon_images_head.png', TEXT_INFO_INSERT_IMAGES) . '</a>'; ?></div>
+                <label class="floater"><?php echo TEXT_INFO_UPLOAD_IMAGES . ':'; ?></label>
+                <div class="floater"><?php echo '<a href="#" id="image_upload">' . tep_image(DIR_WS_ICONS . 'icon_upload_head.png', TEXT_INFO_UPLOAD_IMAGES) . '</a>'; ?></div>
+<?php
+    $templates_query_raw = "select template_id as id, template_title as text from " . TABLE_TEMPLATES . " where group_id = '" . TEMPLATE_CONTENT_GROUP . "' order by template_title";
+    $templates_array = $g_db->query_to_array($templates_query_raw);
+    if( count($templates_array) ) {
+?>
+                <div class="floatend">
+<?php
+      echo '<label for="template_list" class="floater">' . TEXT_INFO_TEMPLATES . '</label>';
+      echo '<div class="floater hpad" style="margin-top: 4px;">' . tep_draw_pull_down_menu('template_list', $templates_array, '', 'id="template_list" style="width: auto"') . '</div>';
+      echo '<div class="floater"><a href="' . tep_href_link($g_script, tep_get_all_get_params('action') . 'action=template') . '" id="set_template">' . tep_image(DIR_WS_ICONS . 'icon_arrow_up.png', TEXT_INFO_INSERT_TEMPLATE) . '</a></div>';
+      echo '<div class="floater rspacer"><a href="' . tep_href_link($g_script, tep_get_all_get_params('action') . 'action=template') . '" id="view_template" target="_blank" title="' . TEXT_INFO_VIEW_TEMPLATE . '">' . tep_image(DIR_WS_ICONS . 'icon_question.png', TEXT_INFO_VIEW_TEMPLATE) . '</a></div>';
+?>
+                </div>
+<?php
+    }
+?>
+              </div>
+              <div class="cleaner tmargin"><label><?php echo TEXT_GENERIC_ZONES; ?></label></div>
+              <div class="target_abstract_zones">
 <?php
       $zones_query = $g_db->query("select az.abstract_zone_id, az.abstract_zone_name from " . TABLE_GTEXT_TO_DISPLAY . " g2d left join " . TABLE_ABSTRACT_ZONES . " az on (g2d.abstract_zone_id=az.abstract_zone_id) left join " . TABLE_ABSTRACT_TYPES . " at on (at.abstract_types_id = az.abstract_types_id) where at.abstract_types_class='generic_zones' and g2d.gtext_id = '" . (int)$gtID . "'");
       $zones_link_array = array();
@@ -421,40 +365,50 @@ $(document).ready(function(){
           $zones_link_array[] = '<a href="' . tep_href_link(FILENAME_ABSTRACT_ZONES, 'zID=' . $zones_array['abstract_zone_id'] . '&action=list') . '" title="' . $zones_array['abstract_zone_name'] . '" class="list_abstract_zones" attr="' . $generic_text['gtext_id'] . '">' . $zones_array['abstract_zone_name'] . '</a>';
         }
       } else {
-        $zones_link_array[] = '<a href="' . tep_href_link(FILENAME_ABSTRACT_ZONES) . '" class="list_abstract_zones" attr="' . $generic_text['gtext_id'] . '"><b style="color: #FF0000;">' . TEXT_INFO_ZONES_NOT_ASSIGNED . '</b></a>';
+        $zones_link_array[] = '<a href="' . tep_href_link(FILENAME_ABSTRACT_ZONES) . '" class="list_abstract_zones" attr="' . $gtInfo->gtext_id . '"><b style="color: #FF0000;">' . TEXT_INFO_ZONES_NOT_ASSIGNED . '</b></a>';
       }
       echo implode('<br />', $zones_link_array);
 ?>
-                  </div></td>
-                </tr>
-              </table></td>
-            </tr>
+              </div>
+              <div class="formButtons tmargin">
 <?php
+    $buttons = array();
+    if( !empty($gtID) ) {
+      $buttons[] = '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'gtID') . 'gtID=' . $gtID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>';
+      $buttons[] = tep_image_submit('button_update.gif', IMAGE_UPDATE);
+    } else {
+      $buttons[] = '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'gtID')) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>';
+      $buttons[] = tep_image_submit('button_insert.gif', IMAGE_INSERT);
     }
-//-MS- SEO-G Added
+    echo implode('', $buttons);
 ?>
-            <tr>
-              <td><div class="listArea"><table width="100%" border="0" cellspacing="0" cellpadding="2">
-                <tr bgcolor="#ffffeb">
-                  <td><table width="100%" border="0" cellspacing="0" cellpadding="2">
-                    <tr>
-                      <td class="smallText"><?php echo '<b>' . TEXT_SEO_SECTION . '</b>'; ?></td>
-                    </tr>
-                    <tr>
-                      <td><?php echo tep_draw_separator('pixel_trans.gif', '1', '4'); ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo TEXT_SEO_NAME; ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo tep_draw_input_field('seo_name', $gtInfo->seo_name); ?></td>
-                    </tr>
-                    <tr>
-                      <td><?php echo tep_draw_separator('pixel_trans.gif', '1', '4'); ?></td>
-                    </tr>
+              </div>
+            </fieldset></div>
+            <div class="bounder sectionAlt"><fieldset><legend><?php echo HEADING_TEXT_FIELDS; ?></legend>
+              <div><?php echo TEXT_GENERIC_STATUS; ?></div>
+              <div>
+                <?php echo tep_draw_radio_field('status', '0', $out_status, 'id="out_status"'); ?><label for="out_status"><?php echo TEXT_GENERIC_NOT_AVAILABLE; ?></label>
+                <?php echo tep_draw_radio_field('status', '1', $in_status, 'id="in_status"'); ?><label for="in_status"><?php echo TEXT_GENERIC_AVAILABLE; ?></label>
+              </div>
+              <div class="tmargin"><?php echo TEXT_GENERIC_SUB; ?></div>
+              <div>
+                <?php echo tep_draw_radio_field('sub', '0', $out_sub, 'id="out_sub"'); ?><label for="out_sub"><?php echo TEXT_GENERIC_NOT_AVAILABLE; ?></label>
+                <?php echo tep_draw_radio_field('sub', '1', $in_sub, 'id="in_sub"'); ?><label for="in_sub"><?php echo TEXT_GENERIC_AVAILABLE; ?></label>
+              </div>
+              <div class="tmargin"><?php echo TEXT_DATE_ADDED; ?></div>
+              <label for="date_added_label"><?php echo ((isset($gtInfo->date_added) && tep_mysql_to_time_stamp($gtInfo->date_added) > 0 )?tep_date_short($gtInfo->date_added):''); ?></label>
+<?php 
+    echo tep_draw_input_field('date_added', (isset($gtInfo->date_added) && tep_mysql_to_time_stamp($gtInfo->date_added) > 0 )?tep_date_short($gtInfo->date_added):'', 'size="12" maxlength="12" class="date_added" id="date_added_label"'); ?>
 <?php
-//-MS- SEO-G Added EOM
+/*
+              <?php echo '<a href="#">' . tep_image(DIR_WS_ICONS . 'scheduled.gif', 'Date Entry Added', '','','id="start_trigger" style="vertical-align:middle;"') . '</a>'; ?>
+*/
 ?>
+            </fieldset></div>
+            <div class="bounder sectionLight"><fieldset><legend><?php echo HEADING_SEO_FIELDS; ?></legend>
+              <div><label for="seo_name"><?php echo TEXT_SEO_NAME; ?></label></div>
+              <div class="rpad"><?php echo tep_draw_input_field('seo_name', $gtInfo->seo_name, 'class="wider" id="seo_name"'); ?></div>
+              <div class="vlinepad"><?php echo tep_draw_checkbox_field('seo_name_force', 1, false, 'id="seo_name_force"'); ?><label for="seo_name_force" class="lspacer"><?php echo TEXT_SEO_NAME_FORCE; ?></label></div>
 <?php
 //-MS- META-G Added
       if( !isset($metag_title_array) ) {
@@ -474,52 +428,14 @@ $(document).ready(function(){
         $metag_text = stripslashes($metag_keywords_array);
       }
 ?>
-                    <tr>
-                      <td class="smallText"><?php echo TEXT_META_TITLE; ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo tep_draw_input_field('meta_title', $metag_title, 'size="62"'); ?></td>
-                    </tr>
-                    <tr>
-                      <td><?php echo tep_draw_separator('pixel_trans.gif', '1', '4'); ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo TEXT_META_KEYWORDS; ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo tep_draw_textarea_field('meta_keywords', 'soft', '70', '2', $metag_keywords); ?></td>
-                    </tr>
-                    <tr>
-                      <td><?php echo tep_draw_separator('pixel_trans.gif', '1', '4'); ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo TEXT_META_TEXT; ?></td>
-                    </tr>
-                    <tr>
-                      <td class="smallText"><?php echo tep_draw_textarea_field('meta_text', 'soft', '70', '2', $metag_text); ?></td>
-                    </tr>
-                  </table></td>
-                </tr>
-              </table></div></td>
-            </tr>
-<?php
-//-MS- META-G Added EOM
-?>
-            <tr>
-              <td class="formButtons">
-<?php 
-    if( !empty($gtID) ) {
-      $submit = tep_image_submit('button_update.gif', IMAGE_UPDATE);
-      $cancel = '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action', 'gtID')) . 'gtID=' . $gtID) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>';
-    } else {
-      $submit = tep_image_submit('button_insert.gif', IMAGE_INSERT);
-      $cancel = '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action', 'gtID'))) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>';
-    }
-    echo $cancel . '&nbsp;' . $submit;
-?>
-              </td>
-            </tr>
-          </table></form></div>
+              <div class="tmargin"><label for="meta_title"><?php echo TEXT_META_TITLE; ?></label></div>
+              <div class="rpad"><?php echo tep_draw_input_field('meta_title', $metag_title, 'class="wider" id="meta_title"'); ?></div>
+              <div class="tmargin"><label for="meta_keywords"><?php echo TEXT_META_KEYWORDS; ?></label></div>
+              <div class="rpad"><?php echo tep_draw_textarea_field('meta_keywords', $metag_keywords, '', '4', 'id="meta_keywords"'); ?></div>
+              <div class="tmargin"><label for="meta_text"><?php echo TEXT_META_TEXT; ?></label></div>
+              <div class="rpad"><?php echo tep_draw_textarea_field('meta_text', $metag_text, '', '4', 'id="meta_text"'); ?></div>
+            </fieldset></div>
+          </form></div>
         </div>
 <?php
   } elseif( !empty($gtID) && $action == 'generic_text_preview' ) {
@@ -528,28 +444,31 @@ $(document).ready(function(){
     $gtInfo = new objectInfo($generic_text, false);
 ?>
         <div class="maincell wider">
-          <div class="comboHeading">
-            <div class="pageHeading"><h1><?php  echo $gtInfo->gtext_title; ?></h1></div>
+          <div class="comboHeadingTop">
+            <div><h1><?php  echo $gtInfo->gtext_title; ?></h1></div>
           </div>
           <div><?php echo $gtInfo->gtext_description; ?></div>
         </div>
 <?php
   } else {
+    $help_title = $cPlug->get_system_help_title('generic_text_list');
+
     $search = '';
     if( isset($_GET['search']) && !empty($_GET['search']) ) {
       $search = $g_db->prepare_input($_GET['search']);
     }
 ?>
         <div class="maincell">
-          <div class="comboHeading">
-            <div class="pageHeading"><h1><?php echo HEADING_TITLE; ?></h1></div>
+          <div class="comboHeadingTop">
+            <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help&ajax=generic_text_list') . '" title="' . $help_title . '" class="heading_help" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', $help_title) . '</a>'; ?></div>
+            <div class="floater"><h1><?php echo HEADING_TITLE; ?></h1></div>
           </div>
           <div class="comboHeading">
-            <div class="smallText" style="float: left;">
+            <div class="floater textadj rspacer">
 <?php
-    echo tep_draw_form('search', $g_script, '', 'get');
-    echo TEXT_TITLE_SEARCH . '&nbsp;' . tep_draw_input_field('search');
-    $params_string = tep_get_all_get_params(array('action', 'search', 'page'));
+    echo tep_draw_form('search', $g_script, '', 'get', 'id="gtext_search"');
+    echo '<label for="text_search">' . TEXT_TITLE_SEARCH . '</label>' . tep_draw_input_field('search', '', 'size="40" id="text_search"');
+    $params_string = tep_get_all_get_params('action', 'search', 'page') . 'action=search';
     $params_array = tep_get_string_parameters($params_string);
     foreach($params_array as $key => $value ) {
       echo tep_draw_hidden_field($key, $value);
@@ -557,12 +476,12 @@ $(document).ready(function(){
     echo '</form>' . "\n";
 ?>
             </div>
-            <div class="smallText" style="float: left; padding-left: 20px;">
+            <div class="floater textadj">
 <?php
     echo tep_draw_form("filter", $g_script, '', 'get'); 
-    echo TEXT_TITLE_FILTER . '&nbsp;' . tep_draw_pull_down_menu('filter_id', $filter_array, $filter_id, 'onchange="this.form.submit()"');
+    echo '<label for="text_filter">' . TEXT_TITLE_FILTER . '</label>' . tep_draw_pull_down_menu('filter_id', $filter_array, $filter_id, 'class="change_submit" id="text_filter"');
 
-    $params_string = tep_get_all_get_params(array('action', 'search', 'filter_id', 'page'));
+    $params_string = tep_get_all_get_params('action', 'search', 'filter_id', 'page');
     $params_array = tep_get_string_parameters($params_string);
     foreach($params_array as $key => $value ) {
       echo tep_draw_hidden_field($key, $value);
@@ -574,9 +493,9 @@ $(document).ready(function(){
     echo '</form>' . "\n";
 ?>
             </div>
-            <div style="float: right;"><?php if (!isset($_GET['search'])) echo '<a href="' . tep_href_link($g_script, 'action=new_generic_text') . '">' . tep_image_button('button_new.gif', IMAGE_NEW_GENERIC_TEXT) . '</a>'; ?></div>
+            <div class="floatend"><?php if (!isset($_GET['search'])) echo '<a href="' . tep_href_link($g_script, 'action=new_generic_text') . '">' . tep_image_button('button_new.gif', IMAGE_NEW_GENERIC_TEXT) . '</a>'; ?></div>
           </div>
-          <div class="bounder">
+          <div class="comboHeading">
             <div class="dataTableRowAlt3 colorblock floater"><?php echo TEXT_INFO_FRONT_WHOLE; ?></div>
             <div class="dataTableRowAlt4 colorblock floater"><?php echo TEXT_INFO_FRONT_INTERNAL; ?></div>
             <div class="dataTableRow colorblock floater"><?php echo TEXT_INFO_FRONT_DISABLED; ?></div>
@@ -648,19 +567,19 @@ $(document).ready(function(){
     $generic_text_split = new splitPageResults($generic_text_query_raw, GTEXT_PAGE_SPLIT);
     $generic_text_query = $g_db->query($generic_text_split->sql_query);
 ?>
-          <div class="splitLine">
-            <div style="float: left;"><?php echo $generic_text_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
-            <div style="float: right;"><?php echo $generic_text_split->display_links(tep_get_all_get_params(array('page'))); ?></div>
+          <div class="comboHeading">
+            <div class="floater"><?php echo $generic_text_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
+            <div class="floatend"><?php echo $generic_text_split->display_links(tep_get_all_get_params('page')); ?></div>
           </div>
-          <div class="listArea"><table class="tabledata" cellspacing="1">
-              <tr class="dataTableHeadingRow">
-                <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action', 's_sort_id')) . 's_sort_id=' . $sortID) . '">' . TABLE_HEADING_ID . '</a>'; ?></th>
-                <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action', 's_sort_id')) . 's_sort_id=' . $sortTitle) . '">' . TABLE_HEADING_TITLE . '</a>'; ?></th>
-                <th><?php echo TABLE_HEADING_PAGE_GROUPS; ?></th>
-                <th class="calign"><?php echo TABLE_HEADING_STATUS; ?></th>
-                <th class="calign"><?php echo TABLE_HEADING_SUB; ?></th>
-                <th class="calign"><?php echo TABLE_HEADING_ACTION; ?></th>
-              </tr>
+          <div class="formArea"><table class="tabledata" id="gtext_table">
+            <tr class="dataTableHeadingRow">
+              <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 's_sort_id') . 's_sort_id=' . $sortID) . '">' . TABLE_HEADING_ID . '</a>'; ?></th>
+              <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 's_sort_id') . 's_sort_id=' . $sortTitle) . '">' . TABLE_HEADING_TITLE . '</a>'; ?></th>
+              <th><?php echo TABLE_HEADING_PAGE_GROUPS; ?></th>
+              <th class="calign"><?php echo TABLE_HEADING_STATUS; ?></th>
+              <th class="calign"><?php echo TABLE_HEADING_SUB; ?></th>
+              <th class="calign"><?php echo TABLE_HEADING_ACTION; ?></th>
+            </tr>
 <?php
     while( $generic_text = $g_db->fetch_array($generic_text_query) ) {
       $row_class = 'dataTableRow';
@@ -673,21 +592,21 @@ $(document).ready(function(){
       if( !empty($gtID) && $gtID == $generic_text['gtext_id'] ) {
         $gtInfo = new objectInfo($generic_text);
       }
-
       $generic_count++;
       $rows++;
 
+      $sel_link = tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text');
+      $inf_link = tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $generic_text['gtext_id']);
+
       if( isset($gtInfo) && is_object($gtInfo) && ($generic_text['gtext_id'] == $gtInfo->gtext_id) ) {
-        //echo '              <tr class="dataTableRowSelected" onclick="document.location.href=\'' . tep_href_link($g_script, tep_get_all_get_params(array('action', 'gtID')) . 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text') . '\'">' . "\n";
-        echo '              <tr class="dataTableRowSelected">' . "\n";
+        echo '              <tr class="dataTableRowSelected row_link" href="' . $sel_link . '">' . "\n";
       } else {
-        //echo '              <tr class="dataTableRow" onclick="document.location.href=\'' . tep_href_link($g_script, tep_get_all_get_params(array('action', 'gtID')) . 'gtID=' . $generic_text['gtext_id']) . '\'">' . "\n";
-        echo '              <tr class="' . $row_class . '">' . "\n";
+        echo '              <tr class="' . $row_class . ' row_link" href="' . $inf_link . '">' . "\n";
       }
 ?>
-                <td><?php echo $generic_text['gtext_id']; ?></td>
-                <td><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action', 'gtID')) . 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text') . '">' . $generic_text['gtext_title'] . '</a>'; ?></td>
-                <td><div class="target_abstract_zones">
+              <td><?php echo $generic_text['gtext_id']; ?></td>
+              <td class="transtwenties"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'gtID') . 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text') . '">' . $generic_text['gtext_title'] . '</a>'; ?></td>
+              <td><div class="target_abstract_zones">
 <?php
       $zones_query = $g_db->query("select az.abstract_zone_id, az.abstract_zone_name from " . TABLE_GTEXT_TO_DISPLAY . " g2d left join " . TABLE_ABSTRACT_ZONES . " az on (g2d.abstract_zone_id=az.abstract_zone_id) where az.abstract_types_id = '" . (int)$types_array['abstract_types_id'] . "' and g2d.gtext_id = '" . (int)$generic_text['gtext_id'] . "'");
       $zones_link_array = array();
@@ -701,45 +620,45 @@ $(document).ready(function(){
       }
       echo implode('<br />', $zones_link_array);
 ?>
-                </div></td>
-                <td class="calign">
+              </div></td>
+              <td class="transtwenties medsep calign">
 <?php
       if( $generic_text['status'] == '1' ) {
-        echo tep_image(DIR_WS_ICONS . 'icon_status_green.png', IMAGE_ICON_STATUS_GREEN) . '&nbsp;&nbsp;<a href="' . tep_href_link($g_script, 'action=setflag&flag=0&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_red_light.png', IMAGE_ICON_STATUS_RED_LIGHT) . '</a>';
+        echo tep_image(DIR_WS_ICONS . 'icon_status_green.png', IMAGE_ICON_STATUS_GREEN) . '<a href="' . tep_href_link($g_script, 'action=setflag&flag=0&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_red_light.png', IMAGE_ICON_STATUS_RED_LIGHT) . '</a>';
       } else {
-        echo '<a href="' . tep_href_link($g_script, 'action=setflag&flag=1&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_green_light.png', IMAGE_ICON_STATUS_GREEN_LIGHT) . '</a>&nbsp;&nbsp;' . tep_image(DIR_WS_ICONS . 'icon_status_red.png', IMAGE_ICON_STATUS_RED);
+        echo '<a href="' . tep_href_link($g_script, 'action=setflag&flag=1&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_green_light.png', IMAGE_ICON_STATUS_GREEN_LIGHT) . '</a>' . tep_image(DIR_WS_ICONS . 'icon_status_red.png', IMAGE_ICON_STATUS_RED);
       }
 ?>
-                </td>
-                <td class="calign">
+              </td>
+              <td class="medsep calign">
 <?php
       if( $generic_text['sub'] == '1' ) {
-        echo tep_image(DIR_WS_ICONS . 'icon_status_green.png', IMAGE_ICON_STATUS_GREEN) . '&nbsp;&nbsp;<a href="' . tep_href_link($g_script, 'action=setsub&sub=0&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_red_light.png', IMAGE_ICON_STATUS_RED_LIGHT) . '</a>';
+        echo tep_image(DIR_WS_ICONS . 'icon_status_green.png', IMAGE_ICON_STATUS_GREEN) . '<a href="' . tep_href_link($g_script, 'action=setsub&sub=0&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_red_light.png', IMAGE_ICON_STATUS_RED_LIGHT) . '</a>';
       } else {
-        echo '<a href="' . tep_href_link($g_script, 'action=setsub&sub=1&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_green_light.png', IMAGE_ICON_STATUS_GREEN_LIGHT) . '</a>&nbsp;&nbsp;' . tep_image(DIR_WS_ICONS . 'icon_status_red.png', IMAGE_ICON_STATUS_RED);
+        echo '<a href="' . tep_href_link($g_script, 'action=setsub&sub=1&gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_status_green_light.png', IMAGE_ICON_STATUS_GREEN_LIGHT) . '</a>' . tep_image(DIR_WS_ICONS . 'icon_status_red.png', IMAGE_ICON_STATUS_RED);
       }
 ?>
-                </td>
-                <td class="tinysep calign">
+              </td>
+              <td class="transtwenties tinysep calign">
 <?php
-      echo '<a href="' . tep_href_link($g_script, 'gtID=' . $generic_text['gtext_id'] . '&action=delete_generic_text') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE . ' ' . $generic_text['gtext_title']) . '</a>';
-      echo '<a href="' . tep_href_link($g_script, 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', TEXT_EDIT . ' ' . $generic_text['gtext_title']) . '</a>';
-      echo '<a href="' . tep_href_link($g_script, 'gtID=' . $generic_text['gtext_id'] . '&action=generic_text_preview&read=only') . '">' . tep_image(DIR_WS_ICONS . 'icon_preview.png', ICON_PREVIEW) . '</a>';
+      echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $generic_text['gtext_id'] . '&action=delete_generic_text') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE . ' ' . $generic_text['gtext_title']) . '</a>';
+      echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $generic_text['gtext_id'] . '&action=new_generic_text') . '">' . tep_image(DIR_WS_ICONS . 'icon_edit.png', TEXT_EDIT . ' ' . $generic_text['gtext_title']) . '</a>';
+      echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('gtID', 'action') . 'gtID=' . $generic_text['gtext_id'] . '&action=generic_text_preview') . '">' . tep_image(DIR_WS_ICONS . 'icon_preview.png', ICON_PREVIEW) . '</a>';
       if (isset($gtInfo) && is_object($gtInfo) && ($generic_text['gtext_id'] == $gtInfo->gtext_id)) { 
         echo tep_image(DIR_WS_ICONS . 'icon_arrow_right.png', $generic_text['gtext_title'] . ' ' . TEXT_SELECTED);
       } else { 
-        echo '<a href="' . tep_href_link($g_script, 'gtID=' . $generic_text['gtext_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_SELECT . ' ' . $generic_text['gtext_title']) . '</a>';
+        echo '<a href="' . $inf_link . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_SELECT . ' ' . $generic_text['gtext_title']) . '</a>';
       }
 ?>
-                </td>
-              </tr>
+              </td>
+            </tr>
 <?php
     }
 ?>
           </table></div>
-          <div class="splitLine">
-            <div style="float: left;"><?php echo $generic_text_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
-            <div style="float: right;"><?php echo $generic_text_split->display_links(tep_get_all_get_params(array('page'))); ?></div>
+          <div class="listArea splitLine">
+            <div class="floater"><?php echo $generic_text_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
+            <div class="floatend"><?php echo $generic_text_split->display_links(tep_get_all_get_params('page')); ?></div>
           </div>
         </div>
 <?php
@@ -750,19 +669,18 @@ $(document).ready(function(){
         $heading[] = array('text' => '<b>' . TEXT_INFO_HEADING_DELETE_GENERIC . '</b>');
 
         $contents[] = array('form' => tep_draw_form('generic_text', $g_script, 'action=delete_generic_text_confirm') . tep_draw_hidden_field('gtext_id', $gtInfo->gtext_id));
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
+        $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
         $contents[] = array('text' => TEXT_DELETE_GENERIC_INTRO);
         $contents[] = array('text' => '<b>' . $gtInfo->gtext_title . '</b>');
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image_submit('button_delete.gif', IMAGE_DELETE) . ' <a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+        $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_delete.gif', IMAGE_DELETE) . '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         break;
       case 'copy_to':
         $heading[] = array('text' => '<b>' . TEXT_INFO_HEADING_COPY_TO . '</b>');
         $contents[] = array('form' => tep_draw_form('copy_to', $g_script, 'action=copy_to_confirm') . tep_draw_hidden_field('gtext_id', $gtInfo->gtext_id));
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'copy_entry.png', IMAGE_COPY) );
+        $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'copy_entry.png', IMAGE_COPY) );
         $contents[] = array('text' => TEXT_INFO_COPY_TO_INTRO);
-        $contents[] = array('text' => tep_draw_input_field('gtext_title', $gtInfo->gtext_title));
-        $contents[] = array('text' => tep_draw_hidden_field('copy_as', 'duplicate'));
-        $contents[] = array('params' => 'text-align: center', 'text' => tep_image_submit('button_copy.gif', IMAGE_COPY) . ' <a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+        $contents[] = array('class' => 'rpad', 'text' => tep_draw_input_field('gtext_title', $gtInfo->gtext_title, 'class="wider"'));
+        $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_copy.gif', IMAGE_COPY) . '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         break;
 
       default:
@@ -771,11 +689,19 @@ $(document).ready(function(){
           $g_plugins->invoke('add_current_page', $gtInfo->gtext_title, tep_get_all_get_params());
 
           $heading[] = array('text' => '<b>' . $gtInfo->gtext_title . '</b>');
-          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=new_generic_text') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a><a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=delete_generic_text') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a><a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=copy_to') . '">' . tep_image_button('button_copy_to.gif', IMAGE_COPY_TO) . '</a>');
+          $buttons = array(
+            '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=new_generic_text') . '">' . tep_image_button('button_edit.gif', IMAGE_EDIT) . '</a>',
+            '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=delete_generic_text') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>',
+            '<a href="' . tep_href_link($g_script, 'gtID=' . $gtInfo->gtext_id . '&action=copy_to') . '">' . tep_image_button('button_copy_to.gif', IMAGE_COPY_TO) . '</a>',
+          );
+          $contents[] = array(
+            'class' => 'calign', 
+            'text' => implode('', $buttons),
+          );
           $contents[] = array('text' => tep_truncate_string($gtInfo->gtext_description));
         } else { // create generic_text dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => '<a href="' . tep_href_link($g_script, 'action=new_generic_text') . '">' . tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_NEW_GENERIC_TEXT) . '</a>');
+          $contents[] = array('class' => 'calign', 'text' => '<a href="' . tep_href_link($g_script, 'action=new_generic_text') . '">' . tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_NEW_GENERIC_TEXT) . '</a>');
           $contents[] = array('text' => TEXT_NO_GENERIC);
         }
         break;
@@ -783,13 +709,12 @@ $(document).ready(function(){
 
     if( !empty($heading) && !empty($contents) ) {
       echo '             <div class="rightcell">';
+      //extract(tep_load('box'));
+      //echo $cBox->infoBox($heading, $contents);
       $box = new box;
       echo $box->infoBox($heading, $contents);
       echo '             </div>';
     }
   }
 ?>
-          <div id="modalBox" title="Image Selection" style="display:none;">Loading...Please Wait</div>
-          <div id="ajaxLoader" title="Image Manager" style="display:none;"><img src="includes/javascript/jquery/themes/smoothness/images/ajax_load.gif"><p id="ajaxMsg" class="main">Updating, please wait...</p><hr /></div>
-
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_INCLUDES . 'objects/html_end.php'); ?>

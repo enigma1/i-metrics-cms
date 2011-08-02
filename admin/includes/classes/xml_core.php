@@ -1,23 +1,23 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2007 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
-// XML Core functions for the osC Admin.
+// Admin: XML Core functions
 // XML Base class
 //----------------------------------------------------------------------------
-// I-Metrics Layer
+// I-Metrics CMS
 //----------------------------------------------------------------------------
 // Script is intended to be used with:
 // osCommerce, Open Source E-Commerce Solutions
+// http://www.oscommerce.com
 // Copyright (c) 2003 osCommerce
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
   class xml_core {
-    var $xml_array, $tag_index, $separator;
 
     function xml_core() {
       $this->xml_array = array();
@@ -75,6 +75,7 @@
       $result_array = array();
       if( !file_exists($file) ) return $result_array;
       $data = file_get_contents($file);
+
       $result_array = $this->parse($data);
       return $result_array;
     }
@@ -87,7 +88,7 @@
       $this->isError = false;
          
       if (!$this->parse_init()) {
-        return false;
+        //return false;
       }
 
       $this->index = 0;
@@ -116,7 +117,7 @@
 
         $tagName = $tag['tag'];
 
-        if (isset($tagCount[$tagName])) {       
+        if (isset($tagCount[$tagName])) {
           if ($tagCount[$tagName] == 1) {
             $found[$tagName] = array($found[$tagName]);
           }
@@ -134,7 +135,7 @@
             if (isset($tag['attributes'])) {
               $tagRef[$this->attribKey] = $tag['attributes'];
             }
-               
+
             if (isset($tag['value'])) {
               if (isset($tagRef[$this->cdataKey])) {
                 $tagRef[$this->cdataKey] = (array)$tagRef[$this->cdataKey];   

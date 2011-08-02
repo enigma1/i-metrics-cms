@@ -16,6 +16,67 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
+  function tep_load() {
+    static $_objects = array();
+    static $_cross = array(
+      'database'       => 'db',
+      'languages'      => 'lng',
+      'http_validator' => 'http',
+      'message_stack'  => 'msg',
+      'breadcrumb'     => 'breadcrumb',
+      'plugins_front'  => 'cPlug',
+    );
+
+    $result_array = array();
+    $args = func_get_args();
+    if( empty($args) ) return $_objects;
+
+    foreach( $args as $name ) {
+      $file = DIR_FS_CLASSES . $name . '.php';
+      if( is_file($file) ) {
+        require_once($file);
+      }
+      if( !class_exists($name) ) {
+        die('Critical: Invalid Class File: ' . $file);
+      }
+      if( isset($_cross[$name]) ) {
+        $cname = $_cross[$name];
+      } elseif( strpos($name, '_') !== false) {
+        $cname = $name;
+      } else {
+        $cname = 'c' . ucfirst($name);
+      }
+      if( !isset($_objects[$cname]) ) {
+        $_objects[$cname] = new $name;
+      }
+      $result_array[$cname] =& $_objects[$cname];
+    }
+    return $result_array;
+  }
+
+  function tep_sanitize_string($string, $sep='_') {
+    $patterns = array ('/ +/','/[<>]/');
+    $replace = array (' ', $sep);
+    return preg_replace($patterns, $replace, trim($string));
+  }
+
+  function tep_define_vars($metrics_file) {
+    $vars_array = tep_get_file_array($metrics_file);
+    foreach( $vars_array as $key => $value ) {
+      if( defined($key) ) continue;
+      define($key, $value);
+    }
+    return true;
+  }
+
+  function tep_get_file_array($metrics_file) {
+    if( !file_exists($metrics_file) ) return array();
+    require($metrics_file);
+    $vars_array = get_defined_vars();
+    unset($vars_array['metrics_file']);
+    return $vars_array;
+  }
+
   function pre_configure_site() {
     global $g_db;
 
@@ -59,9 +120,17 @@
 
     switch(INSTALL_TEMPLATE) {
       case 'stock':
-      case '3col':
-      case 'ebooks':
-        $store_data = serialize($plugins_data);
+      //case '3col':
+      //case 'ebooks':
+        $tmp_data = $plugins_data;
+        $tmp_data[$index]['max_cols'] = 8;
+        $tmp_data[$index]['max_drop'] = 10;
+        $tmp_data[$index]['max_width'] = 380;
+        $tmp_data[$index]['border_width'] = 2;
+        $tmp_data[$index]['font_size'] = 10;
+        $tmp_data[$index]['font_pad'] = 0;
+
+        $store_data = serialize($tmp_data);
         erase_dir(DIR_FS_CATALOG . DIR_WS_PLUGINS . 'css_menu');
         copy_dir('install/plugins/css_menu/', DIR_FS_CATALOG . DIR_WS_PLUGINS . 'css_menu');
         $g_db->query("update " . TABLE_PLUGINS . " set plugins_data = '" . $g_db->input($store_data) . "' where plugins_key = 'css_menu'");
@@ -237,6 +306,7 @@
 
   function remove_directory($dir) {
     if(basename($dir) !== 'install') return;
+//return;
     closedir(opendir($dir));
     $files = glob('*', GLOB_MARK );
     foreach( $files as $file ){

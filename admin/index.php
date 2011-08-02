@@ -1,5 +1,6 @@
 <?php
 /*
+Came from:
   $Id: index.php,v 1.19 2003/06/27 09:38:31 dgw_ Exp $
 
   osCommerce, Open Source E-Commerce Solutions
@@ -7,95 +8,59 @@
 
   Copyright (c) 2006 osCommerce
 
-  Released under the GNU General Public License
+// Modifications by Asymmetrics
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Admin: Home Page
+//----------------------------------------------------------------------------
+// Converted for the CMS
+// Removed register global dependencies
+// Added compatibility for PHP4,5
+// Enhanced navigation by using jscripts
+// Added common HTML sections
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
-
   require('includes/application_top.php');
-
-  $cat = array(
-               array('title' => BOX_ABSTRACT_GENERIC_TEXT_NEW,
-                     'image' => 'zones.png',
-                     'href' => tep_href_link(FILENAME_GENERIC_TEXT, 'action=new_generic_text&selected_box=abstract_config'),
-                     'children' => array(
-                                         array('title' => BOX_ABSTRACT_GENERIC_TEXT, 'link' => tep_href_link(FILENAME_GENERIC_TEXT, 'selected_box=abstract_config')),
-                                         array('title' => BOX_TITLE_GROUP_PAGES, 'link' => tep_href_link(FILENAME_ABSTRACT_ZONES, 'selected_box=abstract_config')),
-                                         array('title' => BOX_ABSTRACT_CONFIG, 'link' => tep_href_link(FILENAME_ABSTRACT_ZONES_CONFIG, 'selected_box=abstract_config')),
-                                   )
-               ),
-
-               array('title' => BOX_HEADING_HELPDESK,
-                     'image' => 'helpdesk.png',
-                     'href' => tep_href_link(FILENAME_HELPDESK, 'selected_box=helpdesk'),
-                     'children' => array(array('title' => BOX_HELPDESK_POP3, 'link' => tep_href_link(FILENAME_HELPDESK_POP3, 'selected_box=helpdesk')),
-                                         array('title' => BOX_TOOLS_MAIL, 'link' => tep_href_link(FILENAME_MAIL, 'selected_box=helpdesk')),
-                                         array('title' => BOX_HELPDESK_DEPARTMENTS, 'link' => tep_href_link(FILENAME_HELPDESK_DEPARTMENTS, 'selected_box=helpdesk')),
-                                   ) 
-               ),
-
-               array('title' => BOX_HEADING_CONFIGURATION,
-                     'image' => 'configuration.png',
-                     'href' => tep_href_link(FILENAME_CONFIGURATION, 'selected_box=configuration&gID=1'),
-                     'children' => array(array('title' => BOX_CONFIGURATION_MYSTORE, 'link' => tep_href_link(FILENAME_CONFIGURATION, 'selected_box=configuration&gID=1')),
-                                         array('title' => BOX_CONFIGURATION_LOGGING, 'link' => tep_href_link(FILENAME_CONFIGURATION, 'selected_box=configuration&gID=10')),
-                                   )
-               ),
-
-               array('title' => BOX_HEADING_MARKETING,
-                     'image' => 'marketing.png',
-                     'href' => tep_href_link(FILENAME_SEO_REPORTS, 'selected_box=seo_config'),
-                     'children' => array(array('title' => BOX_SEO_ZONES, 'link' => tep_href_link(FILENAME_SEO_ZONES, 'selected_box=seo_config')),
-                                         array('title' => BOX_META_ZONES, 'link' => tep_href_link(FILENAME_META_ZONES, 'selected_box=meta_config')))),
-
-
-               array('title' => BOX_CACHE_REPORTS,
-                     'image' => 'cache.png',
-                     'href' => tep_href_link(FILENAME_CACHE_REPORTS, 'selected_box=cache'),
-                     'children' => array(array('title' => BOX_CACHE_CONFIG, 'link' => tep_href_link(FILENAME_CACHE_CONFIG, 'selected_box=cache')),
-                                         array('title' => BOX_CACHE_HTML, 'link' => tep_href_link(FILENAME_CACHE_HTML, 'selected_box=cache')),
-                                   )
-               ),
-
-               array('title' => BOX_HEADING_TOOLS,
-                     'image' => 'tools.png',
-                     'href' => tep_href_link(FILENAME_WHOS_ONLINE, 'selected_box=tools'),
-                     'children' => array(
-                                         array('title' => BOX_TOOLS_PLUGINS, 'link' => tep_href_link(FILENAME_PLUGINS, 'selected_box=tools')),
-                                         array('title' => BOX_TOOLS_BACKUP, 'link' => tep_href_link(FILENAME_BACKUP, 'selected_box=tools')),
-                                         array('title' => BOX_TOOLS_MULTI_SITES, 'link' => tep_href_link(FILENAME_MULTI_SITES, 'selected_box=tools')),
-                                         array('title' => TOOLS_WHOS_ONLINE, 'link' => tep_href_link(FILENAME_WHOS_ONLINE, 'selected_box=tools')),
-                                         array('title' => BOX_TOOLS_TOTAL_CONFIGURATION, 'link' => tep_href_link(FILENAME_TOTAL_CONFIGURATION, 'selected_box=tools')),
-                                   )
-               ),
-         );
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php require('includes/objects/html_start_sub2.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
       <div id="header">
         <div class="logo" style="height: 38px;">
-          <div style="float: left; padding: 12px 0px 0px 20px;"><?php echo '<a href="' . tep_href_link() . '">' . tep_image(DIR_WS_IMAGES . 'design/logo.png', STORE_NAME) . '</a>'; ?></div>
-          <div style="float: right; padding: 10px 10px 0px 0px;"><h1><?php echo HEADING_MANAGE_SITE; ?></h1></div>
+          <div class="floater" style="padding: 12px 0px 0px 20px;"><?php echo '<a href="' . tep_href_link() . '">' . tep_image(DIR_WS_IMAGES . 'design/logo.png', STORE_NAME) . '</a>'; ?></div>
+          <div class="floatend" style="padding: 10px 10px 0px 0px;"><h1><?php echo HEADING_MANAGE_SITE; ?></h1></div>
         </div>
       </div>
 <?php
   $messageStack->output('header');
 ?>
-      <div id="leftpane">
+      <div id="lefthomepane">
         <div style="padding: 8px;">
 <?php
+  $heading = array();
+  $contents = array();
+
   if( DEFAULT_WARNING_PASSWORD_PROTECT_REMIND == 'true' ) {
-    $contents = array();
     $cfq_query = $g_db->query("select configuration_id from " . TABLE_CONFIGURATION . " where configuration_key = 'DEFAULT_WARNING_PASSWORD_PROTECT_REMIND'");
     $cfg_array = $g_db->fetch_array($cfq_query);
     $warning_string = '<a href="' . tep_href_link(FILENAME_CONFIGURATION, 'action=edit&cID=' . $cfg_array['configuration_id']) . '"><b style="color: #FF0000">' . WARNING_PASSWORD_PROTECT_REMIND . '</b></a>';
 
     $contents[] = array(
-                        'text' => tep_image(DIR_WS_ICONS . 'icon_restrict.png', ICON_UNLOCKED, '', '', 'align="right"') . $warning_string
-                       );
+     'text' => tep_image(DIR_WS_ICONS . 'icon_restrict.png', ICON_UNLOCKED, '', '', 'class="floatend rpad"') . $warning_string
+    );
+  }
 
-    echo '<div class="vspacer"></div>' . "\n";
+  if( !empty($contents) ) {
+    $heading[] = array(
+      'text'  => BOX_HEADING_REMINDERS,
+    );
     $box = new box;
-    $box->common_data_parameters = 'class="altBoxContent"';
-    echo $box->commonBlock($contents);
+    echo $box->menuBox($heading, $contents, 'class="altBoxHeading"');
     echo '<div class="vspacer"></div>' . "\n";
   }
 
@@ -103,9 +68,9 @@
   $contents = array();
 
   $heading[] = array(
-                     'text'  => BOX_HEADING_TOP,
-                     'link'  => tep_href_link()
-                    );
+    'text'  => BOX_HEADING_TOP,
+    'link'  => tep_href_link()
+  );
 
   $contents[] = array('text'  => '<a href="http://demos.asymmetrics.com" target="_blank">' . BOX_ENTRY_SUPPORT_SITE . '</a>');
   $contents[] = array('text'  => '<a href="http://demos.asymmetrics.com" target="_blank">' . BOX_ENTRY_DOCUMENTATION . '</a>');
@@ -114,60 +79,107 @@
 
 
   $box = new box;
-  echo $box->menuBox($heading, $contents, 'class="altBoxHeading"', 'class="altBoxContent"');
+  echo $box->menuBox($heading, $contents, 'class="altBoxHeading"');
 
   echo '<div class="vspacer"></div>' . "\n";
 
+
+  $total_array = array();
+  $contents = array();
+  $heading = array();
+  $heading[] = array(
+    'text'  => BOX_HEADING_CONTENT,
+  );
+
+  $entries_query = $g_db->query("select count(*) as total from " . TABLE_GTEXT);
+  $entriee_array = $g_db->fetch_array($entries_query);
+  $total_array[] = array(
+    'text' => BOX_ENTRY_TOTAL_PAGES,
+    'count' => $entriee_array['total'],
+  );
+
+  $entries_query = $g_db->query("select count(*) as total from " . TABLE_GTEXT . " where sub='0'");
+  $entriee_array = $g_db->fetch_array($entries_query);
+
+  $total_array[] = array(
+    'text' => BOX_ENTRY_FRONT_PAGES,
+    'count' => $entriee_array['total'],
+  );
+
+  require_once(DIR_FS_CLASSES . FILENAME_ABSTRACT_ZONES);
+  $cAbstract = new abstract_zones();
+  $types_array = $cAbstract->get_types();
+  for($i=0, $j=count($types_array); $i<$j; $i++) {
+    $entries_query = $g_db->query("select count(*) as total from " . TABLE_ABSTRACT_ZONES . " where abstract_types_id='" . (int)$types_array[$i]['abstract_types_id'] . "'");
+    $entriee_array = $g_db->fetch_array($entries_query);
+    $total_array[] = array(
+      'text' => $types_array[$i]['abstract_types_name'],
+      'count' => $entriee_array['total'],
+    );
+  }
+
+  $entries_query = $g_db->query("select count(*) as total from " . TABLE_CUSTOMERS);
+  $entriee_array = $g_db->fetch_array($entries_query);
+
+  $total_array[] = array(
+    'text' => BOX_ENTRY_CUSTOMERS,
+    'count' => $entriee_array['total'],
+  );
+
+  for($i=0, $j=count($total_array); $i<$j; $i++) {
+    $contents[] = array(
+      'text'  => '<span><b>' . $total_array[$i]['count'] . '</b>&nbsp;' . $total_array[$i]['text'] . '</span>'
+    );
+  }
+
+  $box = new box;
+  echo $box->menuBox($heading, $contents, 'class="altBoxHeading"');
+  echo '<div class="vspacer"></div>' . "\n";
+
+  $plugin_contents = array();
+  $args = array(
+    'contents' => &$plugin_contents
+  );
+  $g_plugins->invoke('html_home_side', $plugin_contents);
+  if( !empty($plugin_contents) ) {
+    $heading[] = array(
+      'text'  => BOX_HEADING_PLUGIN_NOTICES,
+    );
+    $box = new box;
+    echo $box->menuBox($heading, $plugin_contents, 'class="altBoxHeading"');
+    echo '<div class="vspacer"></div>' . "\n";
+  }
+
+  $heading = array();
   $contents = array();
 
   if (getenv('HTTPS') == 'on') {
     $size = ((getenv('SSL_CIPHER_ALGKEYSIZE')) ? getenv('SSL_CIPHER_ALGKEYSIZE') . '-bit' : '<i>' . BOX_CONNECTION_UNKNOWN . '</i>');
     $contents[] = array(
-                        'text' => tep_image(DIR_WS_ICONS . 'locked.gif', ICON_LOCKED, '', '', 'align="right"') . sprintf(BOX_CONNECTION_PROTECTED, $size)
-                       );
+      'text' => tep_image(DIR_WS_ICONS . 'locked.gif', ICON_LOCKED, '', '', 'class="floatend rpad"') . sprintf(BOX_CONNECTION_PROTECTED, $size)
+    );
   } else {
     $contents[] = array(
-                        'text' => tep_image(DIR_WS_ICONS . 'unlocked.gif', ICON_UNLOCKED, '', '', 'align="right"') . BOX_CONNECTION_UNPROTECTED
-                       );
+      'text' => '<div class="linepad">' . tep_image(DIR_WS_ICONS . 'unlocked.gif', ICON_UNLOCKED, '', '', 'class="floatend"') . BOX_CONNECTION_UNPROTECTED . '</div>'
+    );
   }
 
+  $heading[] = array(
+    'text'  => BOX_HEADING_WARNINGS,
+  );
+
   $box = new box;
-  $box->common_data_parameters = 'class="altBoxContent"';
-  echo $box->commonBlock($contents);
+  echo $box->menuBox($heading, $contents, 'class="altBoxHeading"');
 ?>
         </div>
       </div>
-      <div id="mainpane">
-        <div class="maincell" style="width: 100%;">
-          <div style="padding: 8px;">
+      <div id="mainhomepane">
+        <div class="maincell wider">
+          <div id="top_level" style="min-height: 610px;">
 <?php
-  $col = 2;
-  for ($i = 0, $n = sizeof($cat); $i < $n; $i++) {
-    if( !($i%$col) ) {
-      echo '                  <div class="cleaner">' . "\n";
-    }
-
-    $children = '';
-    for ($j = 0, $k = sizeof($cat[$i]['children']); $j < $k; $j++) {
-      $children .= '<a href="' . $cat[$i]['children'][$j]['link'] . '" class="pageSub">' . $cat[$i]['children'][$j]['title'] . '</a>, ';
-    }
-    $children = substr($children, 0, -2);
-?>
-    <div style="float: left; width: 50%; height: 134px;">
-      <div style="float: left; padding-right: 4px;"><?php echo '<a href="' . $cat[$i]['href'] . '">' . tep_image(DIR_WS_IMAGES . 'categories/' . $cat[$i]['image'], $cat[$i]['title']) . '</a>'; ?></div>
-      <div style="margin-top: 30px;"><?php echo '<a href="' . $cat[$i]['href'] . '" title="' . $cat[$i]['title'] . '" class="pageHeading">' . $cat[$i]['title'] . '</a><br />' . $children; ?></div>
-    </div>
-<?php
-    if( !(($i+1)%$col) ) {
-      echo '                  </div>' . "\n";
-    }
-  }
-
-  if( !(($i+1)%$col) ) {
-    echo '                  </div>' . "\n";
-  }
+  require(DIR_FS_MODULES . 'index_main.php');
 ?>
           </div>
         </div>
       </div>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

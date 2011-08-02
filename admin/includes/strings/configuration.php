@@ -10,6 +10,7 @@
   Released under the GNU General Public License
 */
 define('HEADING_TITLE', 'Configuration');
+define('HEADING_HELP_TITLE', 'Help on Configuration');
 
 define('TABLE_HEADING_CONFIGURATION_TITLE', 'Title');
 define('TABLE_HEADING_CONFIGURATION_VALUE', 'Value');

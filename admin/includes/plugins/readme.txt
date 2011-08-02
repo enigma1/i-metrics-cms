@@ -74,6 +74,8 @@
      then in its folder it should include a file called voting_system.php 
      that extends into plugins_base and should be set in the files_array of the
      install class to be copied to the web-front.
+   Also note the sub-folder names in this directory are effectively classes.
+   Do not create identical plugin classes with the standard classes directory.
    For a basic functionality see how the demo_message plugin operates
 //----------------------------------------------------------------------------
 */

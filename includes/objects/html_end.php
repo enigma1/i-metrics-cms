@@ -17,12 +17,33 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-  $html_end = array(
-    DIR_WS_TEMPLATE . 'html_end.tpl'
-  );
-  $g_plugins->invoke('html_end');
-  for($i=0, $j=count($html_end); $i<$j; $i++) {
-    require($html_end[$i]);
+  class html_end {
+    function html_end() {
+      extract(tep_load('defs', 'database', 'languages', 'plugins_front', 'sessions', 'message_stack', 'breadcrumb'));
+
+      if( $cDefs->ajax ) {
+        $cPlug->invoke('ajax_end');
+        echo '    </div>' . "\n";
+        echo '  </div>' . "\n";
+        require(DIR_FS_INCLUDES . 'application_bottom.php');
+        $cSessions->close();
+      }
+    }
+
+    function set_html() {
+      extract(tep_load('defs', 'database', 'languages', 'plugins_front', 'sessions', 'message_stack', 'breadcrumb'));
+
+      $html_end = array(
+        DIR_FS_TEMPLATE . 'html_end.tpl'
+      );
+      for($i=0, $j=count($html_end); $i<$j; $i++) {
+        require($html_end[$i]);
+      }
+      require(DIR_FS_INCLUDES . 'application_bottom.php');
+    }
   }
-  require(DIR_WS_INCLUDES . 'application_bottom.php');
+
+  $obj = new html_end();
+  $obj->set_html();
+  unset($obj);
 ?>

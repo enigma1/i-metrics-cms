@@ -7,21 +7,35 @@
 
   Copyright (c) 2003 osCommerce
 
-  Released under the GNU General Public License
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Front: Filename Variables
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Var Conversion allows use from the admin end its expandable
+// - Converted definitions to vars, using tep_define_vars to define them
+// - Removed unused definitions added abstract zones related ones.
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
-  define('FILENAME_COMMON', 'common.php');
+// Common Strings
+$FILENAME_LCONFIG                   = 'lconfig.php';
+$FILENAME_COMMON                    = 'common.php';
 
 // define the filenames used in the project
-  define('FILENAME_ADVANCED_SEARCH_RESULT', 'advanced_search_result.php');
-  define('FILENAME_CONTACT_US', 'contact_us.php');
-  define('FILENAME_COOKIE_USAGE', 'cookie_usage.php');
-  define('FILENAME_DEFAULT', 'index.php');
+$FILENAME_ADVANCED_SEARCH_RESULT    = 'advanced_search_result.php';
+$FILENAME_CONTACT_US                = 'contact_us.php';
+$FILENAME_COOKIE_USAGE              = 'cookie_usage.php';
+$FILENAME_DEFAULT                   = 'index.php';
 
 //-MS- Abstract zones added
-  define('FILENAME_GENERIC_PAGES', 'generic_pages.php');
-  define('FILENAME_IMAGE_PAGES', 'image_pages.php');
-  define('FILENAME_SUPER_PAGES', 'super_pages.php');
+$FILENAME_COLLECTIONS               = 'collections.php';
+$FILENAME_GENERIC_PAGES             = 'generic_pages.php';
 //-MS- Abstract zones added EOM
 
-  define('FILENAME_JS_MODULES', 'js_modules.php');
+$FILENAME_JS_MODULES                = 'js_modules.php';
 ?>

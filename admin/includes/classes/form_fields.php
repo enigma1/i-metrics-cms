@@ -1,11 +1,13 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2008 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
-// Catalog: Groups Front class
-// Manages the Group fields for products
+// Admin: Form fields class
+// Manages General Form fields
+//----------------------------------------------------------------------------
+// I-Metrics CMS
 //----------------------------------------------------------------------------
 // Script is intended to be used with:
 // osCommerce, Open Source E-Commerce Solutions
@@ -36,31 +38,28 @@
     }
 
     function get_field_info($fID) {
-      global $g_db;
-
+      extract(tep_load('database'));
       $result = array();
-      $form_fields_query = $g_db->query("select form_fields_id, form_fields_name, form_fields_description, layout_id, limit_id from " . TABLE_FORM_FIELDS . " where form_fields_id = '" . (int)$fID . "' and status_id='1'");
-      if( !$g_db->num_rows($form_fields_query) ) return $result;
-      $form_fields_array = $g_db->fetch_array($form_fields_query);
+      $form_fields_query = $db->query("select form_fields_id, form_fields_name, form_fields_description, layout_id, limit_id from " . TABLE_FORM_FIELDS . " where form_fields_id = '" . (int)$fID . "' and status_id='1'");
+      if( !$db->num_rows($form_fields_query) ) return $result;
+      $form_fields_array = $db->fetch_array($form_fields_query);
       return $form_fields_array;
 
     }
 
     function get_options($fID) {
-      global $g_db;
-
+      extract(tep_load('database'));
       $result = array();
       $options_query_raw = "select form_options_id, form_types_id, form_options_name, image_status, layout_id, limit_id from " . TABLE_FORM_OPTIONS . " where form_fields_id = '" . (int)$fID . "' and status_id = '1' order by sort_id";
-      $result = $g_db->query_to_array($options_query_raw, 'form_options_id');
+      $result = $db->query_to_array($options_query_raw, 'form_options_id');
       return $result;
     }
 
     function get_values($oID) {
-      global $g_db;
-
+      extract(tep_load('database'));
       $result = array();
       $values_query_raw = "select form_values_id, form_values_name, form_values_image from " . TABLE_FORM_OPTIONS . " where form_options_id = '" . (int)$oID . "' and status_id = '1' order by sort_id";
-      $result = $g_db->query_to_array($values_query_raw, 'form_values_id');
+      $result = $db->query_to_array($values_query_raw, 'form_values_id');
       return $result;
     }
 
@@ -137,7 +136,7 @@
     }
 
     function insert_field($input) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $result = 0;
       if( !isset($input['form_fields_name']) ) return $result;
@@ -149,27 +148,27 @@
       if( !isset($input['status_id']) ) $input['status_id'] = 1;
 
       $sql_data_array = array(
-        'form_fields_name' => $g_db->prepare_input($input['form_fields_name']),
-        'form_fields_description' => $g_db->prepare_input($input['form_fields_description']),
+        'form_fields_name' => $db->prepare_input($input['form_fields_name']),
+        'form_fields_description' => $db->prepare_input($input['form_fields_description']),
         'layout_id' => (int)$input['layout'],
         'limit_id' => (int)$input['limit'],
         'sort_id' => (int)$input['sort_id'],
         'status_id' => (int)$input['status_id'],
       );
-      $g_db->perform(TABLE_FORM_FIELDS, $sql_data_array);
-      $field_id = $g_db->insert_id();
+      $db->perform(TABLE_FORM_FIELDS, $sql_data_array);
+      $field_id = $db->insert_id();
       return $field_id;
     }
 
     function insert_option($input) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $result = 0;
       if( !isset($input['form_fields_id']) || !isset($input['form_types_id']) || empty($input['form_types_id']) ) return $result;
       if( !isset($input['form_options_name']) || empty($input['form_options_name']) ) return $result;
 
-      $check_query = $g_db->query("select count(*) as total from " . TABLE_FORM_FIELDS . " where form_fields_id = '" . (int)$input['form_fields_id'] . "'");
-      $check_array = $g_db->fetch_array($check_query);
+      $check_query = $db->query("select count(*) as total from " . TABLE_FORM_FIELDS . " where form_fields_id = '" . (int)$input['form_fields_id'] . "'");
+      $check_array = $db->fetch_array($check_query);
       if( !$check_array['total'] ) return $result;
 
       if( !isset($input['image_status']) ) $input['image_status'] = 0;
@@ -180,7 +179,7 @@
 
       $sql_data_array = array(
         'form_fields_id' => (int)$input['form_fields_id'],
-        'form_options_name' => $g_db->prepare_input($input['form_options_name']),
+        'form_options_name' => $db->prepare_input($input['form_options_name']),
         'image_status' => (int)$input['image_status'],
         'layout_id' => (int)$input['layout'],
         'limit_id' => (int)$input['limit'],
@@ -188,19 +187,19 @@
         'status_id' => (int)$input['status_id'],
       );
 
-      $g_db->perform(TABLE_FORM_OPTIONS, $sql_data_array);
-      $option_id = $g_db->insert_id();
+      $db->perform(TABLE_FORM_OPTIONS, $sql_data_array);
+      $option_id = $db->insert_id();
       return $option_id;
     }
 
     function insert_value($input) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $result = 0;
       if( !isset($input['form_options_id']) || !isset($input['form_fields_id']) ) return $result;
 
-      $check_query = $g_db->query("select count(*) as total from " . TABLE_FORM_OPTIONS . " where form_fields_id = '" . (int)$input['form_fields_id'] . "' and form_options_id = '" . (int)$input['form_options_id'] . "'");
-      $check_array = $g_db->fetch_array($check_query);
+      $check_query = $db->query("select count(*) as total from " . TABLE_FORM_OPTIONS . " where form_fields_id = '" . (int)$input['form_fields_id'] . "' and form_options_id = '" . (int)$input['form_options_id'] . "'");
+      $check_array = $db->fetch_array($check_query);
       if( !$check_array['total'] ) return $result;
 
       if( !isset($input['form_values_name']) ) $input['form_values_name'] = null;
@@ -212,14 +211,14 @@
       $sql_data_array = array(
         'form_fields_id' => (int)$input['form_fields_id'],
         'form_options_id' => (int)$input['form_options_id'],
-        'form_values_name' => $g_db->prepare_input($input['form_values_name']),
-        'form_values_image' => $g_db->prepare_input($input['form_values_image']),
+        'form_values_name' => $db->prepare_input($input['form_values_name']),
+        'form_values_image' => $db->prepare_input($input['form_values_image']),
         'sort_id' => (int)$input['sort_id'],
         'status_id' => (int)$input['status_id'],
       );
 
-      $g_db->perform(TABLE_FORM_VALUES, $sql_data_array);
-      $value_id = $g_db->insert_id();
+      $db->perform(TABLE_FORM_VALUES, $sql_data_array);
+      $value_id = $db->insert_id();
       return $value_id;
     }
 
@@ -228,7 +227,7 @@
 
       $result_array = array();
 
-      require_once(DIR_WS_CLASSES . 'xml_core.php');
+      require_once(DIR_FS_CLASSES . 'xml_core.php');
       $obj = new xml_parse();
       $parse_array = $obj->xml_file_parse($file);
       if( empty($parse_array) || !isset($parse_array['forms']) ) return $result_array;

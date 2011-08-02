@@ -19,10 +19,12 @@
 */
 
   class validator {
-    var $get_array, $get_keys, $post_array, $post_keys, $default_filter='/<\?((?!\?>).)*\?>/s';
-// class constructor
+    var $get_array, $get_keys, $post_array, $post_keys;
+    var $default_filter='/<\?((?!\?>).)*\?>/s';
+
+    // class constructor
     function validator() {
-      global $g_session;
+      extract(tep_load('sessions'));
 
       $this->get_array = array();
       $this->post_array = array();
@@ -71,7 +73,7 @@
         }
       }
 
-      if( $g_session->has_started() ) {
+      if( $cSessions->has_started() ) {
         foreach($this->post_keys as $key => $value) {
           if( !isset($_POST[$key]) ) continue;
           $method = 'post_' . $key;
@@ -98,8 +100,9 @@
     }
 
     function process_error() {
-      global $g_session;
-      $g_session->destroy();
+      extract(tep_load('sessions'));
+
+      $cSessions->destroy();
       tep_redirect();
     }
 
@@ -130,7 +133,8 @@
     }
 
     function post_validate($input_array) {
-      global $g_session;
+      extract(tep_load('sessions'));
+
       $result_array = array();
       if( !is_array($input_array) || !count($input_array) ) {
         return $result_array;
@@ -183,7 +187,7 @@
             $_POST[$key] = $this->common_validate($_POST[$key], $property_array['filter']);
           }
           // In case a parameter conflicts with a session one skip
-          if( !$g_session->is_registered($_POST[$key]) ) {
+          if( !$cSessions->is_registered($_POST[$key]) ) {
             $GLOBALS[$key] = $_POST[$key];
           }
         } else {
@@ -202,64 +206,71 @@
       return $input;
     }
 
-    function convert_to_get($exclude_array=array()) {
-      ksort($this->get_array);
-      return tep_params_to_string($this->get_array);
+    function convert_to_get($exclude_array=array(), $include_array=array()) {
+      $tmp_array = $this->get_array;
+      foreach($exclude_array as $value) {
+        unset($tmp_array[$value]);
+      }
+      foreach($include_array as $key => $value) {
+        $tmp_array[$key] = $value;
+      }
+      ksort($tmp_array);
+      return tep_params_to_string($tmp_array);
     } 
 
     function get_abz_id($id) {
-      global $g_db, $current_abstract_id;
+      extract(tep_load('defs', 'database'));
 
       if( !defined('TABLE_ABSTRACT_ZONES') ) {
         return false;
       }
 
       $org_id = $id;
-      $check_query = $g_db->query("select abstract_zone_id from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id = '" . (int)$id . "' and status_id='1'");
+      $check_query = $db->query("select abstract_zone_id from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id = '" . (int)$id . "' and status_id='1'");
       $id = false;
-      if( !$g_db->num_rows($check_query) ) {
+      if( !$db->num_rows($check_query) ) {
         return false;
       }
 
-      $check_array = $g_db->fetch_array($check_query);
+      $check_array = $db->fetch_array($check_query);
       $id = $check_array['abstract_zone_id'];
 
       if( $id != $org_id ) {
         $id = false;
       } else {
-        $current_abstract_id = $id;
+        $cDefs->abstract_id = $id;
       }
       return $id;    
     }
 
     function get_gtext_id($id) {
-      global $g_db, $current_gtext_id;
+      extract(tep_load('defs', 'database'));
 
       if( !defined('TABLE_GTEXT') ) {
         return false;
       }
 
       $org_id = $id;
-      $check_query = $g_db->query("select gtext_id from " . TABLE_GTEXT . " where gtext_id = '" . (int)$id . "' and sub='0' and status='1'");
+      $check_query = $db->query("select gtext_id from " . TABLE_GTEXT . " where gtext_id = '" . (int)$id . "' and sub='0' and status='1'");
       $id = false;
 
-      if( !$g_db->num_rows($check_query) ) {
+      if( !$db->num_rows($check_query) ) {
         return false;
       }
 
-      $check_array = $g_db->fetch_array($check_query);
+      $check_array = $db->fetch_array($check_query);
       $id = $check_array['gtext_id'];
 
       if( $id != $org_id ) {
         $id = false;
       } else {
-        $current_gtext_id = $id;
+        $cDefs->gtext_id = $id;
       }
       return $id;    
     }
 
     function get_page($id) {
-      global $current_page_id;
+      extract(tep_load('defs'));
 
       $org_id = (int)$id;
       if( $org_id <= 0 ) {
@@ -267,7 +278,7 @@
       }
       $org_id .= "";
       if( $org_id == $id ) {
-        $current_page_id = $id;
+        $cDefs->page_id = $id;
         return $id;
       }
       return false;
@@ -283,17 +294,19 @@
     }
 
     function update_get($param, $value) {
-      global $g_navigation;
+      extract(tep_load('history'));
+
       $old_array = $this->get_array;
       $this->get_array[$param] = $value;
-      $g_navigation->update_get_entry($old_array, $this->get_array);
+      $cHistory->update_get_entry($old_array, $this->get_array);
     }
 
     function update_post($param, $value) {
-      global $g_navigation;
+      extract(tep_load('history'));
+
       $old_array = $this->post_array;
       $this->post_array[$param] = $value;
-      $g_navigation->update_post_entry($old_array, $this->post_array);
+      $cHistory->update_post_entry($old_array, $this->post_array);
     }
   }
 ?>

@@ -1,1 +1,3 @@
-The CSS Menu plugin attaches a css file to the front end and presents a CSS menu based on a mixed collection that is configurable. The basic steps are you create a mixed collection you assign the collections you want to display with this plugin and you activate this plugin. A CSS menu container is included with the css_menu.css that needs to be adjusted or customized according to the template in use. By default the menu is injected from the html_end hook.
+<p>The CSS Menu plugin attaches a css file to the front end and presents a CSS menu based on a mixed collection with menu configuration options.</p>
+<p>The basic steps are, you create a mixed collection you assign the collections you want to display within the menu and you activate this plugin.</p>
+<p>A CSS menu container is included with the css_menu.css and it's templeate dependent. By default the menu is injected from the html_menu runtime hook.</p>

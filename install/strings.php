@@ -1,9 +1,9 @@
 <?php
-  define('TEXT_INFO_VERSION', 'Version 1.11');
+  define('TEXT_INFO_VERSION', 'Version 1.12');
   $copyright_string='
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Configuration Script
@@ -38,6 +38,7 @@ define('TEXT_LEGEND_SERVER_INFO', 'Server Information');
 define('TEXT_LEGEND_DBASE_INFO', 'Database Information');
 define('TEXT_LEGEND_CONFIG_REVIEW', 'Final Configuration Review');
 define('TEXT_LEGEND_CONFIG_INFO', 'Site Configuration');
+define('TEXT_LEGEND_INSTALL_COMPLETE', 'Installation Complete');
 define('TEXT_LEGEND_LICENSE', 'License Agreement');
 
 define('TEXT_INFO_HTTP_SERVER', 'Web Server Address:');
@@ -61,7 +62,7 @@ define('TEXT_INFO_EMAIL_ADDRESS', 'Site E-Mail Address:');
 define('TEXT_INFO_EMAIL_PASSWORD', 'Site E-Mail Password:');
 define('TEXT_INFO_HELPDESK_MAILSERVER', 'Mail Server:');
 define('TEXT_INFO_SEO_URLS', 'Enable Friendly Links:');
-define('TEXT_INFO_SEO_NOTICE', 'Friendly URLs can be set on Apache Server only!');
+define('TEXT_INFO_SEO_NOTICE', 'Friendly URLs will work on Apache Server only!');
 define('TEXT_INFO_EMAIL_PASSWORD_NOTICE', 'Password to retrieve email if you use the helpdesk');
 
 define('TEXT_INFO_YES', 'Yes');
@@ -77,6 +78,7 @@ define('TEXT_INFO_FRONT_ACCESS', 'Website');
 
 // Button Help Titles
 define('BUTTON_INFO_CANCEL', 'Cancel this operation and return to the Server Setup.');
+define('BUTTON_INFO_LICENSE_SETUP', 'Click here to begin installation.');
 define('BUTTON_INFO_SERVER_SETUP', 'Click here to submit the Server information.');
 define('BUTTON_INFO_DBASE_SETUP', 'Click here to submit the Database information.');
 define('BUTTON_INFO_FINAL_SETUP', 'Click here to begin uploading the database.');
@@ -157,7 +159,7 @@ define('TEXT_CONTENT_SERVER_SETUP',
 
 define('TEXT_CONTENT_DATABASE_SETUP', 
   '<p>Please enter the Database Information in this form and make any necessary changes to the presets. Then click the submit button to setup the database configuration file for the I-Metrics CMS.</p>' . 
-  '<p style="color: #EE0000; font-style: italic; font-weight: bold;">Also note I will the necessary database privileges to create the database you want in case it does not exist.</p>'
+  '<p style="color: #EE0000; font-style: italic; font-weight: bold;">Also note I will need the necessary database privileges to create the database you want in case it does not exist.</p>'
 );
 
 define('TEXT_CONTENT_DATABASE_PRE_UPLOAD', 

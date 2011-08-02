@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------
 */
 ?>
-      <div class="listArea"><?php echo tep_draw_form('rc', $g_script, tep_get_all_get_params(array('action')) . 'action=process_options', 'post'); ?><table class="tabledata" cellspacing="1">
+      <div class="listArea"><?php echo tep_draw_form('rc', $cDefs->script, tep_get_all_get_params('action') . 'action=process_options', 'post'); ?><table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->HEADING_DISPLAY_OPTIONS; ?></th>
         </tr>
@@ -34,6 +34,10 @@
           <td><?php echo $cStrings->TEXT_IMAGE_COLLECTIONS; ?></td>
         </tr>
         <tr class="dataTableRow">
+          <td><?php echo tep_draw_checkbox_field('mixed_collections', 1, $mixed_collections); ?></td>
+          <td><?php echo $cStrings->TEXT_MIXED_COLLECTIONS; ?></td>
+        </tr>
+        <tr class="dataTableRow">
           <td><?php echo tep_draw_checkbox_field('text_include', 1, $text_include); ?></td>
           <td><?php echo $cStrings->TEXT_INCLUSION_TEXT_PAGES; ?></td>
         </tr>
@@ -45,8 +49,12 @@
           <td><?php echo tep_draw_checkbox_field('display_rating', 1, $display_rating); ?></td>
           <td><?php echo $cStrings->TEXT_DISPLAY_RATING; ?></td>
         </tr>
+        <tr class="dataTableRow">
+          <td><?php echo tep_draw_checkbox_field('rss', 1, $rss); ?></td>
+          <td><?php echo $cStrings->TEXT_DISPLAY_RSS; ?></td>
+        </tr>
       </table>
-      <table class="tabledata" cellspacing="1">
+      <table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->TEXT_FORM_PROTECTION_OPTIONS; ?></th>
         </tr>
@@ -63,7 +71,7 @@
           <td><?php echo $cStrings->TEXT_ANTI_BOT_STRICT; ?></td>
         </tr>
       </table>
-      <table class="tabledata" cellspacing="1">
+      <table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->TEXT_OTHER_CONFIGURATION_OPTIONS; ?></th>
         </tr>
@@ -72,6 +80,6 @@
           <td><?php echo $cStrings->TEXT_RATING_STEPS; ?></td>
         </tr>
         <tr>
-          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
+          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($cDefs->script, tep_get_all_get_params('action')) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
         </tr>
       </table></form></div>

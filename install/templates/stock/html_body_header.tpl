@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // ---------------------------------------------------------------------------
@@ -16,14 +16,17 @@
 //----------------------------------------------------------------------------
 */
 ?>
-    <div class="totalsize negate" id="mainbody">
-      <div class="totalsize negate" id="maindriver">
+    <div class="totalsize balancer" id="mainbody">
+      <div class="totalsize hideover" id="maindriver">
+<!-- header //-->
+<?php require(DIR_FS_TEMPLATE . 'header.tpl'); ?>
+<!-- header_eof //-->
         <div class="leftsize floater" id="leftpane">
 <?php
   $messageStack->output('header');
   $messageStack->output();
 ?>
-          <div class="scroller" id="leftcontent">
+          <div id="leftcontent">
 <?php
   if( !isset($heading_row) ) {
     $title = HEADING_TITLE;
@@ -31,12 +34,12 @@
       $title .= ' ' . $s_name_params;
     }
 ?>
-            <div class="cleaner">
+            <div class="bounder">
 <?php
     if(defined('HEADING_IMAGE') ) {
 ?>
               <div class="floater"><h1><?php echo $title; ?></h1></div>
-              <div class="floater"><h1><?php echo tep_image(DIR_WS_IMAGES . HEADING_IMAGE, HEADING_TITLE, HEADING_IMAGE_WIDTH, HEADING_IMAGE_HEIGHT); ?></h1></div>
+              <div class="floater"><?php echo tep_image(DIR_WS_IMAGES . HEADING_IMAGE, HEADING_TITLE, HEADING_IMAGE_WIDTH, HEADING_IMAGE_HEIGHT); ?></div>
 <?php
     } else {
 ?>

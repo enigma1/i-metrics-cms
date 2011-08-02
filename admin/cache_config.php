@@ -33,5 +33,5 @@
   require('includes/application_top.php');
   // Set configuration ID
   $gID = 22;
-  require(DIR_WS_MODULES . 'common_config.php');
+  require(DIR_FS_MODULES . 'common_config.php');
 ?>

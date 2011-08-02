@@ -8,7 +8,7 @@
   Copyright (c) 2003 osCommerce
 
 //----------------------------------------------------------------------------
-// Copyright (c) 2007-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2007-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Admin: Message Stack Class to display messages
@@ -20,6 +20,7 @@
 // - 07/02/2007: Fix for intermittent session displaying of messages
 // - 02/02/2010: Ported code from the front end to support script names
 // - 02/03/2010: Modified examples to include the script argument
+// - 10/19/2010: Removed global variables
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
@@ -32,17 +33,13 @@
   $messageStack->output('header'); // Outputs some global messages
   $messageStack->output(); // Outputs the current script messages
 */
-  class messageStack extends box {
-    var $messages, $script;
+  class message_stack extends box {
 
-    function messageStack() {
-      global $g_session, $messageToStack;
-      $this->script = tep_get_script_name();
+    // Compatibility Constructor
+    function message_stack() {
+      extract(tep_load('sessions'));
 
-      $message_array =& $g_session->register('g_message_stack');
-      if( !$g_session->is_registered('g_message_stack') || !is_array($message_array) ) {
-        $message_array = array();
-      }
+      $message_array =& $cSessions->register('g_message_stack', array());
       $this->messages = array();
 
       for ($i=0, $j=count($message_array); $i<$j; $i++) {
@@ -51,9 +48,18 @@
       $message_array = array();
     }
 
+    function &get() {
+      extract(tep_load('sessions'));
+
+      $message_array =& $cSessions->register('g_message_stack');
+      return $message_array;
+    }
+
     function add($message, $type = 'error', $class='') {
+      extract(tep_load('defs'));
+
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
       if ($type == 'error') {
         $this->messages[] = array('params' => 'class="messageStackError"', 'class' => $class, 'text' => $message);
@@ -67,11 +73,11 @@
     }
 
     function add_session($message, $type = 'error', $class='') {
-      global $g_session;
+      extract(tep_load('defs', 'sessions'));
 
-      $message_array =& $g_session->register('g_message_stack');
+      $message_array =& $cSessions->register('g_message_stack');
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
       $message_array[] = array(
         'text' => $message, 
@@ -85,10 +91,12 @@
     }
 
     function output($class='') {
+      extract(tep_load('defs'));
+
       if( empty($class) ) {
-        $class = $this->script;
+        $class = $cDefs->script;
       }
-      $this->common_data_parameters = 'class="messageBox"';
+      $this->common_parameters = 'class="messageBox"';
 
       $output = array();
       for ($i=0, $j=count($this->messages); $i<$j; $i++) {

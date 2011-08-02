@@ -16,9 +16,29 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-  ini_set('error_reporting', E_ALL);
-  ini_set('display_errors', 1);
-  //error_reporting(E_ALL & ~E_NOTICE);
+  //ini_set('error_reporting', E_ALL);
+  //ini_set('display_errors', 1);
+  error_reporting(E_ALL & ~E_NOTICE);
+
+  function tep_paths($file='', $type = 'base') {
+    static $base = '';
+    static $root = '';
+    if( empty($base) || empty($root) ) {
+      $base = preg_replace('/\w+\/\.\.\//', '', dirname(__FILE__));
+      $base = str_replace('\\', '/', $base);
+      $base = rtrim($base, '/') . '/';
+      $root = rtrim($base, '/');
+      $tmp_array = explode('/', $root);
+      array_pop($tmp_array);
+      $root = implode('/', $tmp_array) . '/';
+      if( !strlen(ini_get('date.timezone')) && function_exists('date_default_timezone_get')) {
+        date_default_timezone_set(@date_default_timezone_get());
+      }
+    }
+    $full = $$type . $file;
+    return $full;
+  }
+  tep_paths();
 
   require('strings.php');
   require('functions.php');
@@ -26,6 +46,7 @@
   $current_dir = getcwd();
   $physical_path = preg_replace('/\w+\/\.\.\//', '', dirname(__FILE__));
   $physical_path = str_replace('\\', '/', $physical_path);
+
 
   $action = (isset($_GET['action']) ? prepare_input($_GET['action']) : '');
   $errors_array = array();
@@ -122,7 +143,7 @@
       }
 
       if( $error ) {
-        $action = '';
+        //$action = '';
         $errors_array[] = ERROR_GLOBAL_SERVER_CONFIG;
         break;
       }
@@ -137,65 +158,80 @@
         @unlink(FILE_TMP_ADMIN_FRONT);
       }
 
-      $contents = '  define(\'HTTP_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
-                  '  define(\'HTTPS_SERVER\', \'' . $HTTPS_SERVER . '\');' . "\n" .
-                  '  define(\'ENABLE_SSL\', false);' . "\n" .
-                  '  define(\'HTTP_COOKIE_DOMAIN\', \'' . $HTTP_COOKIE_DOMAIN . '\');' . "\n" .
-                  '  define(\'HTTPS_COOKIE_DOMAIN\', \'' . $HTTPS_COOKIE_DOMAIN . '\');' . "\n" .
-                  '  define(\'HTTP_COOKIE_PATH\', \'' . $HTTP_COOKIE_PATH . '\');' . "\n" .
-                  '  define(\'HTTPS_COOKIE_PATH\', \'' . $HTTPS_COOKIE_PATH . '\');' . "\n" .
-                  '  define(\'DIR_WS_HTTP_CATALOG\', \'' . $HTTP_CATALOG_PATH . '\');' . "\n" .
-                  '  define(\'DIR_WS_HTTPS_CATALOG\', \'' . $HTTPS_CATALOG_PATH . '\');' . "\n" .
-                  '  define(\'DIR_WS_IMAGES\', \'images/\');' . "\n" .
-                  '  define(\'DIR_WS_INCLUDES\', \'includes/\');' . "\n" .
-                  '  define(\'DIR_WS_FUNCTIONS\', DIR_WS_INCLUDES . \'functions/\');' . "\n" .
-                  '  define(\'DIR_WS_CLASSES\', DIR_WS_INCLUDES . \'classes/\');' . "\n" .
-                  '  define(\'DIR_WS_MODULES\', DIR_WS_INCLUDES . \'modules/\');' . "\n" .
-                  '  define(\'DIR_WS_STRINGS\', DIR_WS_INCLUDES . \'strings/\');' . "\n" .
-                  '  define(\'DIR_WS_PLUGINS\', DIR_WS_INCLUDES . \'plugins/\');' . "\n" .
-                  '  define(\'DIR_WS_TEMPLATE\', DIR_WS_INCLUDES . \'template/\');' . "\n\n" .
-                  '  define(\'DIR_WS_DOWNLOAD_PUBLIC\', \'pub/\');' . "\n" .
-                  '  define(\'DIR_FS_CATALOG\', \'' . $DIR_FS_CATALOG . '\');' . "\n" .
-                  '  define(\'DIR_FS_DOWNLOAD\', DIR_FS_CATALOG . \'download/\');' . "\n" .
-                  '  define(\'DIR_FS_DOWNLOAD_PUBLIC\', DIR_FS_CATALOG . \'pub/\');' . "\n\n";
+      // Front-End Configuration definitions
+      $contents = 
+      '  define(\'HTTP_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
+      '  define(\'HTTPS_SERVER\', \'' . $HTTPS_SERVER . '\');' . "\n" .
+      '  define(\'ENABLE_SSL\', false);' . "\n" .
+      '  define(\'HTTP_COOKIE_DOMAIN\', \'' . $HTTP_COOKIE_DOMAIN . '\');' . "\n" .
+      '  define(\'HTTPS_COOKIE_DOMAIN\', \'' . $HTTPS_COOKIE_DOMAIN . '\');' . "\n" .
+      '  define(\'HTTP_COOKIE_PATH\', \'' . $HTTP_COOKIE_PATH . '\');' . "\n" .
+      '  define(\'HTTPS_COOKIE_PATH\', \'' . $HTTPS_COOKIE_PATH . '\');' . "\n" .
+      '  define(\'DIR_FS_CATALOG\', \'' . tep_paths('', 'root') . '\');' . "\n\n" .
+      '  define(\'DIR_WS_HTTP_CATALOG\', \'' . $HTTP_CATALOG_PATH . '\');' . "\n" .
+      '  define(\'DIR_WS_HTTPS_CATALOG\', \'' . $HTTPS_CATALOG_PATH . '\');' . "\n" .
+      '  define(\'DIR_WS_IMAGES\', \'images/\');' . "\n" .
+      '  define(\'DIR_FS_IMAGES\', \'' . tep_paths('', 'root') . 'images/\');' . "\n\n" .
+      '  define(\'DIR_WS_INCLUDES\', \'includes/\');' . "\n" .
+      '  define(\'DIR_FS_INCLUDES\', \'' . tep_paths('', 'root') . 'includes/\');' . "\n\n" .
+      '  define(\'DIR_FS_FUNCTIONS\', DIR_FS_INCLUDES . \'functions/\');' . "\n" .
+      '  define(\'DIR_FS_CLASSES\', DIR_FS_INCLUDES . \'classes/\');' . "\n" .
+      '  define(\'DIR_FS_OBJECTS\', DIR_FS_INCLUDES . \'objects/\');' . "\n" .
+      '  define(\'DIR_FS_MODULES\', DIR_FS_INCLUDES . \'modules/\');' . "\n" .
+      '  define(\'DIR_WS_STRINGS\', DIR_WS_INCLUDES . \'strings/\');' . "\n" .
+      '  define(\'DIR_FS_STRINGS\', DIR_FS_INCLUDES . \'strings/\');' . "\n" .
+      '  define(\'DIR_WS_PLUGINS\', DIR_WS_INCLUDES . \'plugins/\');' . "\n" .
+      '  define(\'DIR_FS_PLUGINS\', DIR_FS_INCLUDES . \'plugins/\');' . "\n" .
+      '  define(\'DIR_WS_TEMPLATE\', DIR_WS_INCLUDES . \'template/\');' . "\n" .
+      '  define(\'DIR_FS_TEMPLATE\', DIR_FS_INCLUDES . \'template/\');' . "\n\n" . 
+      '  define(\'DIR_WS_JS\', DIR_WS_INCLUDES . \'javascript/\');' . "\n\n";
 
       if( !write_contents(FILE_TMP_FRONT_SERVER, $contents) ) {
         $error = true;
         $errors_array[] = ERROR_GLOBAL_TMP_WRITE_CONFIG;
       }
 
-      $contents = '  define(\'HTTP_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
-                  '  define(\'DIR_FS_DOCUMENT_ROOT\', \'' . $DIR_FS_CATALOG . '\');' . "\n" .
-                  '  define(\'DIR_WS_ADMIN\', \'' . $HTTP_CATALOG_PATH . 'admin/\');' . "\n" .
-                  '  define(\'DIR_FS_ADMIN\', DIR_FS_DOCUMENT_ROOT . \'admin/\');' . "\n" .
-                  '  define(\'DIR_WS_IMAGES\', \'images/\');' . "\n" .
-                  '  define(\'DIR_WS_ICONS\', DIR_WS_IMAGES . \'icons/\');' . "\n" .
-                  '  define(\'DIR_WS_INCLUDES\', \'includes/\');' . "\n" .
-                  '  define(\'DIR_WS_BOXES\', DIR_WS_INCLUDES . \'boxes/\');' . "\n" .
-                  '  define(\'DIR_WS_FUNCTIONS\', DIR_WS_INCLUDES . \'functions/\');' . "\n" .
-                  '  define(\'DIR_WS_CLASSES\', DIR_WS_INCLUDES . \'classes/\');' . "\n" .
-                  '  define(\'DIR_WS_MODULES\', DIR_WS_INCLUDES . \'modules/\');' . "\n" .
-                  '  define(\'DIR_WS_STRINGS\', DIR_WS_INCLUDES . \'strings/\');' . "\n" .
-                  '  define(\'DIR_WS_PLUGINS\', DIR_WS_INCLUDES . \'plugins/\');' . "\n" .
-                  '  define(\'DIR_FS_BACKUP\', DIR_FS_ADMIN . \'backups/\');' . "\n\n";
+      // Back-End Configuration definitions
+      $contents =
+      '  define(\'HTTP_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
+      '  define(\'HTTP_COOKIE_DOMAIN\', \'' . $HTTP_COOKIE_DOMAIN . '\');' . "\n" .
+      '  define(\'HTTP_COOKIE_PATH\', \'' . $HTTP_CATALOG_PATH . 'admin/\');' . "\n" .
+      '  define(\'DIR_WS_ADMIN\', \'' . $HTTP_CATALOG_PATH . 'admin/\');' . "\n" .
+      '  define(\'DIR_FS_ADMIN\', \'' . tep_paths('', 'root') . 'admin/\');' . "\n" .
+      '  define(\'DIR_WS_IMAGES\', \'images/\');' . "\n" .
+      '  define(\'DIR_WS_ICONS\', DIR_WS_IMAGES . \'icons/\');' . "\n" .
+      '  define(\'DIR_WS_INCLUDES\', \'includes/\');' . "\n" .
+      '  define(\'DIR_FS_INCLUDES\', DIR_FS_ADMIN . \'includes/\');' . "\n" .
+      '  define(\'DIR_FS_FUNCTIONS\', DIR_FS_INCLUDES . \'functions/\');' . "\n" .
+      '  define(\'DIR_FS_CLASSES\', DIR_FS_INCLUDES . \'classes/\');' . "\n" .
+      '  define(\'DIR_FS_OBJECTS\', DIR_FS_INCLUDES . \'objects/\');' . "\n" .
+      '  define(\'DIR_FS_MODULES\', DIR_FS_INCLUDES . \'modules/\');' . "\n" .
+      '  define(\'DIR_FS_BOXES\', DIR_FS_INCLUDES . \'boxes/\');' . "\n" .
+      '  define(\'DIR_WS_STRINGS\', DIR_WS_INCLUDES . \'strings/\');' . "\n" .
+      '  define(\'DIR_FS_STRINGS\', DIR_FS_INCLUDES . \'strings/\');' . "\n" .
+      '  define(\'DIR_WS_PLUGINS\', DIR_WS_INCLUDES . \'plugins/\');' . "\n" .
+      '  define(\'DIR_FS_PLUGINS\', DIR_FS_INCLUDES . \'plugins/\');' . "\n" .
+      '  define(\'DIR_WS_JS\', DIR_WS_INCLUDES . \'javascript/\');' . "\n" .
+      '  define(\'DIR_FS_BACKUP\', DIR_FS_ADMIN . \'backups/\');' . "\n\n";
 
       if( !write_contents(FILE_TMP_ADMIN_SERVER, $contents) ) {
         $error = true;
         $errors_array[] = ERROR_GLOBAL_TMP_WRITE_CONFIG;
       }
 
-      $contents = '  define(\'HTTP_CATALOG_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
-                  '  define(\'HTTPS_CATALOG_SERVER\', \'' . $HTTPS_SERVER . '\');' . "\n" .
-                  '  define(\'ENABLE_SSL_CATALOG\', \'false\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG\', \'' . $HTTP_CATALOG_PATH . '\');' . "\n" .
-                  '  define(\'DIR_FS_CATALOG\', DIR_FS_DOCUMENT_ROOT);' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_IMAGES\', DIR_WS_CATALOG . \'images/\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_ICONS\', DIR_WS_CATALOG_IMAGES . \'icons/\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_BANNERS\', DIR_WS_CATALOG_IMAGES . \'banners/\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_STRINGS\', DIR_WS_CATALOG . \'includes/strings/\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_MODULES\', DIR_WS_CATALOG . \'includes/modules/\');' . "\n" .
-                  '  define(\'DIR_WS_CATALOG_PLUGINS\', DIR_WS_CATALOG . \'includes/plugins/\');' . "\n" . 
-                  '  define(\'DIR_WS_CATALOG_TEMPLATE\', DIR_WS_CATALOG . \'includes/template/\');' . "\n\n";
+      $contents =
+      '  define(\'HTTP_CATALOG_SERVER\', \'' . $HTTP_SERVER . '\');' . "\n" .
+      '  define(\'HTTPS_CATALOG_SERVER\', \'' . $HTTPS_SERVER . '\');' . "\n" .
+      '  define(\'ENABLE_SSL_CATALOG\', \'false\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG\', \'' . $HTTP_CATALOG_PATH . '\');' . "\n" .
+      '  define(\'DIR_FS_CATALOG\', \'' . tep_paths('', 'root') . '\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_INCLUDES\', DIR_WS_CATALOG . \'includes/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_IMAGES\', DIR_WS_CATALOG . \'images/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_ICONS\', DIR_WS_CATALOG_IMAGES . \'icons/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_STRINGS\', DIR_WS_CATALOG_INCLUDES . \'strings/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_MODULES\', DIR_WS_CATALOG_INCLUDES . \'modules/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_PLUGINS\', DIR_WS_CATALOG_INCLUDES . \'plugins/\');' . "\n" .
+      '  define(\'DIR_WS_CATALOG_TEMPLATE\', DIR_WS_CATALOG_INCLUDES . \'template/\');' . "\n\n";
 
       if( !write_contents(FILE_TMP_ADMIN_FRONT, $contents) ) {
         $error = true;
@@ -254,12 +290,12 @@
         @unlink(FILE_TMP_DBASE);
       }
 
-      $contents = '  define(\'DB_SERVER\', \'' . $DB_SERVER . '\');' . "\n" .
-                  '  define(\'DB_SERVER_USERNAME\', \'' . $DB_SERVER_USERNAME . '\');' . "\n" .
-                  '  define(\'DB_SERVER_PASSWORD\', \'' . $DB_SERVER_PASSWORD . '\');' . "\n" .
-                  '  define(\'DB_DATABASE\', \'' . $DB_DATABASE . '\');' . "\n" .
-                  '  define(\'USE_PCONNECT\', \'false\');' . "\n" .
-                  '  define(\'STORE_SESSIONS\', \'mysql\');' . "\n\n";
+      $contents = 
+      '  define(\'DB_SERVER\', \'' . $DB_SERVER . '\');' . "\n" .
+      '  define(\'DB_SERVER_USERNAME\', \'' . $DB_SERVER_USERNAME . '\');' . "\n" .
+      '  define(\'DB_SERVER_PASSWORD\', \'' . $DB_SERVER_PASSWORD . '\');' . "\n" .
+      '  define(\'DB_DATABASE\', \'' . $DB_DATABASE . '\');' . "\n" .
+      '  define(\'USE_PCONNECT\', \'false\');' . "\n\n";
 
       if( !write_contents(FILE_TMP_DBASE, $contents) ) {
         $error = true;
@@ -298,7 +334,7 @@
       $INSTALL_SEO_URLS = 0;
 
       chdir(DIR_FS_CATALOG);
-      erase_dir(DIR_WS_TEMPLATE);
+      erase_dir(DIR_FS_TEMPLATE);
       chdir($current_dir);
 
       $templates_array = array();
@@ -312,6 +348,7 @@
 
     case 'config_setup':
       $INSTALL_OS_TYPE_INFO = $INSTALL_EMAIL_ADDRESS_INFO = $INSTALL_SITE_NAME_INFO = '';
+      $INSTALL_EMAIL_PASSWORD_INFO = $INSTALL_HELPDESK_MAILSERVER_INFO = $INSTALL_SEO_URLS_INFO = '';
       if( file_exists(FILE_TMP_CONFIG) ) {
         @unlink(FILE_TMP_CONFIG);
       }
@@ -363,16 +400,24 @@
         $errors_array[] = ERROR_GLOBAL_COPY_TEMPLATE;
       }
 
+      chdir(DIR_FS_CATALOG);
+      if( file_exists('.htaccess') ) {
+        @unlink('.htaccess');
+      }
+
       if( $INSTALL_SEO_URLS ) {
-        chdir(DIR_FS_CATALOG);
         $contents = '#';
         if( !write_contents('.htaccess', $contents) ) {
           $error = true;
           $errors_array[] = ERROR_GLOBAL_WRITE_HTACCESS;
         }
-        chdir($current_dir);
+        chdir(DIR_FS_CATALOG . 'admin/');
+        if( !write_contents('.htaccess', $contents) ) {
+          $error = true;
+          $errors_array[] = ERROR_GLOBAL_WRITE_HTACCESS;
+        }
       }
-
+      chdir($current_dir);
 
       if( $error ) {
         $action = 'config';
@@ -474,10 +519,10 @@
         redirect( $_SERVER['SCRIPT_NAME'] . '?action=database&error_string=' . $error_string);
       }
 
-      require(DIR_WS_CLASSES . 'database.php');
+      require(DIR_FS_CLASSES . 'database.php');
       chdir($current_dir);
 
-      $g_db = new dbase();
+      $g_db = new database();
       $result = $g_db->connect();
       if( !$result ) {
         $error_string = ERROR_GLOBAL_DBASE_CONNECT;
@@ -505,20 +550,50 @@
       eval($contents);
 
       chdir(DIR_FS_CATALOG);
-      require(DIR_WS_CLASSES . 'database.php');
-      require(DIR_WS_INCLUDES . 'database_tables.php');
+      require(DIR_FS_CLASSES . 'database.php');
+      tep_define_vars(DIR_FS_INCLUDES . 'database_tables.php');
+      //require(DIR_FS_INCLUDES . 'database_tables.php');
 
-      $g_db = new dbase();
+      $g_db = new database();
       $g_db->connect();
       pre_configure_site();
 
       if(INSTALL_SEO_URLS == 1) {
-        $contents = '#-MS- SEO-G Added' . "\n" .
-                    'Options +FollowSymLinks' . "\n" . 
-                    'RewriteEngine On' . "\n" . 
-                    'RewriteBase ' . DIR_WS_HTTP_CATALOG . "\n" .
-                    'RewriteRule ^(.*).asp$ root.php?$1.asp&%{QUERY_STRING}' . "\n" . 
-                    '#-MS- SEO-G Added EOM' . "\n";
+        $contents = 
+        '#-MS- SEO-G Added' . "\n" .
+        'Options +FollowSymLinks' . "\n" . 
+        'RewriteEngine On' . "\n" . 
+        'RewriteBase ' . DIR_WS_HTTP_CATALOG . "\n\n" .
+        '# Note whatever extension you use it should match the SEO-G configuration -> extension on the admin end even if its blank' . "\n" .
+        '# Also the separators defined in the SEO-G for the various entities should be included in the rule here.' . "\n\n" .
+        '# Rules for extensionless URLs' . "\n" .
+        '# 1. Using a trailing slash' . "\n" .
+        '#RewriteRule ^(.*)/$ root.php?$1&%{QUERY_STRING}' . "\n\n" .
+        '# 2. Not using a trailing slash links with alphanumeric characters and hyphens' . "\n" .
+        '#RewriteRule ^([a-z0-9_-]+)$ root.php?$1&%{QUERY_STRING}' . "\n\n" .
+        '# Rules for URLs with extensions' . "\n" .
+        '#RewriteRule ^(.*).asp$ root.php?$1.asp&%{QUERY_STRING}' . "\n" .
+        '#RewriteRule ^(.*).(htm|html|asp|jsp|aspx)$ root.php?$1.*&%{QUERY_STRING}' . "\n\n" .
+        '# Current Rules to support multiple extensions' . "\n" .
+        '#RewriteRule ^([a-z0-9_-]+)$ root.php?$1&%{QUERY_STRING}' . "\n" .
+        'RewriteRule ^([/a-z0-9_-]+)$ root.php?$1&%{QUERY_STRING}' . "\n" .
+        'RewriteRule ^(.*)/$ root.php?$1&%{QUERY_STRING}' . "\n" .
+        'RewriteRule ^(.*).(htm|html|asp|jsp|aspx)$ root.php?$1.*&%{QUERY_STRING}' . "\n" .
+        '#-MS- SEO-G Added EOM' . "\n";
+
+        $result = write_contents('.htaccess', $contents);
+        if( !$result ) {
+          $errors_array[] = ERROR_GLOBAL_WRITE_HTACCESS;
+        }
+
+        $contents = 
+        '#-MS- Disable SEO-G on admin folder' . "\n" .
+        'Options +FollowSymLinks' . "\n" . 
+        'RewriteEngine On' . "\n" . 
+        'RewriteBase ' . DIR_WS_HTTP_CATALOG . 'admin/' . "\n" .
+        'RewriteRule ^(.*)$ $1 [L]' . "\n" . 
+        '#-MS- SEO-G Added EOM' . "\n";
+        chdir(DIR_FS_CATALOG . 'admin/');
 
         $result = write_contents('.htaccess', $contents);
         if( !$result ) {
@@ -526,7 +601,6 @@
         }
       }
       chdir($current_dir);
-
       remove_directory($current_dir);
       chdir(DIR_FS_CATALOG);
       break;
@@ -545,10 +619,9 @@
       if( !read_contents(FILE_LICENSE, $contents) || !read_contents(FILE_LICENSE_AMENDMENT, $amend) ) {
         $errors_array[] = ERROR_GLOBAL_LICENSE_AGREE;
       }
-      $contents = nl2br(htmlspecialchars($amend  . "\n\n" . $contents));
+      $contents = nl2br(htmlspecialchars($amend)  . "\n<hr />\n" . htmlspecialchars($contents));
       break;
   }
-
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
@@ -569,7 +642,13 @@
 </head>
 <body>
   <div id="wrapper">
-      <div id="header"><h1><?php echo HEADING_TITLE; ?></h1><br /><?php echo TEXT_INFO_VERSION; ?></div>
+      <div class="b1" style="margin-left: 6px; margin-right: 6px;"></div>
+      <div class="b1" style="margin-left: 4px; margin-right: 4px;"></div>
+      <div class="b2" style="margin-left: 2px; margin-right: 2px;"></div>
+      <div class="b2" style="margin-left: 1px; margin-right: 1px;"></div>
+      <div class="b1"></div>
+
+      <div id="header"><h1><?php echo HEADING_TITLE; ?></h1><br /><?php echo '<b>' . TEXT_INFO_VERSION . '</b>'; ?></div>
 <?php
   for($i=0, $j=count($errors_array); $i<$j; $i++) {
     echo '          <div class="messageStackError">' . $errors_array[$i] . '</div>' . "\n";
@@ -582,14 +661,109 @@
 <?php
   if( $action == 'finish' ) {
 ?>
-        <div class="innerContent" style="background: #F4FFF4">
+        <div class="bounder" style="background: #F4FFF4"><fieldset><legend><?php echo TEXT_LEGEND_INSTALL_COMPLETE; ?></legend>
           <div><?php echo TEXT_INSTALLATION_COMPLETE; ?></div>
           <div><?php echo '<a href="' . HTTP_SERVER . DIR_WS_HTTP_CATALOG . '">' . TEXT_INFO_FRONT_ACCESS . '</a>'; ?></div>
           <div><?php echo '<a href="' . HTTP_SERVER . DIR_WS_HTTP_CATALOG . 'admin">' . TEXT_INFO_ADMIN_ACCESS . '</a>'; ?></div>
-        </div>
+        </fieldset></div>
+          <div class="bounder tmargin"><div class="hpad">
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navcurrent"></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+            <div class="floater quarter20 passed calign">License Agreement</div>
+            <div class="floater quarter20 passed calign">Server Setup</div>
+            <div class="floater quarter20 passed calign">Database Setup</div>
+            <div class="floater quarter20 passed calign">Site Configuration</div>
+            <div class="floater quarter20 current calign">Finished</div>
+          </div></div>
+
 <?php
   } elseif( $action == 'config' || $action == 'config_setup') {
 ?>
+
+        <div class="formArea"><form name="config_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=config_setup'?>" method="post"><fieldset><legend><?php echo TEXT_LEGEND_CONFIG_INFO; ?></legend>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><label for="site_name"><?php echo TEXT_INFO_SITE_NAME; ?></label></div></div>
+            <div class="hafler floater"><div class="ppad"><label for="email_address"><?php echo TEXT_INFO_EMAIL_ADDRESS; ?></label></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><input type="text" name="INSTALL_SITE_NAME" value="" id="site_name" /><span class="error"><?php echo $INSTALL_SITE_NAME_INFO; ?></span></div></div>
+            <div class="halfer floater"><div class="ppad"><input type="text" name="INSTALL_EMAIL_ADDRESS" value="" id="email_address" /><span class="error"><?php echo $INSTALL_EMAIL_ADDRESS_INFO; ?></span></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><label for="mail_server"><?php echo TEXT_INFO_HELPDESK_MAILSERVER; ?></label></div></div>
+            <div class="hafler floater"><div class="ppad"><label for="email_password"><?php echo TEXT_INFO_EMAIL_PASSWORD; ?></label></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><input type="text" name="INSTALL_HELPDESK_MAILSERVER" value="<?php echo $INSTALL_HELPDESK_MAILSERVER; ?>" class="txtInput wider" id="mail_server" /><span class="error"><?php echo $INSTALL_HELPDESK_MAILSERVER_INFO; ?></span></div></div>
+            <div class="halfer floater"><div class="ppad"><input type="text" name="INSTALL_EMAIL_PASSWORD"  value="" class="txtInput wider" id="email_password" /><span class="error"><?php echo $INSTALL_EMAIL_PASSWORD_INFO; ?></span></div></div>
+          </div>
+          <div class="bounder">
+            <div class="bounder"><label for="site_template"><?php echo TEXT_INFO_TEMPLATE; ?></label></div>
+            <div class="bounder">
+              <div class="halfer floater whiter"><select name="TEMPLATE">
+<?php
+    for($i=0, $j=count($templates_array); $i<$j; $i++) {
+      echo '<option value="' . $templates_array[$i]['id'] . '"';
+      if( $INSTALL_TEMPLATE == $templates_array[$i]['text'] ) {
+        echo ' selected="selected"';
+      }
+      if( isset($default_templates_array[$templates_array[$i]['id']] ) ) {
+        $templates_array[$i]['text'] = $default_templates_array[$templates_array[$i]['id']];
+      }
+      echo '>' . $templates_array[$i]['text'] . '</option>';
+    }
+?>
+              </select></div>
+              <div class="halfer floater"><div class="heavy ppad"><?php echo TEXT_INFO_TEMPLATE_HELP; ?></div></div>
+            </div>
+          </div>
+
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><label for="os_type"><?php echo TEXT_INFO_OS_TYPE; ?></label></div></div>
+            <div class="hafler floater"><div class="ppad"><label for="seo_urls"><?php echo TEXT_INFO_SEO_URLS; ?></label></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater whiter"><div class="rpad">
+              <div class="bounder">
+                <div class="halfer floater"><input id="os_type_unix" type="radio" name="INSTALL_OS_TYPE" value="0" <?php echo ($INSTALL_OS_TYPE == 0)?'checked="checked"':''; ?> /><label class="hpad" for="os_type_unix"><?php echo TEXT_INFO_OS_UNIX; ?></label></div>
+                <div class="halfer floater"><input id="os_type_other" type="radio" name="INSTALL_OS_TYPE" value="1" <?php echo ($INSTALL_OS_TYPE == 1)?'checked="checked"':''; ?> /><label class="hpad" for="os_type_other"><?php echo TEXT_INFO_OS_OTHER; ?></label></div>
+              </div>
+              <span class="error"><?php echo $INSTALL_OS_TYPE_INFO; ?></span>
+            </div></div>
+            <div class="halfer floater whiter"><div class="ppad"><input type="checkbox" name="INSTALL_SEO_URLS" id="seo_urls" /><span class="heavy"><?php echo TEXT_INFO_SEO_NOTICE; ?></span><span class="error"><?php echo $INSTALL_SEO_URLS_INFO; ?></span></div></div>
+          </div>
+
+          <div class="splitColumn vmargin"><?php echo TEXT_CONTENT_CONFIG_SETUP; ?></div>
+          <div class="formButtons"><input type="submit" title="<?php echo BUTTON_INFO_CONFIG_SETUP; ?>" name="submit_config" value="<?php echo BUTTON_CONFIG_SETUP; ?>" /></div>
+        </fieldset></form></div>
+
+        <div class="bounder"><div class="hpad">
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navcurrent"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20 passed calign"><a href="index.php">License Agreement</a></div>
+          <div class="floater quarter20 passed calign"><a href="index.php?action=server_detect">Server Setup</a></div>
+          <div class="floater quarter20 passed calign"><a href="index.php?action=database">Database Setup</a></div>
+          <div class="floater quarter20 current calign">Site Configuration</div>
+          <div class="floater quarter20 calign">Finished</div>
+        </div></div>
+<?php
+/*
         <div style="clear: both"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=config_setup'?>" method="post">
           <fieldset>
             <legend><?php echo TEXT_LEGEND_CONFIG_INFO; ?></legend>
@@ -597,6 +771,7 @@
             <div class="innerContent">
               <div class="form_label"><?php echo TEXT_INFO_OS_TYPE; ?></div>
               <div class="form_input"><input type="radio" name="INSTALL_OS_TYPE" value="0" <?php echo ($INSTALL_OS_TYPE == 0)?'checked="checked"':''; ?> />&nbsp;<?php echo TEXT_INFO_OS_UNIX; ?><input type="radio" name="INSTALL_OS_TYPE" value="1" <?php echo ($INSTALL_OS_TYPE == 1)?'checked="checked"':''; ?> />&nbsp;<?php echo TEXT_INFO_OS_OTHER; ?></div>
+
               <div class="form_label"><?php echo TEXT_INFO_SITE_NAME; ?></div>
               <div class="form_input"><input type="text" name="INSTALL_SITE_NAME" class="txtInput" /><?php echo $INSTALL_SITE_NAME_INFO; ?></div>
               <div class="form_label"><?php echo TEXT_INFO_EMAIL_ADDRESS; ?></div>
@@ -628,207 +803,351 @@
             <div><input type="submit" title="<?php echo BUTTON_INFO_CONFIG_SETUP; ?>" name="submit_config" value="<?php echo BUTTON_CONFIG_SETUP; ?>" /></div>
           </div>
         </form></div>
+*/
+?>
 <?php
   } elseif( $action == 'database' || $action == 'database_setup') {
 ?>
-        <div style="clear: both"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=database_setup'?>" method="post">
-          <fieldset>
-            <legend><?php echo TEXT_LEGEND_DBASE_INFO; ?></legend>
-            <div class="splitColumn"><?php echo TEXT_CONTENT_DATABASE_SETUP; ?></div>
-            <div class="innerContent">
-              <div class="form_label"><?php echo TEXT_INFO_DB_SERVER; ?></div>
-              <div class="form_input"><input type="text" name="DB_SERVER" value="localhost" class="txtInput" /><?php echo $DB_SERVER_INFO; ?></div>
-              <div class="form_label"><?php echo TEXT_INFO_DB_SERVER_USERNAME; ?></div>
-              <div class="form_input"><input type="text" name="DB_SERVER_USERNAME" class="txtInput" /><?php echo $DB_SERVER_USERNAME_INFO; ?></div>
-              <div class="form_label"><?php echo TEXT_INFO_DB_SERVER_PASSWORD; ?></div>
-              <div class="form_input"><input type="text" name="DB_SERVER_PASSWORD" class="txtInput" /><?php echo $DB_SERVER_PASSWORD_INFO; ?></div>
-              <div class="form_label"><?php echo TEXT_INFO_DB_DATABASE; ?></div>
-              <div class="form_input"><input type="text" name="DB_DATABASE" class="txtInput" /><?php echo $DB_DATABASE_INFO; ?></div>
-            </div>
-          </fieldset>
-          <div class="formButtons">
-            <div><input type="submit" title="<?php echo BUTTON_INFO_DBASE_SETUP; ?>" name="submit_database" value="<?php echo BUTTON_DBASE_SETUP; ?>" /></div>
+        <div class="formArea"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=database_setup'?>" method="post"><fieldset><legend><?php echo TEXT_LEGEND_DBASE_INFO; ?></legend>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><label for="db_server"><?php echo TEXT_INFO_DB_SERVER; ?></label></div></div>
+            <div class="hafler floater"><div class="ppad"><label for="db_server_username"><?php echo TEXT_INFO_DB_SERVER_USERNAME; ?></label></div></div>
           </div>
-        </form></div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><input type="text" name="DB_SERVER" value="localhost" class="txtInput wider" id="db_server" /><span class="error"><?php echo $DB_SERVER_INFO; ?></span></div></div>
+            <div class="halfer floater"><div class="ppad"><input type="text" name="DB_SERVER_USERNAME" class="txtInput wider" id="db_server_username" /><span class="error"><?php echo $DB_SERVER_USERNAME_INFO; ?></span></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><label for="db_database"><?php echo TEXT_INFO_DB_DATABASE; ?></label></div></div>
+            <div class="hafler floater"><div class="ppad"><label for="db_server_password"><?php echo TEXT_INFO_DB_SERVER_PASSWORD; ?></label></div></div>
+          </div>
+          <div class="bounder">
+            <div class="halfer floater"><div class="rpad"><input type="text" name="DB_DATABASE" value="" class="txtInput wider" id="db_database" /><span class="error"><?php echo $DB_DATABASE_INFO; ?></span></div></div>
+            <div class="halfer floater"><div class="ppad"><input type="text" name="DB_SERVER_PASSWORD"  value="" class="txtInput wider" id="db_server_password" /><span class="error"><?php echo $DB_SERVER_PASSWORD_INFO; ?></span></div></div>
+          </div>
+<?php
+/*
+          <div class="innerContent">
+            <div class="form_label"><?php echo TEXT_INFO_DB_SERVER; ?></div>
+            <div class="form_input"><input type="text" name="DB_SERVER" value="localhost" class="txtInput" /><?php echo $DB_SERVER_INFO; ?></div>
+            <div class="form_label"><?php echo TEXT_INFO_DB_SERVER_USERNAME; ?></div>
+            <div class="form_input"><input type="text" name="DB_SERVER_USERNAME" class="txtInput" /><?php echo $DB_SERVER_USERNAME_INFO; ?></div>
+            <div class="form_label"><?php echo TEXT_INFO_DB_SERVER_PASSWORD; ?></div>
+            <div class="form_input"><input type="text" name="DB_SERVER_PASSWORD" class="txtInput" /><?php echo $DB_SERVER_PASSWORD_INFO; ?></div>
+            <div class="form_label"><?php echo TEXT_INFO_DB_DATABASE; ?></div>
+            <div class="form_input"><input type="text" name="DB_DATABASE" class="txtInput" /><?php echo $DB_DATABASE_INFO; ?></div>
+          </div>
+*/
+?>
+          <div class="splitColumn vmargin"><?php echo TEXT_CONTENT_DATABASE_SETUP; ?></div>
+          <div class="formButtons"><input type="submit" title="<?php echo BUTTON_INFO_DBASE_SETUP; ?>" name="submit_database" value="<?php echo BUTTON_DBASE_SETUP; ?>" /></div>
+        </fieldset></form></div>
+        <div class="bounder"><div class="hpad">
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navcurrent"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20 passed calign"><a href="index.php">License Agreement</a></div>
+          <div class="floater quarter20 passed calign"><a href="index.php?action=server_detect">Server Setup</a></div>
+          <div class="floater quarter20 current calign"><a href="index.php?action=database">Database Setup</a></div>
+          <div class="floater quarter20 calign">Site Configuration</div>
+          <div class="floater quarter20 calign">Finished</div>
+        </div></div>
 <?php
   } elseif( $action == 'database_upload') {
 ?>
-        <div>
+        <div class="bounder">
           <fieldset>
             <legend><?php echo TEXT_LEGEND_DBASE_UPLOAD; ?></legend>
-            <div class="splitColumn"><b><?php echo TEXT_CONTENT_DATABASE_UPLOAD; ?></b></div>
-            <div class="scrollContent" style="height: 400px; overflow: auto; padding: 0px 14px 10px 14px; width: 820px;">
+            <div class="splitColumn vmargin"><b><?php echo TEXT_CONTENT_DATABASE_UPLOAD; ?></b></div>
+            <div class="scrollContent" style="height: 400px; overflow: auto;">
 <?php
     parse_mysql_dump(FILE_I_METRICS_CMS_DBASE);
 ?>
             </div>
+            <div class="innerContent" style="background: #F4FFF4"><h2><?php echo TEXT_CONTENT_DATABASE_COMPLETE; ?></h2></div>
+            <div style="cleaner"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=finish'?>" method="post">
+              <div class="formButtons" style="text-align: right;">
+                <div class="lalign"><input type="submit" title="<?php echo BUTTON_INFO_DBASE_COMPLETE; ?>" name="installation" value="<?php echo BUTTON_FINISH; ?>" /></div>
+              </div>
+            </form></div>
           </fieldset>
-          <div class="innerContent" style="background: #F4FFF4"><h2><?php echo TEXT_CONTENT_DATABASE_COMPLETE; ?></h2></div>
-          <div style="clear: both"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=finish'?>" method="post">
-            <div class="formButtons" style="text-align: right;">
-              <div style="text-align: left"><input type="submit" title="<?php echo BUTTON_INFO_DBASE_COMPLETE; ?>" name="installation" value="<?php echo BUTTON_FINISH; ?>" /></div>
-            </div>
-          </form></div>
+          <div class="bounder tmargin"><div class="hpad">
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navback"></div>
+            <div class="floater quarter20 navline navcurrent"></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navback"></div></div>
+            <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+            <div class="floater quarter20 passed calign">License Agreement</div>
+            <div class="floater quarter20 passed calign">Server Setup</div>
+            <div class="floater quarter20 passed calign">Database Setup</div>
+            <div class="floater quarter20 passed calign">Site Configuration</div>
+            <div class="floater quarter20 current calign">Finished</div>
+          </div></div>
+
         </div>
 <?php
   } elseif( $action == 'database_pre_upload') {
 ?>
-        <div style="clear: both">
-          <fieldset>
-            <legend><?php echo TEXT_LEGEND_CONFIG_REVIEW; ?></legend>
-            <div class="splitColumn"><?php echo TEXT_CONTENT_DATABASE_PRE_UPLOAD; ?></div>
-            <div class="innerContent">
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTP_SERVER; ?></div>
-                <div class="labelFloat2"><?php echo HTTP_SERVER; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTPS_SERVER; ?></div>
-                <div class="labelFloat2"><?php echo HTTPS_SERVER; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DIR_WS_HTTP_CATALOG; ?></div>
-                <div class="labelFloat2"><?php echo DIR_WS_HTTP_CATALOG; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DIR_WS_HTTPS_CATALOG; ?></div>
-                <div class="labelFloat2"><?php echo DIR_WS_HTTPS_CATALOG; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTP_COOKIE_DOMAIN; ?></div>
-                <div class="labelFloat2"><?php echo HTTP_COOKIE_DOMAIN; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTPS_COOKIE_DOMAIN; ?></div>
-                <div class="labelFloat2"><?php echo HTTPS_COOKIE_DOMAIN; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTP_COOKIE_PATH; ?></div>
-                <div class="labelFloat2"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></div>
-                <div class="labelFloat2"><?php echo HTTPS_COOKIE_PATH; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DIR_FS_CATALOG; ?></div>
-                <div class="labelFloat2"><?php echo DIR_FS_CATALOG; ?></div>
-              </div>
-            </div>
-            <div class="innerContent">
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DB_SERVER; ?></div>
-                <div class="labelFloat2"><?php echo DB_SERVER; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DB_SERVER_USERNAME; ?></div>
-                <div class="labelFloat2"><?php echo DB_SERVER_USERNAME; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DB_SERVER_PASSWORD; ?></div>
-                <div class="labelFloat2"><?php echo DB_SERVER_PASSWORD; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_DB_DATABASE; ?></div>
-                <div class="labelFloat2"><?php echo DB_DATABASE; ?></div>
-              </div>
-            </div>
+        <div class="bounder"><fieldset><legend><?php echo TEXT_LEGEND_CONFIG_REVIEW; ?></legend>
 
-            <div class="innerContent">
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_OS_TYPE; ?></div>
-                <div class="labelFloat2"><?php echo (INSTALL_OS_TYPE==0)?TEXT_INFO_OS_UNIX:TEXT_INFO_OS_OTHER; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_SITE_NAME; ?></div>
-                <div class="labelFloat2"><?php echo INSTALL_SITE_NAME; ?></div>
-              </div>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_EMAIL_ADDRESS; ?></div>
-                <div class="labelFloat2"><?php echo INSTALL_EMAIL_ADDRESS; ?></div>
-              </div>
-<?php
-    $mailserver = INSTALL_HELPDESK_MAILSERVER;
-    if( !empty($mailserver) ) {
-?>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_HELPDESK_MAILSERVER; ?></div>
-                <div class="labelFloat2"><?php echo INSTALL_HELPDESK_MAILSERVER; ?></div>
-              </div>
-<?php
-    }
-?>
-              <div class="innerFloat" style="width: 48%">
-                <div class="labelFloat"><?php echo TEXT_INFO_SEO_URLS; ?></div>
-                <div class="labelFloat2"><?php echo (INSTALL_SEO_URLS==1)?TEXT_INFO_YES:TEXT_INFO_NO; ?></div>
-              </div>
-
-            </div>
-
-          </fieldset>
+          <div class="section1 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTP_SERVER; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTP_SERVER; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTPS_SERVER; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTPS_SERVER; ?></div></div>
+          </div>
+          <div class="section1 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DIR_WS_HTTP_CATALOG; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DIR_WS_HTTP_CATALOG; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DIR_WS_HTTPS_CATALOG; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DIR_WS_HTTPS_CATALOG; ?></div></div>
+          </div>
+          <div class="section1 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTP_COOKIE_DOMAIN; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTP_COOKIE_DOMAIN; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTPS_COOKIE_DOMAIN; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTPS_COOKIE_DOMAIN; ?></div></div>
+          </div>
+          <div class="section1 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTP_COOKIE_PATH; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTP_COOKIE_PATH; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo HTTPS_COOKIE_PATH; ?></div></div>
+          </div>
+          <div class="section1 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DIR_FS_CATALOG; ?></div></div>
+            <div class="floater quarter3 confirm2"><div class="ppad vlinepad"><?php echo DIR_FS_CATALOG; ?></div></div>
+          </div>
           <div class="spacer"></div>
+          <div class="section2 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DB_SERVER; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DB_SERVER; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DB_SERVER_USERNAME; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DB_SERVER_USERNAME; ?></div></div>
+          </div>
+          <div class="section2 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DB_DATABASE; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DB_DATABASE; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_DB_SERVER_PASSWORD; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo DB_SERVER_PASSWORD; ?></div></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="section3 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_OS_TYPE; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo (INSTALL_OS_TYPE==0)?TEXT_INFO_OS_UNIX:TEXT_INFO_OS_OTHER; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_SITE_NAME; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo INSTALL_SITE_NAME; ?></div></div>
+          </div>
+          <div class="section3 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_EMAIL_ADDRESS; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo INSTALL_EMAIL_ADDRESS; ?></div></div>
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_HELPDESK_MAILSERVER; ?></div></div>
+            <div class="floater quarter confirm2"><div class="ppad vlinepad"><?php echo INSTALL_HELPDESK_MAILSERVER; ?></div></div>
+          </div>
+          <div class="section3 bounder">
+            <div class="floater quarter confirm1"><div class="ppad vlinepad"><?php echo TEXT_INFO_SEO_URLS; ?></div></div>
+            <div class="floater quarter3 confirm2"><div class="ppad vlinepad"><?php echo (INSTALL_SEO_URLS==1)?TEXT_INFO_YES:TEXT_INFO_NO; ?></div></div>
+          </div>
+          <div class="splitColumn vmargin"><?php echo TEXT_CONTENT_DATABASE_PRE_UPLOAD; ?></div>
           <div class="formButtons">
             <form class="floatForm" name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=server_detect'?>" method="post"><input type="submit" title="<?php echo BUTTON_INFO_CANCEL; ?>" name="cancel" value="<?php echo BUTTON_CANCEL; ?>" /></form>
             <form class="floatForm" name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=database_upload'?>" method="post"><input type="submit" title="<?php echo BUTTON_INFO_FINAL_SETUP; ?>" name="submit_database" value="<?php echo BUTTON_CONFIRM_CONFIG; ?>" /></form>
           </div>
-        </form></div>
+        </div>
+
+        <div class="bounder tmargin"><div class="hpad">
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navcurrent"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20 calign passed"><a href="index.php">License Agreement</a></div>
+          <div class="floater quarter20 calign passed"><a href="index.php?action=server_detect">Server Setup</a></div>
+          <div class="floater quarter20 calign passed"><a href="index.php?action=database">Database Setup</a></div>
+          <div class="floater quarter20 calign current">Site Configuration</div>
+          <div class="floater quarter20 calign">Finished</div>
+        </div></div>
+
 <?php
   } elseif( $action == 'server_detect' || $action == 'server_process') {
 ?>
-        <div style="clear: both"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=server_process'?>" method="post">
-          <fieldset>
-            <legend><?php echo TEXT_LEGEND_SERVER_INFO; ?></legend>
-            <div class="splitColumn"><?php echo TEXT_CONTENT_SERVER_SETUP; ?></div>
-            <div class="innerContent">
-              <div class="innerFloat">
-                <div class="form_label"><?php echo TEXT_INFO_HTTP_SERVER; ?></div>
-                <div class="form_input"><input type="text" name="HTTP_SERVER" value="<?php echo $HTTP_SERVER; ?>" class="txtInput" /><?php echo $HTTP_SERVER_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_HTTPS_SERVER; ?></div>
-                <div class="form_input"><input type="text" name="HTTPS_SERVER" value="<?php echo $HTTP_SERVER; ?>" class="txtInput" /><?php echo $HTTPS_SERVER_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_DIR_WS_HTTP_CATALOG; ?></div>
-                <div class="form_input"><input type="text" name="HTTP_CATALOG_PATH"  value="<?php echo $HTTP_CATALOG_PATH; ?>" class="txtInput" /><?php echo $HTTP_CATALOG_PATH_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_DIR_WS_HTTPS_CATALOG; ?></div>
-                <div class="form_input"><input type="text" name="HTTPS_CATALOG_PATH" value="<?php echo $HTTPS_CATALOG_PATH; ?>" class="txtInput" /><?php echo $HTTPS_CATALOG_PATH_INFO; ?></div>
-              </div>
-              <div class="innerFloat">
+        <div class="formArea"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=server_process'?>" method="post"><fieldset><legend><?php echo TEXT_LEGEND_SERVER_INFO; ?></legend>
+          <div class="bounder">
+            <div class="quarter33 floater"><div class="rpad"><label for="http_server"><?php echo TEXT_INFO_HTTP_SERVER; ?></label></div></div>
+            <div class="quarter33 floater"><div class="ppad"><label for="http_catalog_path"><?php echo TEXT_INFO_DIR_WS_HTTP_CATALOG; ?></label></div></div>
+            <div class="quarter33 floater"><div class="lpad"><label for="dir_fs_catalog"><?php echo TEXT_INFO_DIR_FS_CATALOG; ?></label></div></div>
+          </div>
+          <div class="bounder">
+            <div class="quarter33 floater"><div class="rpad"><input type="text" name="HTTP_SERVER" value="<?php echo $HTTP_SERVER; ?>" id="http_server" /><span class="error"><?php echo $HTTP_SERVER_INFO; ?></span></div></div>
+            <div class="quarter33 floater"><div class="ppad"><input type="text" name="HTTP_CATALOG_PATH"  value="<?php echo $HTTP_CATALOG_PATH; ?>" id="http_catalog_path" /><span class="error"><?php echo $HTTP_CATALOG_PATH_INFO; ?></span></div></div>
+            <div class="quarter33 floater"><div class="lpad"><input type="text" name="DIR_FS_CATALOG" value="<?php echo $DIR_FS_CATALOG; ?>" id="dir_fs_catalog" /><span class="error"><?php echo $DIR_FS_CATALOG_INFO; ?></span></div></div>
+          </div>
+          <div class="bounder tmargin">
+            <div class="quarter33 floater"><div class="rpad"><label for="https_server"><?php echo TEXT_INFO_HTTPS_SERVER; ?></label></div></div>
+            <div class="quarter33 floater"><div class="ppad"><label for="https_catalog_path"><?php echo TEXT_INFO_DIR_WS_HTTPS_CATALOG; ?></label></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="bounder">
+            <div class="quarter33 floater"><div class="rpad"><input type="text" name="HTTPS_SERVER" value="<?php echo $HTTP_SERVER; ?>" class="txtInput wider" id="https_server" /><span class="error"><?php echo $HTTPS_SERVER_INFO; ?></span></div></div>
+            <div class="quarter33 floater"><div class="ppad"><input type="text" name="HTTPS_CATALOG_PATH" value="<?php echo $HTTPS_CATALOG_PATH; ?>" class="txtInput wider" id="https_catalog_path" /><span class="error"><?php echo $HTTP_COOKIE_DOMAIN_INFO; ?></span></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="bounder tmargin">
+            <div class="quarter33 floater"><div class="rpad"><label for="http_cookie_domain"><?php echo TEXT_INFO_HTTP_COOKIE_DOMAIN; ?></label></div></div>
+            <div class="quarter33 floater"><div class="ppad"><label for="http_cookie_path"><?php echo TEXT_INFO_HTTP_COOKIE_PATH; ?></label></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="bounder">
+            <div class="quarter33 floater"><div class="rpad"><input type="text" name="HTTP_COOKIE_DOMAIN" value="<?php echo $HTTP_COOKIE_DOMAIN; ?>" class="txtInput wider" id="http_cookie_domain" /><span class="error"><?php echo $HTTP_COOKIE_DOMAIN_INFO; ?></span></div></div>
+            <div class="quarter33 floater"><div class="ppad"><input type="text" name="HTTP_COOKIE_PATH"  value="<?php echo $HTTP_COOKIE_PATH; ?>" class="txtInput wider" id="http_cookie_path" /><span class="error"><?php echo $HTTP_COOKIE_PATH_INFO; ?></span></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="bounder tmargin">
+            <div class="quarter33 floater"><div class="rpad"><label for="https_cookie_domain"><?php echo TEXT_INFO_HTTPS_COOKIE_DOMAIN; ?></label></div></div>
+            <div class="quarter33 floater"><div class="ppad"><label for="https_cookie_path"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></label></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="bounder">
+            <div class="quarter33 floater"><div class="rpad"><input type="text" name="HTTPS_COOKIE_DOMAIN" value="<?php echo $HTTPS_COOKIE_DOMAIN; ?>" class="txtInput wider" id="https_cookie_domain" /><span class="error"><?php echo $HTTPS_COOKIE_DOMAIN_INFO; ?></span></div></div>
+            <div class="quarter33 floater"><div class="ppad"><input type="text" name="HTTPS_COOKIE_PATH" value="<?php echo $HTTPS_COOKIE_PATH; ?>" class="txtInput wider" id="https_cookie_path" /><span class="error"><?php echo $HTTPS_COOKIE_PATH_INFO; ?></span></div></div>
+            <div class="quarter33 floater"></div>
+          </div>
+          <div class="splitColumn vmargin"><?php echo TEXT_CONTENT_SERVER_SETUP; ?></div>
+          <div class="formButtons tmargin"><input type="submit" title="<?php echo BUTTON_INFO_SERVER_SETUP; ?>" name="submit_server" value="<?php echo BUTTON_SERVER_SETUP; ?>" /></div>
+<?php
+/*
+            <div class="innerFloat quarter33">
+              <div class="form_label"><?php echo TEXT_INFO_HTTP_SERVER; ?></div>
+              <div class="form_input"><input type="text" name="HTTP_SERVER" value="<?php echo $HTTP_SERVER; ?>" class="txtInput wider" /><?php echo $HTTP_SERVER_INFO; ?></div>
+              <div class="form_label"><?php echo TEXT_INFO_HTTPS_SERVER; ?></div>
+              <div class="form_input"><input type="text" name="HTTPS_SERVER" value="<?php echo $HTTP_SERVER; ?>" class="txtInput wider" /><?php echo $HTTPS_SERVER_INFO; ?></div>
+              <div class="form_label"><?php echo TEXT_INFO_DIR_WS_HTTP_CATALOG; ?></div>
+              <div class="form_input"><input type="text" name="HTTP_CATALOG_PATH"  value="<?php echo $HTTP_CATALOG_PATH; ?>" class="txtInput wider" /><?php echo $HTTP_CATALOG_PATH_INFO; ?></div>
+              <div class="form_label"><?php echo TEXT_INFO_DIR_WS_HTTPS_CATALOG; ?></div>
+              <div class="form_input"><input type="text" name="HTTPS_CATALOG_PATH" value="<?php echo $HTTPS_CATALOG_PATH; ?>" class="txtInput wider" /><?php echo $HTTPS_CATALOG_PATH_INFO; ?></div>
+            </div>
+            <div class="innerFloat quarter33">
+              <div class="hpad">
                 <div class="form_label"><?php echo TEXT_INFO_HTTP_COOKIE_DOMAIN; ?></div>
-                <div class="form_input"><input type="text" name="HTTP_COOKIE_DOMAIN" value="<?php echo $HTTP_COOKIE_DOMAIN; ?>" class="txtInput" /><?php echo $HTTP_COOKIE_DOMAIN_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_HTTPS_COOKIE_DOMAIN; ?></div>
-                <div class="form_input"><input type="text" name="HTTPS_COOKIE_DOMAIN" value="<?php echo $HTTPS_COOKIE_DOMAIN; ?>" class="txtInput" /><?php echo $HTTPS_COOKIE_DOMAIN_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_HTTP_COOKIE_PATH; ?></div>
-                <div class="form_input"><input type="text" name="HTTP_COOKIE_PATH"  value="<?php echo $HTTP_COOKIE_PATH; ?>" class="txtInput" /><?php echo $HTTP_COOKIE_PATH_INFO; ?></div>
-                <div class="form_label"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></div>
-                <div class="form_input"><input type="text" name="HTTPS_COOKIE_PATH" value="<?php echo $HTTPS_COOKIE_PATH; ?>" class="txtInput" /><?php echo $HTTPS_COOKIE_PATH_INFO; ?></div>
+                <div class="form_input"><input type="text" name="HTTP_COOKIE_DOMAIN" value="<?php echo $HTTP_COOKIE_DOMAIN; ?>" class="txtInput wider" /><?php echo $HTTP_COOKIE_DOMAIN_INFO; ?></div>
               </div>
-              <div class="innerFloat">
-                <div class="form_label"><?php echo TEXT_INFO_DIR_FS_CATALOG; ?></div>
-                <div class="form_input"><input type="text" name="DIR_FS_CATALOG" value="<?php echo $DIR_FS_CATALOG; ?>" class="txtInput" /><?php echo $DIR_FS_CATALOG_INFO; ?></div>
+              <div class="hpad">
+                <div class="form_label"><?php echo TEXT_INFO_HTTPS_COOKIE_DOMAIN; ?></div>
+                <div class="form_input"><input type="text" name="HTTPS_COOKIE_DOMAIN" value="<?php echo $HTTPS_COOKIE_DOMAIN; ?>" class="txtInput wider" /><?php echo $HTTPS_COOKIE_DOMAIN_INFO; ?></div>
+              </div>
+              <div class="hpad">
+                <div class="form_label"><?php echo TEXT_INFO_HTTP_COOKIE_PATH; ?></div>
+                <div class="form_input"><input type="text" name="HTTP_COOKIE_PATH"  value="<?php echo $HTTP_COOKIE_PATH; ?>" class="txtInput wider" /><?php echo $HTTP_COOKIE_PATH_INFO; ?></div>
+              </div>
+              <div class="hpad">
+                <div class="form_label"><?php echo TEXT_INFO_HTTPS_COOKIE_PATH; ?></div>
+                <div class="form_input"><input type="text" name="HTTPS_COOKIE_PATH" value="<?php echo $HTTPS_COOKIE_PATH; ?>" class="txtInput wider" /><?php echo $HTTPS_COOKIE_PATH_INFO; ?></div>
               </div>
             </div>
-          </fieldset>
-          <div class="formButtons" style="text-align: right;">
-            <div style="text-align: left"><input type="submit" title="<?php echo BUTTON_INFO_SERVER_SETUP; ?>" name="submit_server" value="<?php echo BUTTON_SERVER_SETUP; ?>" /></div>
-          </div>
-        </form></div>
+            <div class="innerFloat quarter33">
+              <div class="form_label"><?php echo TEXT_INFO_DIR_FS_CATALOG; ?></div>
+              <div class="form_input"><input type="text" name="DIR_FS_CATALOG" value="<?php echo $DIR_FS_CATALOG; ?>" class="txtInput wider" /><?php echo $DIR_FS_CATALOG_INFO; ?></div>
+            </div>
+            <div class="cleaner spacer"></div>
+
+          <div class="splitColumn"><?php echo TEXT_CONTENT_SERVER_SETUP; ?></div>
+          <div class="formButtons tmargin"><input type="submit" title="<?php echo BUTTON_INFO_SERVER_SETUP; ?>" name="submit_server" value="<?php echo BUTTON_SERVER_SETUP; ?>" /></div>
+*/
+?>
+        </fieldset></form></div>
+
+        <div class="bounder"><div class="hpad">
+          <div class="floater quarter20 navline navback"></div>
+          <div class="floater quarter20 navline navcurrent"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20 navline navnext"></div>
+          <div class="floater quarter20"><div class="navindex navback"></div></div>
+          <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20"><div class="navindex navnext"></div></div>
+          <div class="floater quarter20 passed calign"><a href="index.php">License Agreement</a></div>
+          <div class="floater quarter20 current calign"><a href="index.php?action=server_detect">Server Setup</a></div>
+          <div class="floater quarter20 calign">Database Setup</div>
+          <div class="floater quarter20 calign">Site Configuration</div>
+          <div class="floater quarter20 calign">Finished</div>
+        </div></div>
 <?php
   } else {
 ?>
-        <div style="clear: both"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=license_agreement'?>" method="post">
-          <fieldset>
-            <legend><?php echo TEXT_LEGEND_LICENSE; ?></legend>
-            <div class="scrollcontent"><?php echo $contents; ?></div>
-            <div class="spacer"></div>
-            <div class="messageStackWarning"><input type="checkbox" name="license" />&nbsp;<?php echo TEXT_INFO_LICENSE_AGREE; ?></div>
-          </fieldset>
-          <div class="formButtons" style="text-align: right;">
-            <div style="text-align: left"><input type="submit" title="<?php echo BUTTON_INFO_SERVER_SETUP; ?>" name="submit_server" value="<?php echo BUTTON_BEGIN; ?>" /></div>
-          </div>
-        </form></div>
+      <div class="formArea"><form name="install_form" action="<?php echo $_SERVER['SCRIPT_NAME'] . '?action=license_agreement'?>" method="post"><fieldset><legend><?php echo TEXT_LEGEND_LICENSE; ?></legend>
+        <div class="scrollcontent"><?php echo $contents; ?></div>
+        <div class="spacer"></div>
+        <div class="messageStackWarning"><input type="checkbox" name="license" /><label class="hpad" style="color: #FFF; font-size: 11px;"><?php echo TEXT_INFO_LICENSE_AGREE; ?></label></div>
+        <div class="formButtons tmargin"><input type="submit" title="<?php echo BUTTON_INFO_LICENSE_SETUP; ?>" name="submit_server" value="<?php echo BUTTON_BEGIN; ?>" /></div>
+      </fieldset></form></div>
+
+      <div class="bounder"><div class="hpad">
+        <div class="floater quarter20 navline navcurrent"></div>
+        <div class="floater quarter20 navline navnext"></div>
+        <div class="floater quarter20 navline navnext"></div>
+        <div class="floater quarter20 navline navnext"></div>
+        <div class="floater quarter20 navline navnext"></div>
+        <div class="floater quarter20"><div class="navindex navcurrent"></div></div>
+        <div class="floater quarter20"><div class="navindex navnext"></div></div>
+        <div class="floater quarter20"><div class="navindex navnext"></div></div>
+        <div class="floater quarter20"><div class="navindex navnext"></div></div>
+        <div class="floater quarter20"><div class="navindex navnext"></div></div>
+        <div class="floater quarter20 current calign">License Agreement</div>
+        <div class="floater quarter20 calign">Server Setup</div>
+        <div class="floater quarter20 calign">Database Setup</div>
+        <div class="floater quarter20 calign">Site Configuration</div>
+        <div class="floater quarter20 calign">Finished</div>
+      </div></div>
+
 <?php
   }
 ?>
+<?php
+/*
+      <div class="bounder"><div class="hpad">
+        <div class="floater quarter20" style="height: 2px; background: #F00;"></div>
+        <div class="floater quarter20" style="height: 2px; background: #F00;"></div>
+        <div class="floater quarter20" style="height: 2px; background: #F00;"></div>
+        <div class="floater quarter20" style="height: 2px; background: #F00;"></div>
+        <div class="floater quarter20" style="height: 2px; background: #F00;"></div>
+        <div class="floater quarter20"><div style="height: 6px; width: 1px; margin-left: 50%; background: #F00;"></div></div>
+        <div class="floater quarter20"><div style="height: 6px; width: 1px; margin-left: 50%; background: #F00;"></div></div>
+        <div class="floater quarter20"><div style="height: 6px; width: 1px; margin-left: 50%; background: #F00;"></div></div>
+        <div class="floater quarter20"><div style="height: 6px; width: 1px; margin-left: 50%; background: #F00;"></div></div>
+        <div class="floater quarter20"><div style="height: 6px; width: 1px; margin-left: 50%; background: #F00;"></div></div>
+        <div class="floater quarter20 calign"><a href="index.php">License Agreement</a></div>
+        <div class="floater quarter20 calign"><a href="index.php?action=server_detect">Server Setup</a></div>
+        <div class="floater quarter20 calign"><a href="index.php?action=database">Database Setup</a></div>
+        <div class="floater quarter20 calign"><a href="index.php?action=database">Setting Database</a></div>
+        <div class="floater quarter20 calign">Finished</div>
+      </div></div>
+*/
+?>
       </div>
       <div id="footer"><?php echo TEXT_CONTENT_FOOTER; ?></div>
+      <div class="b2" style="margin-left: 1px; margin-right: 1px;"></div>
+      <div class="b2" style="margin-left: 2px; margin-right: 2px;"></div>
+      <div class="b1" style="margin-left: 4px; margin-right: 4px;"></div>
+      <div class="b1" style="margin-left: 6px; margin-right: 6px;"></div>
   </div>
-</body> 
+</body>
 </html>

@@ -17,8 +17,10 @@
 //----------------------------------------------------------------------------
 */
 define('HEADING_TITLE', 'Plugins Manager');
+define('HEADING_HELP_TITLE', 'Help with the Plugins Manager');
 define('HEADING_INSTALL_TITLE', 'Install Plugin');
 define('HEADING_COPY_TITLE', 'Copy Plugin Files');
+define('HEADING_REVERT_TITLE', 'Revert Plugin Files');
 define('HEADING_UNINSTALL_TITLE', 'Uninstall Plugin');
 define('HEADING_REMOVE_TITLE', 'Completely Erase Plugin');
 define('HEADING_CONFIGURE_TITLE', 'Configuration Options');
@@ -26,11 +28,21 @@ define('HEADING_CONFIGURE_TITLE', 'Configuration Options');
 define('TABLE_HEADING_NAME', 'Plugins');
 define('TABLE_HEADING_STATUS', 'Status');
 define('TABLE_HEADING_FILE', 'Path/Filename');
+define('TABLE_HEADING_FILE_FROM', 'From - Path/Filename');
+define('TABLE_HEADING_FILE_INTO', 'To - Path/Filename');
 define('TABLE_HEADING_VERSION', 'Version');
 define('TABLE_HEADING_FRAMEWORK', 'Release');
 define('TABLE_HEADING_AUTHOR', 'Author');
 define('TABLE_HEADING_ACTION', 'Action');
 define('TABLE_HEADING_COMPRESSED', 'Compressed Plugins');
+
+define('TEXT_INFO_REVERT_NOTICE', 'About to revert files for the following plugin:');
+define('TEXT_INFO_REVERT_WARN', 
+  '<p>Useful for development, this operation will copy installed files of a plugin into the install folder. Different configurations for multiple sites can coexist in the same database.</p>' . 
+  '<p>If the plugin supports different templates it is important to select the right one during this step. Template related files will be restored into the installation folder under the associated template.</p>' .
+  '<p>If you are using a single admin for multiple sites, you will need to repeat this operation for each site. Use the multi-sites management tool to switch sites. Make sure you backup your plugin folder before this operation starts.</p>' . 
+  '<p style="color: #EE0000; font-weight: bold;">Important: write permissions must be enabled for the server scripts to properly delete or modify files. Different plugins may require read/write access to different files.</p>'
+);
 
 define('TEXT_INFO_COPY_NOTICE', 'About to copy files for the following plugin:');
 define('TEXT_INFO_COPY_WARN', 
@@ -48,12 +60,15 @@ define('TEXT_INFO_INSTALL_WARN',
 );
 define('TEXT_INFO_NEW_FILES', 'The following files will be created, if already exist will be overriden!');
 define('TEXT_INFO_COPY_FILES_OVER', 'The following files will be overriden if exist');
+define('TEXT_INFO_REVERT_FILES_OVER', 'The following files will be reverted');
 
 define('TEXT_INFO_UNINSTALL_NOTICE', 'About to uninstall the following plugin:');
 define('TEXT_INFO_UNINSTALL_WARN', 
   '<p>This operation will remove the files from the current site and drop the database tables related with this plugin.</p>' . 
   '<p>Manual removal of files on the web-front of different sites may required if you are using a single database and multiple sites. Make sure you backup your files and database before installing or uninstalling plugins<br />' . 
   'Plugins can write to the database, override or remove files and change configuration settings. Ensure your site files were recently backed up. There is no reverse process once you confirm this operation.</p>' . 
+  '<p>If you choose to create a zip file by ticking the compress zip checkbox below, all files in the install folder will be compressed into a zip archive, then removed from the install folder, so it is possible to install the plugin at a later time. ' . 
+  'Otherwise only installed files are removed. This operation will not copy back the installed folders. Use the revert operation to copy the files before compressing them.</p>' . 
   '<p style="color: #EE0000; font-weight: bold;">Important: write permissions must be enabled for the server scripts to properly delete or modify files. Different plugins may require read/write access to different files.</p>'
 );
 define('TEXT_INFO_REMOVE_FILES', 'The following files will be removed');
@@ -72,17 +87,27 @@ define('TEXT_FILE_FOLDER', 'Folder:');
 define('TEXT_FILE_UPLOAD', 'File to Upload:');
 define('TEXT_FILE_UPLOAD_FOLDER', 'Upload in:');
 
+define('TEXT_INFO_FRONT_FILES', 'Front Files');
+define('TEXT_INFO_FRONT_STRINGS', 'Front String Files of %s required for the current languages installed. (If not found, the system will attempt to create them)');
+define('TEXT_INFO_ADMIN_FILES', 'Administration Files');
 define('TEXT_INFO_SORT_ORDER', 'Order to Process:');
+define('TEXT_INFO_FRONT_SCRIPTS', 'Plugin Web-Front Files:');
+define('TEXT_INFO_ADMIN_SCRIPTS', 'Plugin Back-End Files:');
 define('TEXT_INFO', 'Information');
 define('TEXT_INFO_INSTALL', 'Install');
 define('TEXT_INFO_UNINSTALL', 'Uninstall');
+define('TEXT_INFO_ARCHIVE', 'Download an archive for this plugin');
 define('TEXT_INFO_REMOVE', 'Completely Remove Plugin');
 define('TEXT_INFO_CONFIGURE', 'Configure Plugin');
 define('TEXT_INFO_BASIC_SETTINGS', 'Basic Settings');
 define('TEXT_INFO_EDIT', 'Enable/Disable Plugin');
 define('TEXT_INFO_COPY_FILES', 'Copy Web-Front Files again');
+define('TEXT_INFO_REVERT_FILES', 'Revert Files into the Plugin Folder');
 define('TEXT_INFO_ENABLE', 'Enable');
 define('TEXT_INFO_DISABLE', 'Disable');
+define('TEXT_INFO_CREATE_ZIP', 'Create Zip File');
+define('TEXT_INFO_REMOVE_MAKE_ZIP', 'Completely remove files but leave an installation zip file of this plugin');
+define('TEXT_INFO_DATABASE_BACKUP', 'If applicable, backup plugin database records');
 
 define('TEXT_INFO_SYNOPSIS', 'Synopsis:');
 define('TEXT_INFO_SIDE', 'Operates in:');
@@ -101,10 +126,14 @@ define('TEXT_INFO_EMPTY', 'No Plugins Selected');
 define('TEXT_INFO_OPTIONS', 'Options');
 
 define('TEXT_INFO_NO_HELP', 'There is no brief description about this plugin');
+define('TEXT_INFO_ARCHIVE_TITLE', 'Download');
+define('TEXT_INFO_ARCHIVE_INTRO', 'This operation will download an archive the entire folder of %s.<br />Previously stored archives may be included if the store to server option is not set.');
+define('TEXT_INFO_ARCHIVE_STORE', 'Also store it on the server');
+
 define('TEXT_INFO_DECOMPRESS', 'Decompress %s into %s');
 define('TEXT_INFO_DECOMPRESS_TITLE', 'Extract');
-
 define('TEXT_INFO_DECOMPRESS_INTRO', 'This operation will decompress the following archive:');
+
 define('TEXT_INFO_INTO_FOLDER', 'Into the following administration folder:');
 
 define('TEXT_INFO_ADMIN_USE', 'Uses Admin Only');
@@ -116,6 +145,8 @@ define('TEXT_INFO_PRECOPY_FAILED', 'Addition plugin options have halted copying 
 
 define('ERROR_PLUGIN_PARTIAL_INSTALL', 'Installation of %s is incomplete, check the file permissions and plugin files');
 define('ERROR_PLUGIN_PARTIAL_UNINSTALL', 'Could not remove all files of %s, check the file permissions');
+define('ERROR_PLUGIN_PARTIAL_REVERT', 'Reverting files of %s is incomplete, check the file permissions and plugin files');
+define('ERROR_PLUGIN_MISSING_STRINGS', 'Missing string files for %s. At least one matching language folder is required');
 define('WARNING_PLUGIN_ALREADY_INSTALLED', 'The plugin is already installed, will be best to uninstall it before re-installing it!');
 define('WARNING_PLUGIN_NOT_INSTALLED', 'The plugin you are trying to uninstall does not seem to be installed!');
 define('WARNING_PLUGIN_EDIT_NOT_INSTALLED', 'The plugin you are trying to edit does not seem to be installed!');
@@ -123,6 +154,11 @@ define('WARNING_PLUGIN_NOT_CONFIGURABLE', 'The plugin you are trying to access i
 define('WARNING_PLUGIN_STATUS_CHANGE', 'Plugin status change completed!');
 define('WARNING_PLUGIN_REINSERT', 'Plugin %s exists in the database, Re-Inserting');
 define('WARNING_PLUGIN_FILES_COPIED', 'Web-Front files copied for Plugin %s');
+define('WARNING_PLUGIN_NO_DATABASE', 'No database records stored for Plugin %s');
+define('WARNING_PLUGIN_MISSING_STRINGS', 'Attempt to create missing language string files for %s. Requires manual string files validation');
 define('SUCCESS_PLUGIN_INSTALLED', 'Installation of %s is complete');
 define('SUCCESS_PLUGIN_UNINSTALLED', 'Uninstall of %s completed');
+define('SUCCESS_PLUGIN_REVERTED', 'Reverting Plugin files of %s is complete');
+define('SUCCESS_PLUGIN_REVERT_ZIP', 'Reverting Plugin files of %s complete, Install Zip File Generated');
+define('SUCCESS_PLUGIN_DATABASE_BACKUP', 'Database backup of %s for existing records completed');
 ?>

@@ -16,50 +16,36 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-?>
-</head>
-<!-- body //-->
-<?php
-  $params = $focus = $calendar = '';
-  if( isset($set_focus) ) {
-    $focus = 'SetFocus();';
-  } 
-  if(isset($set_calendar) ) {
-    $calendar = 'init_calendar();';
+  class html_start_sub2 {
+    function html_start_sub2() {
+      extract(tep_load('defs', 'database', 'languages', 'sessions', 'plugins_admin', 'message_stack'));
+      $selected_box =& $cSessions->register('selected_box');
+
+      $html = '';
+      if( $cDefs->ajax ) {
+        $html .= '  <div id="ajax">' . "\n";
+        $html .= '    <div id="wrapper">' . "\n";
+        echo $html;
+        return;
+      }
+      tep_output_media();
+      $html .= '</head>' . "\n";
+      $html .= '<body>' . "\n";
+      $html .= '  <div id="wrapper">' . "\n";
+      echo $html;
+      if( $cDefs->script != FILENAME_DEFAULT ) {
+        require(DIR_FS_INCLUDES . 'header.php');
+        echo '    <div class="cleaner"></div>' . "\n";
+        echo '      <div id="leftpane">' . "\n";
+        require(DIR_FS_INCLUDES . 'column_left.php');
+        echo '      </div>' . "\n";
+        echo '      <div id="mainpane">' . "\n";
+      } else {
+        echo '    <div class="homepane main">' . "\n";
+      }
+      // Display Script specific notices
+      $msg->output();
+    }
   }
-  $tmp_params = $focus . $calendar;
-  if(strlen($tmp_params) ) {
-    $params = ' onload="' . $tmp_params . '"';
-  }
-  echo '<body' . $params . '>' . "\n";
-?>
-  <div id="wrapper">
-<?php
-  if( basename($PHP_SELF) != FILENAME_DEFAULT ) {
-?>
-<?php require(DIR_WS_INCLUDES . 'header.php'); ?>
-    <div class="cleaner">
-      <div id="leftpane"><?php require(DIR_WS_INCLUDES . 'column_left.php'); ?></div>
-      <div id="mainpane">
-<?php
-  } else {
-?>
-    <div class="main" style="width: 860px; overflow: hidden; margin: auto;">
-<?php
-  }
-  // Display Script specific notices
-  $messageStack->output();
-/*
-  if( defined('HELP_SHOT') ) {
-?>
-<script language="javascript" type="text/javascript">
-  $("div#help_image_group a").fancybox({
-    'titleShow'     : false,
-    'transitionIn'  : 'elastic',
-    'transitionOut' : 'elastic'
-  });
-</script>
-<?php
-  }
-*/
+  new html_start_sub2();
 ?>

@@ -17,8 +17,8 @@
 //----------------------------------------------------------------------------
 */
   $rstring = $cStrings->TEXT_TOTAL_RATING_EMPTY;
-  if( $rating_array['total_resolution'] ) {
-    $r = (100*ceil($rating_array['total_rating'])/$rating_array['total_resolution']) . '%';
+  if( $rating_array['total_resolution'] > 1 ) {
+    $r = (100*ceil($rating_array['total_rating'])/($rating_array['total_resolution']-1)) . '%';
     $rstring = sprintf($cStrings->TEXT_TOTAL_RATING, $r);
   }
   $j = count($comments_array);
@@ -43,6 +43,13 @@
             <div class="floater"><?php echo $cStrings->TEXT_FROM . '&nbsp;' . $post_author; ?></div>
             <div class="floatend"><?php echo $post_date; ?></div>
             <div class="desc cleaner"><?php echo $entry['comments_body']; ?></div>
+          </div>
+<?php
+  }
+  if( !$this->form_show ) {
+?>
+          <div class="cleaner vspacer">
+            <div class="lcharsep" style="background: #FFF; margin: 12px 0px; border: 1px solid #777;"><h2><?php echo $cStrings->TEXT_LOCKED_COMMENTS; ?></i></div>
           </div>
 <?php
   }

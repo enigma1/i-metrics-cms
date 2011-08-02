@@ -1,1 +1,1 @@
-The popup image plugin attaches the jquery fancybox plugin into the images
+<p>The popup image plugin attaches the jquery fancybox plugin into the images of your website.</p>

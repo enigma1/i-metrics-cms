@@ -66,9 +66,9 @@
   if( empty($action) ) {
 ?>
     <div class="comboHeading" style="border: 1px solid #777;">
-      <?php echo tep_draw_form("insert", basename($PHP_SELF), 'action=insert', 'post', 'id="core_upload_form" enctype="multipart/form-data"'); ?>
-        <div class="pageHeading"><?php echo TEXT_FILE_UPLOAD_FOLDER . '&nbsp;'  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></div>
-        <div class="smallText" style="padding: 8px 0px 8px 0px;">
+      <?php echo tep_draw_form("insert", $g_script, 'action=insert', 'post', 'id="core_upload_form" enctype="multipart/form-data"'); ?>
+        <div><?php echo TEXT_FILE_UPLOAD_FOLDER . '&nbsp;'  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></div>
+        <div style="padding: 8px 0px 8px 0px;">
 <?php 
     echo TEXT_FILE_UPLOAD . '&nbsp;' . tep_draw_file_field('image');
     echo tep_draw_hidden_field('module','image_upload');
@@ -86,7 +86,7 @@
     if( $j ) {
 ?>
         <div style="clear: both;">
-          <div class="pageHeading"><?php echo TEXT_FILE_FOLDER . '&nbsp;'  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></div>
+          <div><?php echo TEXT_FILE_FOLDER . '&nbsp;'  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></div>
           
 <?php
       for($i=0; $i<$j; $i++) {
@@ -114,7 +114,7 @@
         echo '<a class="folder_upload_list" href="#" attr="' . $attr . '">' . tep_image(DIR_WS_IMAGES . $folder_image, basename($subdirs_array[$i])) . '</a>'; 
 ?>
             </div>
-            <div class="smallText" style="text-align: center"><?php echo basename($subdirs_array[$i]); ?></div>
+            <div class="calign"><?php echo basename($subdirs_array[$i]); ?></div>
           </div>
 <?php
       }

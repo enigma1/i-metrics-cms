@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Admin: Multiple Sites Control and Switch strings file
@@ -57,6 +57,7 @@ define('TEXT_INFO_DELETE', 'Warning this operation will delete the following con
 define('TEXT_INFO_MULTI_DELETE', 'Warning this operation will delete the following configuration files:');
 define('TEXT_INFO_RESTART', 'Warning this operation will change the <b>Administrator Configuration</b> files and restart the I-Metrics CMS to the following configuration:');
 define('TEXT_INFO_MARK', 'Tick %s then select an action to update or delete');
+define('TEXT_INFO_ADD_NEW_SITE', 'Add a new site');
 
 define('WARNING_NOTHING_SELECTED', 'No entries selected. Use the checkboxes to select entries first');
 define('ERROR_EMPTY_CONFIG_NAME', 'The configuration name cannot be empty. Required for the configuration file');

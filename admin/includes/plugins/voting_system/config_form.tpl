@@ -17,28 +17,24 @@
 //----------------------------------------------------------------------------
 */
 ?>
-      <div class="listArea"><?php echo tep_draw_form('rc', $g_script, tep_get_all_get_params(array('action')) . 'action=process_options', 'post'); ?><table class="tabledata" cellspacing="1">
+      <div class="listArea"><?php echo tep_draw_form('rc', $cDefs->script, tep_get_all_get_params('action') . 'action=process_options', 'post'); ?><table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->HEADING_DISPLAY_OPTIONS; ?></th>
         </tr>
         <tr class="dataTableRow">
-          <td><table cellpadding="2">
-            <tr>
-              <td>
+          <td class="charsep">
 <?php
   $left_status = ($display_col == 1)?0:1;
   $right_status = ($display_col == 0)?0:1;
   $radio_array = array(
-    tep_draw_radio_field('display_col', 0, ($display_col == 1)?false:true) . $cStrings->TEXT_DISPLAY_COLUMN_LEFT,
-    tep_draw_radio_field('display_col', 1, ($display_col == 1)?true:false) . $cStrings->TEXT_DISPLAY_COLUMN_RIGHT,
+    tep_draw_radio_field('display_col', 0, ($display_col == 1)?false:true, 'id="vote_left"') . '<label for="vote_left">' . $cStrings->TEXT_DISPLAY_COLUMN_LEFT . '</label>',
+    tep_draw_radio_field('display_col', 1, ($display_col == 1)?true:false, 'id="vote_right"') . '<label for="vote_right">' . $cStrings->TEXT_DISPLAY_COLUMN_RIGHT . '</label>',
   );
   echo implode('&nbsp;&nbsp', $radio_array);
 ?>
-              </td>
-          </table></td>
+          </td>
           <td><?php echo $cStrings->TEXT_TEXT_PAGES; ?></td>
         </tr>
-
         <tr class="dataTableRow">
           <td><?php echo tep_draw_checkbox_field('text_pages', 1, $text_pages); ?></td>
           <td><?php echo $cStrings->TEXT_TEXT_PAGES; ?></td>
@@ -52,7 +48,7 @@
           <td><?php echo $cStrings->TEXT_IMAGE_COLLECTIONS; ?></td>
         </tr>
       </table>
-      <table class="tabledata" cellspacing="1">
+      <table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->HEADING_CONFIGURATION_OPTIONS; ?></th>
         </tr>
@@ -61,6 +57,6 @@
           <td><?php echo $cStrings->TEXT_BOX_STEPS; ?></td>
         </tr>
         <tr>
-          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
+          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($cDefs->script, tep_get_all_get_params('action')) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
         </tr>
       </table></form></div>

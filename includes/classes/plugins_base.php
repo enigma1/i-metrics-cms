@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -19,28 +19,41 @@
 //
 */
   class plugins_base {
-    var $key;
-    var $active=true;
-    var $scripts_array = array();
-    var $strings_array = array();
 
     // Compatibility constructor
     function plugins_base() {
+      extract(tep_load('languages'));
+
+      $this->scripts_array = $this->strings_array = array();
       $this->site_index = tep_create_safe_string(tep_get_site_path(), '_', "/[^0-9a-z\-_]+/i");
+
       $this->key = get_class($this);
-      $this->web_path = DIR_WS_PLUGINS.$this->key.'/';
-      $this->web_template_path = DIR_WS_TEMPLATE.$this->key.'/';
+      $key_path = tep_trail_path($this->key);
+      $this->web_path = DIR_WS_PLUGINS . $key_path;
+      $this->fs_path = DIR_FS_PLUGINS . $key_path;
+      $this->web_template_path = DIR_WS_TEMPLATE . $key_path;
+      $this->fs_template_path = DIR_FS_TEMPLATE . $key_path;
+      $this->fs_language_path = DIR_FS_STRINGS . tep_trail_path($lng->path) . $key_path;
       $this->active = $this->scripts_check();
+    }
+
+    function load_strings($files_array) {
+      $strings_array = array();
+      foreach($files_array as $value) {
+        $file = $this->fs_language_path . $value;
+        $strings_array = array_merge($strings_array, tep_get_strings_array($file));
+      }
+      return new objectInfo($strings_array, false);
     }
 
     // Retrieve plugin configuration data from the database
     function load_options($all=false) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $key = get_class($this);
       $index = $this->site_index;
-      $plugins_query = $g_db->query("select plugins_data from " . TABLE_PLUGINS . " where plugins_key = '" . $g_db->filter($key) . "'");
-      $plugins_array = $g_db->fetch_array($plugins_query);
+      $plugins_query = $db->query("select plugins_data from " . TABLE_PLUGINS . " where plugins_key = '" . $db->filter($key) . "'");
+      $plugins_array = $db->fetch_array($plugins_query);
       $plugins_data = array();
       if( !empty($plugins_array['plugins_data']) ) {
         $tmp_data = unserialize($plugins_array['plugins_data']);
@@ -56,7 +69,7 @@
 
     // Save plugin configuration data from the database
     function save_options($input_array) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $key = get_class($this);
       $index = $this->site_index;
@@ -77,13 +90,14 @@
       }
       $plugins_data[$index] = $input_array;
       $store_data = serialize($plugins_data);
-      $g_db->query("update " . TABLE_PLUGINS . " set plugins_data = '" . $g_db->filter($store_data) . "' where plugins_key = '" . $g_db->filter($key) . "'");
+      $db->query("update " . TABLE_PLUGINS . " set plugins_data = '" . $db->filter($store_data) . "' where plugins_key = '" . $db->filter($key) . "'");
     }
 
     function scripts_check() {
-      global $g_script;
+      extract(tep_load('defs'));
+
       if( empty($this->scripts_array) ) return true;
-      return in_array($g_script, $this->scripts_array);
+      return in_array($cDefs->script, $this->scripts_array);
     }
 
     function change($state) {

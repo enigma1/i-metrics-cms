@@ -22,7 +22,7 @@ define('HEADING_META_TYPES_UPDATE', 'Update META-G Types');
 define('TABLE_HEADING_META_NAME', 'Name');
 define('TABLE_HEADING_META_HANDLER', 'Handler');
 define('TABLE_HEADING_META_LINKAGE', 'Linkage');
-define('TABLE_HEADING_META_CLASS', 'Class');
+define('TABLE_HEADING_META_CLASS', 'Class (.php)');
 define('TABLE_HEADING_SORT_ORDER', 'Sort Order');
 define('TABLE_HEADING_STATUS', 'Status');
 define('TABLE_HEADING_SELECT', 'Select');

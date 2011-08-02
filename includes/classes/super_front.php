@@ -27,7 +27,7 @@
     }
 
     function get_entries($zone, $tflag=true) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $super_array = array();
       $zone_id = $this->get_zone($zone);
@@ -40,25 +40,22 @@
         $select_string .= ', sub_alt_title';
       }
 
-      $zone_query = $g_db->query("select subzone_id" . $select_string . " from " . TABLE_SUPER_ZONES . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order");
-      if( !$g_db->num_rows($zone_query) ) {
-        return $super_array;
-      }
+      $super_query_raw = "select subzone_id" . $select_string . " from " . TABLE_SUPER_ZONES . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order";
+      $super_array = $db->query_to_array($super_query_raw, 'subzone_id');
 
-      while( $zone = $g_db->fetch_array($zone_query) ) {
-        $super_array[$zone['subzone_id']] = $zone;
-      }
       return $super_array;
     }
 
     function get_parent_zones($subzone_id, $enabled_flag=true) {
-      global $g_db;
+      extract(tep_load('database'));
 
-      $zones_array = $g_db->query_to_array("select abstract_zone_id from " . TABLE_SUPER_ZONES . " where subzone_id = '" . (int)$subzone_id . "' order by sequence_order");
+      $zones_array = $db->query_to_array("select abstract_zone_id from " . TABLE_SUPER_ZONES . " where subzone_id = '" . (int)$subzone_id . "' order by sequence_order");
 
       if( $enabled_flag ) {
         $tmp_array = tep_array_invert_from_element($zones_array, 'abstract_zone_id', 'abstract_zone_id');
-        $zones_array = $g_db->query_to_array("select abstract_zone_id from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id in (" . $g_db->filter(implode(',', $tmp_array)) . ") and status_id='1'");
+        if( !empty($tmp_array) ) {
+          $zones_array = $db->query_to_array("select abstract_zone_id from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id in (" . $db->filter(implode(',', $tmp_array)) . ") and status_id='1'");
+        }
       }
       return $zones_array;
     }

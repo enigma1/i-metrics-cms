@@ -7,10 +7,42 @@
 
   Copyright (c) 2002 osCommerce
 
-  Released under the GNU General Public License
+// Modifications by Asymmetrics
+//----------------------------------------------------------------------------
+// Copyright (c) 2007-2011 Asymmetric Software - Innovation & Excellence
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Admin: Server Information script
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Modifications:
+// - Added various SQL Details
+// - Added PHP Extensions/Functions
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
 
 define('HEADING_TITLE', 'Server Information');
+
+define('HEADING_SQL_INFO', 'Database Server Information');
+define('HEADING_PHP_INFO', 'PHP Server Information');
+define('HEADING_PHP_EXT', 'PHP Compiled and Loaded Extensions and Functions');
+
+define('TEXT_INFO_PHP_FUNCTION', '%s in the PHP Function Manual');
+define('TEXT_INFO_PHP_EXTENSIONS', 'PHP Extensions and Functions');
+define('TEXT_INFO_PHP_SERVER', 'PHP Server Information');
+define('TEXT_INFO_SQL_SERVER', 'Database Server Information');
+define('TEXT_INFO_SQL_PROCESSES', 'SQL Running Processes');
+define('TEXT_INFO_SQL_STATS', 'SQL Statistics');
+define('TEXT_INFO_SQL_VARS', 'SQL Variables');
+
+define('TEXT_INFO_ID', 'ID');
+define('TEXT_INFO_HOST', 'Host');
+define('TEXT_INFO_DB', 'Database');
+define('TEXT_INFO_CMD', 'Command');
+define('TEXT_INFO_TIME', 'Time');
 
 define('TITLE_SERVER_HOST', 'Server Host:');
 define('TITLE_SERVER_OS', 'Server OS:');

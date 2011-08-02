@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Admin Plugin: Voting System Installation and Configuration Strings
@@ -21,6 +21,8 @@ $HEADING_CONFIGURATION_OPTIONS       = 'Configuration Options';
 
 $TEXT_SELECT_TEMPLATE                = 'Please Select a template:';
 $TEXT_ADDITIONAL_TEMPLATE_FILES      = 'Additional Template files will be installed based on your selection.';
+$TEXT_ADDITIONAL_TEMPLATE_FILES_REV  = 'Template files will be reverted based on your selection.';
+
 $TEXT_DISPLAY_BOX                    = 'Display Box';
 $TEXT_DISPLAY_MODULE                 = 'Display Module';
 $TEXT_DISPLAY_COLUMN                 = 'Display Box in column';

@@ -18,59 +18,66 @@
 //----------------------------------------------------------------------------
 */
 //-MS- Abstract Zones Support Added
-  define('TABLE_ABSTRACT_ZONES', 'abstract_zones');
-  define('TABLE_ABSTRACT_TYPES', 'abstract_types');
+$TABLE_ABSTRACT_ZONES             = 'abstract_zones';
+$TABLE_ABSTRACT_TYPES             = 'abstract_types';
 
-  define('TABLE_GTEXT', 'gtext');
-  define('TABLE_GTEXT_COMMENTS', 'gtext_comments');
-  define('TABLE_GTEXT_TO_DISPLAY', 'gtext_to_display');
+$TABLE_GTEXT                      = 'gtext';
+$TABLE_GTEXT_TO_DISPLAY           = 'gtext_to_display';
 
-  define('TABLE_SUPER_ZONES', 'super_zones');
-  define('TABLE_IMAGE_ZONES', 'image_zones');
+$TABLE_SUPER_ZONES                = 'super_zones';
+$TABLE_IMAGE_ZONES                = 'image_zones';
 //-MS- Abstract Zones Support Added EOM
 
 //-MS- SEO-G Added
-  define('TABLE_SEO_URL', 'seo_url');
-  define('TABLE_SEO_CACHE', 'seo_cache');
-  define('TABLE_SEO_REDIRECT', 'seo_redirect');
-  define('TABLE_SEO_EXCLUDE', 'seo_exclude');
-  define('TABLE_SEO_FREQUENCY', 'seo_frequency');
-  define('TABLE_SEO_TYPES', 'seo_types');
-  define('TABLE_SEO_TO_GTEXT','seo_to_gtext');
-  define('TABLE_SEO_TO_ABSTRACT','seo_to_abstract');
-  define('TABLE_SEO_TO_SCRIPTS','seo_to_scripts');
+$TABLE_SEO_URL                    = 'seo_url';
+$TABLE_SEO_CACHE                  = 'seo_cache';
+$TABLE_SEO_REDIRECT               = 'seo_redirect';
+$TABLE_SEO_EXCLUDE                = 'seo_exclude';
+$TABLE_SEO_FREQUENCY              = 'seo_frequency';
+$TABLE_SEO_TYPES                  = 'seo_types';
+$TABLE_SEO_TO_GTEXT               = 'seo_to_gtext';
+$TABLE_SEO_TO_ABSTRACT            = 'seo_to_abstract';
+$TABLE_SEO_TO_SCRIPTS             = 'seo_to_scripts';
 //-MS- SEO-G Added EOM
 
 //-MS- META-G Added
-  define('TABLE_META_SCRIPTS', 'meta_scripts');
-  define('TABLE_META_LEXICO', 'meta_lexico');
-  define('TABLE_META_EXCLUDE', 'meta_exclude');
-  define('TABLE_META_TYPES', 'meta_types');
-  define('TABLE_META_GTEXT','meta_gtext');
-  define('TABLE_META_ABSTRACT','meta_abstract');
+$TABLE_META_SCRIPTS               = 'meta_scripts';
+$TABLE_META_LEXICO                = 'meta_lexico';
+$TABLE_META_EXCLUDE               = 'meta_exclude';
+$TABLE_META_TYPES                 = 'meta_types';
+$TABLE_META_GTEXT                 = 'meta_gtext';
+$TABLE_META_ABSTRACT              = 'meta_abstract';
 //-MS- META-G Added EOM
 
 //-MS- Cache Support added
-  define('TABLE_CACHE_HTML', 'cache_html');
-  define('TABLE_CACHE_HTML_REPORTS', 'cache_html_reports');
+$TABLE_CACHE_HTML                 = 'cache_html';
+$TABLE_CACHE_HTML_REPORTS         = 'cache_html_reports';
 //-MS- Cache Support added
 
 //-MS- Add Help Desk system
-  define('TABLE_HELPDESK_DEPARTMENTS', 'helpdesk_departments');
+$TABLE_HELPDESK_DEPARTMENTS       = 'helpdesk_departments';
 //-MS- Add Help Desk system EOM
 
 //-MS- Plugins
-  define('TABLE_PLUGINS', 'plugins');
+$TABLE_PLUGINS                    = 'plugins';
 //-MS- Plugins EOM
 
+//-MS- Multilingual
+$TABLE_LANGUAGES                  = 'languages';
+//-MS- Multilingual EOM
+
+$TABLE_TEMPLATES                  = 'templates';
+
 //-MS- Original osCommerce MS2.2 Tables
-  define('TABLE_CONFIGURATION', 'configuration');
-  define('TABLE_CONFIGURATION_GROUP', 'configuration_group');
-  define('TABLE_SESSIONS', 'sessions');
-  define('TABLE_WHOS_ONLINE', 'whos_online');
+$TABLE_CONFIGURATION              = 'configuration';
+$TABLE_CONFIGURATION_GROUP        = 'configuration_group';
+$TABLE_SESSIONS                   = 'sessions';
+$TABLE_SESSIONS_ADMIN             = 'sessions_admin';
+$TABLE_WHOS_ONLINE                = 'whos_online';
+$TABLE_CUSTOMERS                  = 'customers';
 //-MS- Original osCommerce MS2.2 Tables EOM
 
-  define('TABLE_FORM_FIELDS', 'form_fields');
-  define('TABLE_FORM_OPTIONS', 'form_options');
-  define('TABLE_FORM_VALUES', 'form_values');
+$TABLE_FORM_FIELDS                = 'form_fields';
+$TABLE_FORM_OPTIONS               = 'form_options';
+$TABLE_FORM_VALUES                = 'form_values';
 ?>

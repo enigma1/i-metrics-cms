@@ -16,12 +16,13 @@
 // I-Metrics CMS
 //----------------------------------------------------------------------------
 // Modifications:
-// - 07/05/2007: PHP5 Register Globals and Long Arrays Off support added
-// - 07/08/2007: PHP5 Long Arrays Off support added
-// - 03/05/2009: Added Thumbnailer support OTF and enchantments
-// - 03/05/2009: Converted code for CMS removed unused functions
-// - 03/05/2009: Integrated SEO-G and image thumbnailer
-// - 03/05/2009: HTML tag fixes for XHTML compliant code generation
+// - PHP5 Register Globals and Long Arrays Off support added
+// - PHP5 Long Arrays Off support added
+// - Added Thumbnailer support OTF and enchantments
+// - Converted code for CMS removed unused functions
+// - Integrated SEO-G and image thumbnailer
+// - HTML tag fixes for XHTML compliant code generation
+// - Ported for the I-Metrics CMS
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
@@ -29,9 +30,13 @@
 ////
 // The HTML href link wrapper function
   function tep_href_link($page = '', $parameters = '', $connection = '', $add_session_id = true, $search_engine_safe = true, $url_encode=true) {
+    extract(tep_load('defs', 'sessions'));
+
 //-MS- SEO-G Added
-    global $request_type, $g_session, $SID, $g_seo_url;
+    global $g_seo_url;
 //-MS- SEO-G Added EOM
+
+    $sid = '';
 
     $link = HTTP_SERVER . DIR_WS_HTTP_CATALOG;
     if( $connection == 'SSL' && ENABLE_SSL == true) {
@@ -51,28 +56,30 @@
       $separator = '?';
     }
 
-    while ( (substr($link, -1) == '&') || (substr($link, -1) == '?') ) $link = substr($link, 0, -1);
+    rtrim($link, '?&');
 
 // Add the session ID when moving from different HTTP and HTTPS servers, or when SID is defined
-    if( SESSION_FORCE_COOKIE_USE == 'False' && $add_session_id == true && isset($g_session) && is_object($g_session) && $g_session->has_started() ) {
-      if( !empty($SID) ) {
-        $_sid = $SID;
-      } elseif( ( ($request_type == 'NONSSL') && ($connection == 'SSL') && (ENABLE_SSL == true) ) || ( ($request_type == 'SSL') && ($connection == 'NONSSL') ) ) {
+    if( defined('SESSION_FORCE_COOKIE_USE') && SESSION_FORCE_COOKIE_USE == 'false' && $add_session_id == true && $cSessions->has_started() ) {
+      
+      $sid = $cSessions->get_string();
+
+      if( empty($sid) && (($cDefs->request_type == 'NONSSL' && $connection == 'SSL' && ENABLE_SSL == true) || ($cDefs->request_type == 'SSL' && $connection == 'NONSSL')) ) {
         if( HTTP_COOKIE_DOMAIN != HTTPS_COOKIE_DOMAIN ) {
-          $_sid = $g_session->name() . '=' . $g_session->id();
+          $sid = $cSessions->get_string(true);
         }
       }
     }
 
 //-MS- SEO-G Added
     if( isset($g_seo_url) && is_object($g_seo_url) ) {
-      if( $connection == 'NONSSL' || SEO_PROCESS_SSL == 'true' )
+      if( $connection == 'NONSSL' || SEO_PROCESS_SSL == 'true' ) {
         $link = $g_seo_url->get_seo_url($link, $separator, $search_engine_safe);
+      }
     }
 //-MS- SEO-G Added EOM
 
-    if( isset($_sid) ) {
-      $link .= $separator . tep_output_string($_sid);
+    if( !empty($sid) ) {
+      $link .= $separator . $sid;
     }
 
     if( $url_encode && !empty($parameters) ) {
@@ -83,12 +90,12 @@
 
 // -MS- Requires further optimization, get rid of the getimagesize calls, pass them to flythumb
   function tep_image($src, $alt = '', $width = '', $height = '', $params = '', $bForce = false, $full_path=false) { 
-    global $g_relpath, $g_external_path;
+    extract(tep_load('defs'));
 
     if( !$full_path ) {
       $image = '<img src="' . $src . '"';
     } else {
-      $image = '<img src="' . $g_relpath . $src . '"';
+      $image = '<img src="' . $cDefs->relpath . $src . '"';
     }
 
     $resize = true;
@@ -105,8 +112,8 @@
       return tep_image_params($image, $alt, $width, $height, $params);
     }
 
-    if( !$full_path && !empty($g_external_path) ) {
-      return tep_external_image($src, $alt, $width, $height, $params, $g_external_path);
+    if( !$full_path && !empty($cDefs->external_path) ) {
+      return tep_external_image($src, $alt, $width, $height, $params, $cDefs->external_path);
     }
 
     $image_filesize = @filesize($src);
@@ -134,19 +141,20 @@
           if( is_array($tmp_array) && count($tmp_array) ) {
             $new_name = $tmp_array[count($tmp_array)-1];
             $new_name = substr($new_name, 0, -4);
-            $base_image = FLY_THUMB_FOLDER . $new_name . FLY_THUMB_POSTFIX . $width . 'x' . $height;
+            $base_image = FLY_THUMB_FOLDER . $new_name . FLY_THUMB_POSTFIX . $width . '-' . $height;
             $check_image = $base_image . '.jpg';
-
+/*
             if( file_exists(DIR_FS_CATALOG . $check_image) ) {
               $image = '<img src="' . $check_image .'"';
               $premade = true;
             }
+*/
           }
           if( !$premade ) {
             $image = '<img src="fly_thumb.php?img='.$src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height).'"';
           }
         } else {
-          $image = '<img src="' .  $g_relpath . 'fly_thumb.php?img='.$src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height).'"';
+          $image = '<img src="' .  $cDefs->relpath . 'fly_thumb.php?img='.$src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height).'"';
         }
         $width=$height=0;
       }
@@ -249,45 +257,42 @@
 
   function tep_image_params($image, $alt = '', $width = '', $height = '', $params = '') {
     // Add remaining image parameters if they exist
-    if ($width) { 
+    if( $width ) { 
       $image .= ' width="' . tep_output_string($width) . '"'; 
     } 
-    if ($height) { 
+    if( $height ) { 
       $image .= ' height="' . tep_output_string($height) . '"'; 
     }       
-    if (tep_not_null($params)) $image .= ' ' . $params;
+    if( tep_not_null($params) ) $image .= ' ' . $params;
     if( !empty($alt) ) {
       $image .= ' title="' . tep_output_string($alt) . '"';
     }
     $image .= ' alt="' . tep_output_string($alt) . '"';
-    //$image .= ' border="0" />'; // use css
+
     $image .= ' />';
     return $image;
   }
 
   function tep_href_image_link($image, $check_external=true) {
-    global $g_relpath, $g_external_path;
+    extract(tep_load('defs'));
 
-    $path = $g_relpath;
-    if( !empty($g_external_path) && $check_external ) {
-      $path = $g_external_path;
+    $path = $cDefs->relpath;
+    if( !empty($cDefs->external_path) && $check_external ) {
+      $path = $cDefs->external_path;
     }
 
     $link = $path . DIR_WS_IMAGES . $image;
     return $link;
   }
 
-  function tep_link_to_form($name, $link, $type='image', $image_name='', $width='', $height='', $parameters='') {
-    global $g_counter;
-    $form_name = tep_create_safe_string(strtolower($name), '_') . $g_counter;
-    $result = tep_draw_form($form_name, $link);
+  function tep_link_to_form($name, $link, $type='image', $image_name='', $alt='', $width='', $height='', $form_params='', $img_params='') {
+    $result = tep_draw_form($name, $link, '', $form_params);
     if($type == 'image') {
-      $result .= tep_main_image_submit($image_name, $name, $width, $height, $parameters);
+      $result .= tep_main_image_submit($image_name, $alt, $width, $height, $img_params);
     } else {
       $result .= tep_text_submit($form_name, $name);
     }
     $result .= '</form>';
-    $g_counter++;
     return $result;
   }
 
@@ -295,8 +300,10 @@
 // The HTML form submit button wrapper function
 // Outputs a button in the selected language
   function tep_image_submit($image, $alt = '', $parameters = '', $path = false) {
+    extract(tep_load('languages'));
+
     if( !$path ) {
-      $path = DIR_WS_STRINGS . 'images/buttons/';
+      $path = DIR_WS_STRINGS . $lng->path . '/images/buttons/';
     } else {
       $path = '';
     }
@@ -317,14 +324,13 @@
 // The HTML form submit image wrapper function
 // Outputs a button in the selected language
   function tep_main_image_submit($image, $alt = '', $width = '', $height = '', $parameters = '') {
-    global $language;
     $string = tep_calculate_image($image,$width,$height);
     if( empty($string) ) {
       $string = $image;
     }
     $image_submit = '<input type="image" src="' . $string . '" alt="' . tep_output_string($alt) . '"';
 
-    //if (tep_not_null($alt)) $image_submit .= ' title="' . tep_output_string($alt) . '"';
+    if (tep_not_null($alt)) $image_submit .= ' title="' . tep_output_string($alt) . '"';
 
     if( !empty($parameters) ) $image_submit .= ' ' . $parameters;
 
@@ -337,7 +343,6 @@
 // The HTML form submit text wrapper function
 // Outputs a text for a form
   function tep_text_submit($name, $value, $parameters = 'class="inputResults"') {
-    global $language;
 
     $text_submit = '<input type="submit" name="' . $name . '"' . ' value="' . $value . '"';
 
@@ -351,9 +356,8 @@
 ////
 // Output a function button in the selected language
   function tep_image_button($image, $alt = '', $parameters = '') {
-    global $language;
-
-    return tep_image(DIR_WS_STRINGS . 'images/buttons/' . $image, $alt, '', '', $parameters);
+    extract(tep_load('languages'));
+    return tep_image(DIR_WS_STRINGS . $lng->path . '/images/buttons/' . $image, $alt, '', '', $parameters);
   }
 
 ////
@@ -373,7 +377,6 @@
     if( !empty($parameters) ) $form .= ' ' . $parameters;
 
     $form .= '>';
-
     return $form;
   }
 
@@ -433,10 +436,8 @@
 
 ////
 // Output a form textarea field
-  function tep_draw_textarea_field($name, $wrap, $width, $height, $text = '', $parameters = '', $reinsert_value = true) {
-//    $field = '<textarea name="' . tep_output_string($name) . '" wrap="' . tep_output_string($wrap) . '" cols="' . tep_output_string($width) . '" rows="' . tep_output_string($height) . '"';
+  function tep_draw_textarea_field($name, $value = '', $width='', $height='', $parameters = '', $reinsert_value = true) {
     $field = '<textarea name="' . tep_output_string($name) . '"';
-
     if( !empty($width) ) {
       $field .= ' cols="' . tep_output_string($width) . '"';
     }
@@ -450,12 +451,11 @@
 
     if ( (isset($GLOBALS[$name])) && ($reinsert_value == true) ) {
       $field .= tep_output_string_protected(stripslashes($GLOBALS[$name]));
-    } elseif( !empty($text) ) {
-      $field .= tep_output_string_protected($text);
+    } elseif( !empty($value) ) {
+      $field .= tep_output_string_protected($value);
     }
 
     $field .= '</textarea>';
-
     return $field;
   }
 
@@ -489,6 +489,16 @@
     if (empty($default) && isset($GLOBALS[$name])) $default = stripslashes($GLOBALS[$name]);
 
     for ($i=0, $n=sizeof($values); $i<$n; $i++) {
+
+      if( isset($values[$i]['group_start']) ) {
+        $field .= '<optgroup label="' . tep_output_string($values[$i]['text'], array('"' => '&quot;', '\'' => '&#039;', '<' => '&lt;', '>' => '&gt;')) . '">';
+        continue;
+      }
+      if( isset($values[$i]['group_end']) ) {
+        $field .= '</optgroup>';
+        continue;
+      }
+
       $field .= '<option value="' . tep_output_string($values[$i]['id']) . '"';
       if ($default == $values[$i]['id']) {
         $field .= ' selected="selected"';
@@ -504,13 +514,12 @@
   }
 
   function tep_check_submit($button_name, $buttons_array=array(), $action=false ) {
-    global $g_session;
+    extract(tep_load('sessions'));
 
     $result = false;
-    if( !isset($_POST[$button_name . '_x']) || !isset($_POST[$button_name . '_y']) ||
-        !tep_not_null($_POST[$button_name . '_x']) || !tep_not_null($_POST[$button_name . '_y']) ) {
+    if( empty($button_name) || !isset($_POST[$button_name . '_x']) || !isset($_POST[$button_name . '_y']) || !tep_not_null($_POST[$button_name . '_x']) || !tep_not_null($_POST[$button_name . '_y']) ) {
       if( $action == true ) {
-        $g_session->destroy();
+        $cSessions->destroy();
         tep_redirect();
       }
     } else {
@@ -526,13 +535,14 @@
   }
 
   function tep_output_media($reset=true) {
-    global $g_media;
-    if( empty($g_media) ) return;
+    extract(tep_load('defs'));
 
-    $g_media = array_values(array_unique($g_media));
-    for($i=0, $j=count($g_media); $i<$j; $i++) {
-      echo $g_media[$i] . "\n";
+    if( empty($cDefs->media) ) return;
+
+    $cDefs->media = array_values(array_unique($cDefs->media));
+    for($i=0, $j=count($cDefs->media); $i<$j; $i++) {
+      echo $cDefs->media[$i] . "\n";
     }
-    if( $reset ) $g_media = array();
+    if( $reset ) $cDefs->media = array();
   }
 ?>

@@ -17,28 +17,21 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-  $g_plugins->invoke('html_main_content_end');
+  $cPlug->invoke('html_main_content_end');
 ?>
-          </div>
-          <div>
-<!-- footer //-->
-<?php require(DIR_WS_TEMPLATE . 'footer.tpl'); ?>
-<!-- footer_eof //-->
           </div>
         </div>
-        <div class="rightsize floater" id="rightpane"><?php include(DIR_WS_TEMPLATE . 'column_right.tpl'); ?></div>
+        <div class="rightsize floater" id="rightpane"><?php include(DIR_FS_TEMPLATE . 'column_right.tpl'); ?></div>
+        <div class="bounder">
+<!-- footer //-->
+<?php require(DIR_FS_TEMPLATE . 'footer.tpl'); ?>
+<!-- footer_eof //-->
+        </div>
       </div>
-<?php
-  $g_plugins->invoke('html_menu');
-?>
     </div>
-<!-- header //-->
-<?php require(DIR_WS_TEMPLATE . 'header.tpl'); ?>
-<!-- header_eof //-->
   </div>
-  <div class="hideflow wider calign" id="deco"></div>
 <?php
-  $g_plugins->invoke('html_end');
+  $cPlug->invoke('html_end');
   tep_output_media();
 ?>
 </body>

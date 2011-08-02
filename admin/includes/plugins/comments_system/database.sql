@@ -23,7 +23,7 @@ create table comments (
   comments_key varchar(32) not null,
   comments_body text not null,
   resolution int(1) not null default 5,
-  ip_address varchar(15) not null,
+  ip_address varchar(32) not null,
   date_added datetime not null,
   status_id tinyint(1) default 0 not null,
   read_id tinyint(1) default 0 not null,
@@ -32,7 +32,7 @@ create table comments (
   KEY idx_content_type (content_type),
   KEY idx_comments_key (comments_key),
   KEY idx_status_id (status_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists comments_to_content;
 create table comments_to_content (
@@ -40,4 +40,4 @@ create table comments_to_content (
   content_type int(3) NOT NULL default 1, -- Content Type whether its 1=text, 2=collection
   KEY idx_comments_id (comments_id),
   KEY idx_content_type (content_type)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

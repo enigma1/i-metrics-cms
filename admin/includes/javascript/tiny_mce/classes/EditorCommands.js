@@ -155,7 +155,7 @@
 				}
 
 				// Present alert message about clipboard access not being available
-				if (failed || !doc.queryCommandEnabled(command)) {
+				if (failed || !doc.queryCommandSupported(command)) {
 					if (tinymce.isGecko) {
 						editor.windowManager.confirm(editor.getLang('clipboard_msg'), function(state) {
 							if (state)
@@ -246,20 +246,22 @@
 			},
 
 			FormatBlock : function(command, ui, value) {
-				return toggleFormat(value);
+				return toggleFormat(value || 'p');
 			},
 
 			mceCleanup : function() {
-				storeSelection();
+				var bookmark = selection.getBookmark();
+
 				editor.setContent(editor.getContent({cleanup : TRUE}), {cleanup : TRUE});
-				restoreSelection();
+
+				selection.moveToBookmark(bookmark);
 			},
 
 			mceRemoveNode : function(command, ui, value) {
 				var node = value || selection.getNode();
 
 				// Make sure that the body node isn't removed
-				if (node != ed.getBody()) {
+				if (node != editor.getBody()) {
 					storeSelection();
 					editor.dom.remove(node, TRUE);
 					restoreSelection();
@@ -287,7 +289,7 @@
 
 			mceInsertRawHTML : function(command, ui, value) {
 				selection.setContent('tiny_mce_marker');
-				editor.setContent(editor.getContent().replace(/tiny_mce_marker/g, value));
+				editor.setContent(editor.getContent().replace(/tiny_mce_marker/g, function() { return value }));
 			},
 
 			mceSetContent : function(command, ui, value) {
@@ -332,6 +334,10 @@
 				}
 			},
 
+			mceToggleFormat : function(command, ui, value) {
+				editor.formatter.toggle(value);
+			},
+
 			InsertHorizontalRule : function() {
 				selection.setContent('<hr />');
 			},
@@ -360,8 +366,17 @@
 					if (value.href)
 						dom.setAttribs(link, value);
 					else
-						ed.dom.remove(link, TRUE);
+						editor.dom.remove(link, TRUE);
 				}
+			},
+			
+			selectAll : function() {
+				var root = dom.getRoot(), rng = dom.createRng();
+
+				rng.setStart(root, 0);
+				rng.setEnd(root, root.childNodes.length);
+
+				editor.selection.setRng(rng);
 			}
 		});
 

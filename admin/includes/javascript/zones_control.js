@@ -108,7 +108,8 @@ var zones_control = {
       return;
     }
 
-    zones_control.imageBoxDialog = $('#modalBox').clone().show().appendTo(document.body).dialog({
+    //zones_control.imageBoxDialog = $('#modalBox').clone().show().appendTo(document.body).dialog({
+    zones_control.imageBoxDialog = $('#modalBox').show().dialog({
       resizable:  options.resizable || true,
       modal:      options.modal || true,
       shadow:     options.shadow || false,
@@ -242,10 +243,20 @@ var zones_control = {
 
   launch: function(selector, update) {
 
+    var wrapper = '';
+    var $modal = $('#modalBox');
+    if( !$modal.length ) {
+      $('body').append(
+        wrapper = $('<div id="modalBox" title="Collections" style="display:none; overflow: hidden;">Loading...Please Wait</div>')
+      );
+      var inner = $('<div id="ajaxLoader" title="Collection Assignment" style="display:none;"><img src="includes/javascript/jquery/themes/smoothness/images/ajax_load.gif"><p id="ajaxMsg" class="main">Loading, please wait...</p><hr /></div>').appendTo(wrapper);
+    }
+
     zones_control.imageBoxOpenFlag = false;
 
-    $('a.list_abstract_zones').live("click", function(event) {
-      event.preventDefault();
+    $('a.list_abstract_zones').live("click", function(e) {
+      e.stopPropagation();
+      e.preventDefault();
       $gtext_id = $(this).attr('attr');
       zones_control.replacementElement = $(this).parent();
       zones_control.listTextZones('', $gtext_id, '');

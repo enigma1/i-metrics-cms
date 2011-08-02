@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2007-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2007-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -21,9 +21,9 @@
 </head>
 <!-- body //-->
 <body style="background: #FFF;">
-  <div class="totalsize balancer lalign" id="wrapper">
+  <div class="lalign" id="wrapper">
 <?php
-  switch($g_script) {
+  switch($cDefs->script) {
     default:
       break;
   }

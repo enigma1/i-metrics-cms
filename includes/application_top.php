@@ -34,131 +34,125 @@
 // - Moved session process to a different file
 // - Transformed script for CMS
 // - Changed navigation history and sessions removed global sessions
+// - Added path detection
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-// Initialize current global indices for supported entities
-  $g_counter = 0;
-  $g_external_path = '';
-  $current_abstract_id = 0;
-  $current_gtext_id = 0;
-  $current_page_id = 0;
-  $g_development = false;
-  $g_media = array();
-  $g_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])?true:false;
-
-//-MS- SEO-G Added
-  if( !isset($g_seo_flag) || $g_seo_flag !== true) {
-    // Initialize database and basic functions
-    require('includes/init_early.php');
+// Path Detection
+  if (!function_exists('tep_path')) {
+    function tep_path($file='') {
+      static $base = '';
+      if( empty($base) ) {
+        $base = preg_replace('/\w+\/\.\.\//', '', dirname(__FILE__));
+        $base = str_replace('\\', '/', $base);
+        $base = rtrim($base, '/');
+        $tmp_array = explode('/', $base);
+        array_pop($tmp_array);
+        $base = implode('/', $tmp_array) . '/';
+        if( !strlen(ini_get('date.timezone')) && function_exists('date_default_timezone_get')) {
+          date_default_timezone_set(@date_default_timezone_get());
+        }
+      }
+      $full = $base . $file;
+      return $full;
+    }
   }
-//-MS- SEO-G Added EOM
+  tep_path();
+  // include server parameters
+  if( is_file(tep_path('includes/configure.php')) ) {
+    require_once(tep_path('includes/configure.php'));
+  }
+  if( !defined('DB_SERVER') || strlen(DB_SERVER) < 1 ) {
+    if( is_dir(tep_path('install')) ) {
+      header('Location: install/index.php');
+      exit();
+    }
+    die('Critical: Invalid configuration file - Could not locate installation folder for the I-Metrics CMS.');
+  }
+  if( isset($g_exit_path) ) return;
+
+  // Initialize database and basic functions
+  require_once(DIR_FS_INCLUDES . 'init_early.php');
+
   if( defined('HTTP_EXTERNAL_PATH') ) {
     $g_external_path = HTTP_EXTERNAL_PATH;
   }
 
-  require(DIR_WS_CLASSES . 'plugins_front.php');
-  require(DIR_WS_CLASSES . 'plugins_base.php');
-  $g_plugins = new plugins_front();
+  define('PLUGINS_AJAX_PREFIX', 'ajax_');
+  require(DIR_FS_CLASSES . 'plugins_front.php');
+  require(DIR_FS_CLASSES . 'plugins_base.php');
+
+  $tmp_array = tep_load('plugins_front');
+  $g_plugins =& $tmp_array['cPlug'];
   $g_plugins->invoke('init_early');
 
-  require(DIR_WS_CLASSES . 'sessions.php');
-  $g_session = new sessions;
-
-  $g_plugins->invoke('init_record');
-
 // some code to solve compatibility issues
-  require(DIR_WS_FUNCTIONS . 'compatibility.php');
+  require(DIR_FS_FUNCTIONS . 'compatibility.php');
 
-  // if gzip_compression is enabled, start to buffer the output
-  if ( (GZIP_COMPRESSION == 'true') && ($ext_zlib_loaded = extension_loaded('zlib')) ) {
-    if (($ini_zlib_output_compression = (int)ini_get('zlib.output_compression')) < 1) {
-      ob_start('ob_gzhandler');
-    } else {
-      ini_set('zlib.output_compression_level', GZIP_LEVEL);
-    }
+  if( GZIP_COMPRESSION == 'true' ) {
+    ob_start();
   }
-
-// set the cookie domain
-  $cookie_domain = (($request_type == 'NONSSL') ? HTTP_COOKIE_DOMAIN : HTTPS_COOKIE_DOMAIN);
-  $cookie_path = (($request_type == 'NONSSL') ? HTTP_COOKIE_PATH : HTTPS_COOKIE_PATH);
-
-  //-MS- HTML Cache Support Added
-  require(DIR_WS_CLASSES . 'cache_html.php');
-  //-MS- HTML Cache Support Added EOM
 
 // include navigation history class
-  require(DIR_WS_CLASSES . 'navigation_history.php');
-  require(DIR_WS_CLASSES . 'boxes.php');
-  require(DIR_WS_CLASSES . 'message_stack.php');
+  require(DIR_FS_CLASSES . 'boxes.php');
 
-//-MS- perform the session process
-  $g_session->initialize();
-  $g_session->process_agents();
+  //-MS- perform the session process
+  extract($g_session->initialize());
+  $g_plugins->invoke('init_sessions');
 
-//-MS- Parameters Validator added
-  require(DIR_WS_CLASSES . 'validator.php');
-  $g_validator = new validator;
-//-MS- Parameters Validator added EOM
+  //-MS- Parameters Validator added
+  $tmp_array = tep_load('validator');
+  $g_validator =& $tmp_array['cValidator'];
+  //-MS- Parameters Validator added EOM
 
-  require(DIR_WS_STRINGS . FILENAME_COMMON);
-  if( file_exists(DIR_WS_STRINGS . '/' . $g_script) ) {
-    include(DIR_WS_STRINGS . $g_script);
-  }
+  $g_plugins->invoke('init_language');
+  $g_lng->load_strings();
 
-// navigation history
-  $g_navigation =& $g_session->register('g_navigation');
-  if( !$g_session->is_registered('g_navigation') || !is_object($g_navigation) ) {
-    $g_navigation = new navigationHistory;
-  }
+  // navigation history
+  $tmp_array = tep_load('history');
+  $g_navigation =& $tmp_array['cHistory'];
 
-//-MS- moved for early error control
-  $messageStack = new messageStack;
-//-MS- moved for early error control EOM
+  $tmp_array = tep_load('message_stack');
+  $messageStack =& $tmp_array['msg'];
 
-//-MS- Set HTML Cache for visitors via 304 after session is started
-  if( $g_session->has_started() && !empty($g_sid) ) {
-    $g_html_cache =& $g_session->register('g_html_cache');
-    if( !$g_session->is_registered('g_html_cache') || !is_object($g_html_cache) ) {
-      $g_html_cache = new cacheHTML;
-    }
-    $g_html_cache->check_script();
-  }
-//-MS- Set HTML Cache for visitors via 304 after session is started EOM
+  //-MS- Set HTML Cache for visitors via 304 after session is started
+  $tmp_array = tep_load('cache_html');
+  $g_cache_html =& $tmp_array['cache_html'];
+  $g_cache_html->check_script();
+  //-MS- Set HTML Cache for visitors via 304 after session is started EOM
 
 // include the who's online functions
-  require(DIR_WS_FUNCTIONS . 'whos_online.php');
+  require(DIR_FS_FUNCTIONS . 'whos_online.php');
   tep_update_whos_online();
 
 // include validation functions (right now only email address)
-  require(DIR_WS_FUNCTIONS . 'validations.php');
+  require(DIR_FS_FUNCTIONS . 'validations.php');
 
 // split-page-results
-  require(DIR_WS_CLASSES . 'split_page_results.php');
+  require(DIR_FS_CLASSES . 'split_page_results.php');
 
 // include the breadcrumb class and start the breadcrumb trail
-  require(DIR_WS_CLASSES . 'breadcrumb.php');
-  $breadcrumb = new breadcrumb;
+  require(DIR_FS_CLASSES . 'breadcrumb.php');
+  $tmp_array = tep_load('breadcrumb');
+  $g_breadcrumb =& $tmp_array['breadcrumb'];
 
-//-MS- Abstract zones added
-  require(DIR_WS_CLASSES . 'abstract_front.php');
-  require(DIR_WS_CLASSES . 'gtext_front.php');
-  require(DIR_WS_CLASSES . 'super_front.php');
-  require(DIR_WS_CLASSES . 'image_front.php');
-//-MS- Abstract zones added EOM
 
-  if( $g_ajax ) {
-    $g_plugins->invoke('init_ajax');
+  if( $cDefs->ajax ) {
+    $g_plugins->invoke('ajax_start');
     if($g_script != FILENAME_JS_MODULES) {
-      $g_session->close();
+      //$g_session->close();
     }
   }
 
-  if( isset($_GET['action']) && $_GET['action'] == 'plugin_form_process' ) {
+  $g_plugins->invoke('init_post');
+
+  if( $cDefs->action == 'plugin_form_process' ) {
     $g_plugins->invoke('plugin_form_process');
   }
 
   $g_navigation->add_current_page();
   $g_plugins->invoke('init_late');
+
+  $action = $cDefs->action;
 ?>

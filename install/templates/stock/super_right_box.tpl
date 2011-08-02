@@ -24,31 +24,27 @@
   $rows = 0;
   foreach($zones_array as $id => $zone) { 
     $zone_class = $cAbstract->get_zone_class($id);
-    $script = FILENAME_GENERIC_PAGES;
-    switch($zone_class) {
-      case 'image_zones':
-        $script = FILENAME_IMAGE_PAGES;
-        break;
-      default:
-        break;
-    }
+    $script = FILENAME_COLLECTIONS;
     $zone_entries = $cAbstract->get_entries($id);
     if( count($zone_entries) ) {
       echo '<div class="infoBox">' . "\n";
+
       $rows++;
       $text_data = $cAbstract->get_zone_data($id);
       $zone = $text_data['abstract_zone_name'];
 
       $info_box_contents = array();
       $info_box_contents[] = array(
-                                   'text' => '<h2><a href="' . tep_href_link($script, 'abz_id=' . $id) . '" title="' . $zone . '">' . $zone . '</a></h2>'
-                                  );
+        'text' => '<h2><a href="' . tep_href_link($script, 'abz_id=' . $id) . '" title="' . $zone . '">' . $zone . '</a></h2>'
+      );
       new contentBoxHeading($info_box_contents);
+
       $info_box_contents = array();
       $info_box_contents[] = array('text' => tep_truncate_string($text_data['abstract_zone_desc']));
       $info_box_contents[] = array('text' => '<a href="' . tep_href_link($script, 'abz_id=' . $id) . '" title="' . $zone . '">' . TEXT_READ_MORE . $zone . '</a>');
       $class = ($rows%2)?'infoBoxContents':'infoBoxContents infoBoxContentsAlt';
       new contentBox($info_box_contents, $class);
+
       echo '</div>' . "\n";
     }
   }

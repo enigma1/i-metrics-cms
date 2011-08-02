@@ -18,11 +18,11 @@ create table votes (
   votes_type int(3) NOT NULL default 1,
   rating int(3) NOT NULL,
   resolution int(1) NOT NULL default 2,
-  ip_address VARCHAR(15) NOT NULL,
+  ip_address VARCHAR(32) NOT NULL,
   date_added datetime NULL,
   PRIMARY KEY (auto_id),
   KEY idx_votes_id (votes_id),
   KEY idx_votes_type (votes_type),
   KEY idx_date_added (date_added),
   KEY idx_rating (rating)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

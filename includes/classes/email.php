@@ -59,15 +59,17 @@
  * extension and content type here.
  */
 
-      $this->image_types = array('gif' => 'image/gif',
-                                 'jpg' => 'image/jpeg',
-                                 'jpeg' => 'image/jpeg',
-                                 'jpe' => 'image/jpeg',
-                                 'bmp' => 'image/bmp',
-                                 'png' => 'image/png',
-                                 'tif' => 'image/tiff',
-                                 'tiff' => 'image/tiff',
-                                 'swf' => 'application/x-shockwave-flash');
+      $this->image_types = array(
+        'gif' => 'image/gif',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'jpe' => 'image/jpeg',
+        'bmp' => 'image/bmp',
+        'png' => 'image/png',
+        'tif' => 'image/tiff',
+        'tiff' => 'image/tiff',
+        'swf' => 'application/x-shockwave-flash'
+      );
 
       $this->build_params['html_encoding'] = 'quoted-printable';
       $this->build_params['text_encoding'] = '7bit';
@@ -106,7 +108,7 @@
     function send_mail($to_name, $to_email_address, $email_subject, $email_text, $from_email_name, $from_email_address) {
       if (SEND_EMAILS != 'true') return false;
 
-      require_once(DIR_WS_CLASSES . 'mime.php');
+      require_once(DIR_FS_CLASSES . 'mime.php');
       // Instantiate a new mail object
       //$message = new email(array('X-Mailer: I-Metrics Mailer'));
 
@@ -219,10 +221,12 @@
  */
 
     function add_html_image($file, $name = '', $c_type='application/octet-stream') {
-      $this->html_images[] = array('body' => $file,
-                                   'name' => $name,
-                                   'c_type' => $c_type,
-                                   'cid' => md5(uniqid(time())));
+      $this->html_images[] = array(
+        'body' => $file,
+        'name' => $name,
+        'c_type' => $c_type,
+        'cid' => md5(uniqid(time()))
+      );
     }
 
 /**
@@ -230,10 +234,12 @@
  */
 
     function add_attachment($file, $name = '', $c_type='application/octet-stream', $encoding = 'base64') {
-      $this->attachments[] = array('body' => $file,
-                                   'name' => $name,
-                                   'c_type' => $c_type,
-                                   'encoding' => $encoding);
+      $this->attachments[] = array(
+        'body' => $file,
+        'name' => $name,
+        'c_type' => $c_type,
+        'encoding' => $encoding
+      );
     }
 
 /**

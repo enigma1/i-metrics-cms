@@ -20,16 +20,28 @@
   $contents = array();
   $heading_class = 'class="menuBoxHeading"';
 
-  if ($selected_box == 'plugins') {
-    $box_plugins_string = '';
-    $box_plugins_query = $g_db->query("select plugins_name, plugins_key from " . TABLE_PLUGINS);
-    while($box_plugins_array = $g_db->fetch_array($box_plugins_query) ) {
-      $contents[] = array('text' => '<a href="' . tep_href_link(FILENAME_PLUGINS, 'selected_box=plugins&plgID=' . $box_plugins_array['plugins_key']) . '">' . $box_plugins_array['plugins_name'] . '</a>');
+  $box_title = BOX_HEADING_PLUGINS;
+  $box_id = 'plugins_box';
+
+  if( $selected_box == $box_id ) {
+
+    $contents[] = array(
+      'text' => '<div>',
+      'class' => 'leftBoxSection'
+    );
+    $box_plugins_array = $db->query_to_array("select plugins_name, plugins_key from " . TABLE_PLUGINS);
+    for( $i=0, $j=count($box_plugins_array); $i<$j; $i++) {
+      $contents[] = array('text' => '<a href="' . tep_href_link(FILENAME_PLUGINS, 'plgID=' . $box_plugins_array[$i]['plugins_key']) . '">' . $box_plugins_array[$i]['plugins_name'] . '</a>');
     }
+    $contents[] = array(
+      'text'  => '</div>'
+    );
     $heading_class = 'class="menuBoxHeading menuBoxLit"';
   }
-  $heading[] = array('text'  => BOX_HEADING_PLUGINS,
-                     'link'  => tep_href_link(FILENAME_PLUGINS, 'selected_box=plugins'));
+  $heading[] = array(
+    'text'  => $box_title,
+    'link'  => tep_href_link(FILENAME_PLUGINS, 'selected_box=' . $box_id)
+  );
 
   $box = new box;
   echo $box->menuBox($heading, $contents, $heading_class);

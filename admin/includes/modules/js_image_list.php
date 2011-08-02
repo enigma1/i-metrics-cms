@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -55,13 +55,13 @@
   $j = count($subdirs_array);
   if( $j ) {
 ?>
-        <div style="clear: both;">
-          <div class="pageHeading"><?php echo 'Folder: '  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></div>
+        <div class="listArea">
+          <div><h1><?php echo 'Folder: '  . basename(DIR_WS_CATALOG_IMAGES) . '/' . $sub_folder; ?></h1></div>
           
 <?php
     for($i=0; $i<$j; $i++) {
 ?>
-          <div style="float:left; margin: 4px; padding: 8px; text-align: center; border: 1px solid #DDD;">
+          <div class="floater calign" style="margin: 4px; padding: 8px; border: 1px solid #DDD;">
 <?php
 /*
             <div><?php echo '<a class="folder_list" href="#" attr="' . tep_href_link(FILENAME_JS_MODULES, (!empty($sub_folder))?'sub_path =' . $sub_folder:'' ) . '">' . tep_image(DIR_WS_IMAGES . 'folder_image.png', basename($subdirs_array[$i])) . '</a>'; ?></div>
@@ -89,26 +89,26 @@
       echo '<a class="folder_list" href="#" attr="' . $attr . '">' . tep_image(DIR_WS_IMAGES . $folder_image, basename($subdirs_array[$i])) . '</a>'; 
 ?>
             </div>
-            <div class="smallText" style="text-align: center"><?php echo basename($subdirs_array[$i]); ?></div>
+            <div class="calign"><?php echo basename($subdirs_array[$i]); ?></div>
           </div>
 <?php
     }
 ?>
         </div>
-        <div style="clear: both; padding: 8px 0px 4px 0px;"><hr /></div>
+        <div class="vpad"></div>
 <?php
   }
   $j = count($files_array);
   if( $j ) {
 ?>
-        <div style="clear: both;">
-          <div class="pageHeading">File List:</div>
+        <div class="listArea">
+          <div><h1>File List:</h1></div>
 <?php
     for($i=0; $i<$j; $i++) {
 ?>
-          <div style="float:left; text-align: center; ; margin: 8px; padding: 4px; width: <?php echo HEADING_IMAGE_WIDTH+16; ?>px;">
+          <div class="floater calign linepad" style="margin: 8px; width: <?php echo HEADING_IMAGE_WIDTH+16; ?>px;">
             <div style="border: 1px solid #DDD; padding: 8px; width: <?php echo HEADING_IMAGE_WIDTH; ?>px; height: <?php echo HEADING_IMAGE_HEIGHT; ?>px;"><?php echo '<a class="file_list" href="#" attr="' . basename(DIR_WS_CATALOG_IMAGES) . '/' . $files_array[$i] . '">' . tep_catalog_image($files_array[$i], $switch_folder . $files_array[$i], HEADING_IMAGE_WIDTH, HEADING_IMAGE_HEIGHT) . '</a>'; ?></div>
-            <div class="smallText" style="overflow: hidden; text-align: center;  height: <?php echo 36; ?>px;"><?php echo basename($files_array[$i]); ?></div>
+            <div class="hideover calign" style="height: <?php echo 40; ?>px;"><?php echo basename($files_array[$i]); ?></div>
           </div>
 <?php
     }

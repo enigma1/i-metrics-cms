@@ -24,17 +24,32 @@ h1,h2,h3 {margin:0; padding:0; overflow: hidden; }
 form {margin:0; padding:0;}
 fieldset{ margin: 0; }
 img { border: 0; padding: 0; margin: 0}
-div { position: relative; margin:0; padding:0; }
 a { color: #330077; font-weight: bold; text-decoration: none; }
 a:hover { color: #6C0902; }
 table {border: 0;}
 th {text-align: left;}
+textarea {width: 100%; overflow:auto;}
+legend{ margin: 8px; padding: 0px 8px; }
+
+select, select:active, select:focus, input, input:active, input:focus, a:focus{
+  outline: 0;
+  outline-style: none;
+  outline-width: 0;
+}
+
+#wrapper {
+  margin: 0px auto 0px auto;
+  text-align: left;
+  overflow: hidden;
+  position: relative;
+}
+#wrapper > div {position: relative;}
 
 /* CSS Template Main Tags and Overrides */
 h1 {
   font-family: Times New Roman, Arial, sans-serif;
-  font-size: 22px;
-  color: #990000;
+  font-size: 28px;
+  color: #000099;
 }
 
 h2 {
@@ -58,7 +73,6 @@ legend {
   font-size: 20px;
   font-weight: bold;
   color: #545E74;
-  padding: 0px 8px;
 }
 
 fieldset {
@@ -69,18 +83,15 @@ fieldset {
 
 /* Template Design Classes */
 #deco {
-  height: 160px;
-  margin: -160px 0px 0px 0px;
   background: #C7CED6;
-  position: static;
 }
 
 #header {
-  padding-top: 80px;
+  padding-top: 0px;
 }
 
-.logo {
-  background: #7A808C;
+.bg1 {
+  background: #545E74;
 }
 
 .leftlogo {
@@ -89,14 +100,11 @@ fieldset {
 }
 
 .mainlogo {
-  background: #646C79;
-  height: 138px;
-  padding-top: 7px;
+  background: #545E74;
 }
 
 .quicksearch {
-  padding: 0px 10px 0px 0px;
-  margin: 8px 0px -8px 0px;
+  padding: 10px 10px 10px 10px;
   height: 30px;
 }
 
@@ -106,14 +114,8 @@ input.search {
   padding: 2px;
 }
 
-#rightheader {
-  margin-top: -60px;
-  border-left: 2px solid #FFF;
-  height: 260px;
-}
-
 .rightheading {
-  background: #646C79;
+  background: #545E74;
   padding: 4px 0px 0px 9px;
   margin: 0px 20px 0px 0px;
   width: 190px;
@@ -126,7 +128,7 @@ input.search {
 }
 
 #mainbody {
-  margin-top: 150px;
+  margin-top: 20px;
 }
 
 #footer {
@@ -137,6 +139,7 @@ input.search {
   background: #545E74;
   color: #CCCCCC;
   padding: 10px 0px 10px 0px;
+  border-top: 1px solid #CCC;
 }
 
 #footer a {
@@ -153,31 +156,30 @@ input.search {
 }
 
 #leftpane {
-  padding: 160px 0px 0px 0px;
-  background: #DDDDDD;
+  padding: 0px 0px 0px 0px;
 }
 
 #leftcontent {
-  height: 550px;
-  padding: 0px 14px 10px 14px;
+  padding: 0px 14px 10px 0px;
 }
 
 #rightpane {
-  padding: 114px 0px 0px 0px;
+  margin: 0px;
+  padding: 0px 0px 0px 0px;
   color: #2C3952;
   background: #B2B6BF;
-  border-left: 2px solid #FFF;
 }
 
 #rightcontent {
-  padding: 14px 0px 10px 0px;
-  min-height: 600px;
+  padding: 0px 0px 0px 0px;
+  background: #CCC;
+  border-top: 1px solid #CCC;
 }
 
 #rightfooter {
   height: 30px;
   padding: 10px 10px 0px 10px;
-  background: #7A808C;
+  background: #545E74;
   color: #EFEFEF;
   font-size: 9px;
   font-weight: bold;
@@ -196,6 +198,7 @@ input.search {
   height: 15px;
   font-weight: bold;
   font-family: Arial, sans-serif;
+  border-top: 1px solid #CCC;
 }
 
 .breadcrumb a {color: #EFEFCF;}
@@ -208,7 +211,8 @@ input.search {
   font-size: 14px;
   font-weight: bold;
   color: #EEC;
-  background: #646C79;
+  background: #545E74;
+  height: 32px;
   line-height: 32px;
 }
 .boxpadding {padding: 0px 10px;}
@@ -217,7 +221,6 @@ input.search {
   padding: 0px 10px 0px 10px;
   color: #EEC;
   display: block;
-  width: 100%;
 }
 
 .contentBoxHeading a:hover, .infoBoxHeading a:hover {
@@ -265,20 +268,21 @@ input.search {
 
 
 /* Error Display */
+.messageBox {
+  margin: 0;
+  padding: 0;
+}
 .messageStackError, .messageStackWarning, .messageStackSuccess{ font-family: Arial, Verdana, sans-serif; font-size: 11px; font-weight: bold; padding: 0px 0px 0px 20px; border-bottom: 1px outset #FFF; overflow: hidden; }
 .messageStackError  { color: #EEE; background: #FF0000 url(design/error.gif) no-repeat 5px center; }
 .messageStackWarning { color: #EEE; background: #AA6600 url(design/warning.gif) no-repeat 5px center; }
 .messageStackSuccess { color: #000; background: #77EE00 url(design/success.gif) no-repeat 5px center; }
 
 /* Rest of Tags*/
-.textpageheader {
-  background: url(design/arrow-left-down.png) no-repeat; 
-  padding-left: 40px;
-}
 
 .formButtons {
   padding: 8px 8px 8px 8px;
   overflow: hidden;
+  height: 100%;
   border: 2px outset #CCC;
   background: #C2C6BF;
 }
@@ -335,7 +339,6 @@ div.splitColumn {
   background: #EFEFEF; 
   overflow: hidden; 
   border: 2px outset #EEE; 
-  margin: 0px 0px 8px 0px; 
   padding: 0px 6px 4px 6px;
 }
 
@@ -358,6 +361,10 @@ form.post_result {
 div.splitLine div.right_split, div.splitLine div.right_split b, div.splitLine div.right_split span, div.right_split input {
   float: left;
   overflow: hidden;
+}
+
+div.sep {
+  background: url(design/sep.gif) repeat-x 100% 0;
 }
 
 input.inputResults {
@@ -434,23 +441,36 @@ a.pg_link:hover {
 }
 
 /* Common Names to Combine */
-.totalsize {width: 900px;}
-.leftsize {width: 634px;}
+.totalsize {width: 960px;}
+.leftsize {width: 696px;}
 .rightsize{width: 264px;}
 .floater { float:left; }
 .floatend { float:right; }
 .cleaner { clear:both; }
 .scroller { overflow: auto; width: auto; }
 .hideflow {float: left; overflow: hidden;}
+.hideover { overflow:hidden; }
+.extend {float: left; padding-bottom: 30000px; margin-bottom: -30000px;}
 .negate {float: left; margin-bottom: -30000px;}
 .lalign { text-align: left; }
 .ralign { text-align: right; }
 .calign { text-align: center; }
+.rspacer { margin-right: 8px; }
 .bspacer { margin-bottom: 8px; }
 .vspacer { margin: 8px 0px; }
+.ppad { padding: 8px; }
+.lpad { padding-left: 8px; }
+.rpad { padding-right: 8px; }
+.hpad { padding: 0px 8px; }
+.vpad { padding: 8px 0px; }
+.tpad { padding-top: 8px; }
 .wider { width: 100%; }
 .charsep { padding: 0 4px; }
 .lcharsep { padding-left: 12px; }
 .bounder { width: 100%; height: 100%; overflow:hidden; }
 .balancer {margin: 0px auto 0px auto;}
 .heavy {font-weight: bold;}
+.halfer { width: 50%; }
+.quarter { width: 25%; }
+.quarter3 { width: 75%; }
+.third { width: 33%; }

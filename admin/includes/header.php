@@ -17,7 +17,6 @@
 //----------------------------------------------------------------------------
 */
 ?>
-<!-- header //-->
     <div id="header">
       <div class="bounder lalign">
         <div class="floater" style="padding: 12px 0px 0px 20px;"><?php echo '<a href="' . tep_href_link() . '">' . tep_image(DIR_WS_IMAGES . 'design/logo.png', STORE_NAME) . '</a>'; ?></div>
@@ -25,6 +24,5 @@
       </div>
     </div>
 <?php
-  $messageStack->output('header');
+  $msg->output('header');
 ?>
-<!-- header_eof //-->

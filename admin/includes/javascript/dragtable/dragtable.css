@@ -1,0 +1,64 @@
+/*##### the dragtable stuff #####*/
+
+
+.dragtable-sortable { 
+	margin: 0; padding: 0; 
+}
+
+.dragtable-sortable div {
+	margin: 0; padding: 0; 
+    float: left; 
+    background: #545E74; color: #C2D3F6;
+
+  border-left: 1px solid #FFF;
+border-bottom: 1px solid #FFF;
+overflow: hidden;
+}
+
+.dragtable-sortable th, .dragtable-sortable td{
+	border: 0px;
+}
+
+.dragtable-sortable div:first-child th, .dragtable-sortable div:first-child td {
+	border: 0px;
+}
+
+.ui-sortable-helper {
+  opacity: 0.7;
+  filter: alpha(opacity=70);
+}
+
+
+.ui-sortable-placeholder { 
+  /*border: 1px dotted black;*/
+  background: #949EB4 !important; 
+  visibility: visible !important;
+}
+
+.ui-sortable-placeholder * { 
+	opacity: 0.4; visibility: hidden; 
+}
+
+.ui-tabledata {
+  border-collapse: collapse;
+}
+
+.ui-tabledata td{
+  padding: 3px;
+  border: 1px solid #FFF;
+}
+.ui-tabledata tr {
+	margin: 0; padding: 0; 
+}
+.ui-tabledata th {
+/*
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #FFF;
+*/
+  /*border-bottom: 1px solid #FFF;*/
+
+  padding: 6px 3px;
+  cursor: pointer;
+}
+
+.ui-tabledata th, .ui-tabledata th a { color: #C2D3F6; font-weight: bold; }

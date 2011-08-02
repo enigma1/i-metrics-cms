@@ -25,46 +25,46 @@
 */
 
   function tep_update_whos_online() {
-    global $g_session, $g_db;
+    extract(tep_load('http_validator', 'database', 'sessions'));
 
-    if( !empty($g_session->spider_name) ) {
-      $wo_full_name = 'Bot: ' . $g_session->spider_name;
+    if( $http->bot ) {
+      $wo_full_name = 'Bot: ' . $http->bot_name;
     } else {
-      $wo_full_name = 'Visitor:' . $g_session->user_agent;
+      $wo_full_name = 'Visitor:' . $http->ua;
     }
 
-    $wo_session_id = $g_session->id();
-    $wo_ip_address = getenv('REMOTE_ADDR');
+    $wo_session_id = $cSessions->id;
+    $wo_ip_address = $http->ip_string;
     $wo_last_page_url = getenv('REQUEST_URI');
 
     $current_time = time();
     $xx_mins_ago = ($current_time - MAX_WHOS_ONLINE_TIME);
 
     // remove entries that have expired
-    $g_db->query("delete from " . TABLE_WHOS_ONLINE . " where time_last_click < '" . $xx_mins_ago . "'");
+    $db->query("delete from " . TABLE_WHOS_ONLINE . " where time_last_click < '" . $xx_mins_ago . "'");
 
-    $stored_query = $g_db->query("select count(*) as count from " . TABLE_WHOS_ONLINE . " where ip_address = '" . $g_db->filter($wo_ip_address) . "'");
-    $stored_array = $g_db->fetch_array($stored_query);
+    $stored_query = $db->query("select count(*) as count from " . TABLE_WHOS_ONLINE . " where ip_address = '" . $db->filter($wo_ip_address) . "'");
+    $stored_array = $db->fetch_array($stored_query);
     if ($stored_array['count'] > 0) {
       $sql_data_array = array(
-                              'full_name' => $g_db->prepare_input($wo_full_name),
-                              'session_id' => $g_db->prepare_input($wo_session_id),
-                              'time_last_click' => $g_db->prepare_input($current_time),
-                              'last_page_url' => $g_db->prepare_input($wo_last_page_url),
-                              'cookie_sent' => $g_session->has_cookie()?1:0
-                             );
-      $g_db->perform(TABLE_WHOS_ONLINE, $sql_data_array, 'update', "ip_address = '" . $g_db->filter($wo_ip_address) . "'");
+        'full_name' => $db->prepare_input($wo_full_name),
+        'session_id' => $db->prepare_input($wo_session_id),
+        'time_last_click' => $db->prepare_input($current_time),
+        'last_page_url' => $db->prepare_input($wo_last_page_url),
+        'cookie_sent' => $cSessions->has_cookie()?1:0
+      );
+      $db->perform(TABLE_WHOS_ONLINE, $sql_data_array, 'update', "ip_address = '" . $db->filter($wo_ip_address) . "'");
     } else {
       $sql_data_array = array(
-                              'full_name' => $g_db->prepare_input($wo_full_name),
-                              'ip_address' => $g_db->prepare_input($wo_ip_address),
-                              'time_entry' => $g_db->prepare_input($current_time),
-                              'time_last_click' => $g_db->prepare_input($current_time),
-                              'last_page_url' => $g_db->prepare_input($wo_last_page_url),
-                              'session_id' => $g_db->prepare_input($wo_session_id),
-                              'cookie_sent' => $g_session->has_cookie()?1:0
-                             );
-      $g_db->perform(TABLE_WHOS_ONLINE, $sql_data_array, 'insert');
+        'full_name' => $db->prepare_input($wo_full_name),
+        'ip_address' => $db->prepare_input($wo_ip_address),
+        'time_entry' => $db->prepare_input($current_time),
+        'time_last_click' => $db->prepare_input($current_time),
+        'last_page_url' => $db->prepare_input($wo_last_page_url),
+        'session_id' => $db->prepare_input($wo_session_id),
+        'cookie_sent' => $cSessions->has_cookie()?1:0
+      );
+      $db->perform(TABLE_WHOS_ONLINE, $sql_data_array, 'insert');
     }
   }
 ?>

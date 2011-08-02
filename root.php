@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2008 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Catalog: SEO-G Root page
@@ -16,17 +16,21 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-  require('includes/init_early.php');
+  $g_exit_path = true;
+  require('includes/application_top.php');
+  unset($g_exit_path);
+  require_once(DIR_FS_INCLUDES . 'init_early.php');
 
   if( !isset($g_seo_url) || !is_object($g_seo_url) ) {
-    echo '<b>SEO-G Error</b>: Unable to initialize - Missing or incorrect SEO-G files';
+    echo '<b>SEO-G Error</b>: Unable to initialize - Missing or incorrect SEO-G files, check your SEO-G installation';
     exit();
   }
 
   $osc_url = $osc_params = $osc_parse = '';
-  if( $g_seo_url->get_osc_url($g_server . $_SERVER['REQUEST_URI'], $osc_url, $osc_params, $osc_parse) ) {
+  $result = $g_seo_url->get_osc_url($g_server . $_SERVER['REQUEST_URI'], $osc_url, $osc_params, $osc_parse);
 
-    $PHP_SELF = $_SERVER['PHP_SELF'] = $_SERVER['SCRIPT_NAME'] = $osc_parse['path'];
+  if( $result ) {
+    $_SERVER['PHP_SELF'] = $_SERVER['SCRIPT_NAME'] = $osc_parse['path'];
     if(basename($_SERVER['PHP_SELF']) == 'root.php' ) {
       echo '<b>SEO-G Error</b>: Invalid Self-Request - Check recorded URLs';
       exit();
@@ -55,22 +59,22 @@
     unset($tmp_array);
     // Synchronize query string variables
     $_SERVER['QUERY_STRING'] = implode('&',$osc_params);
-
-    $g_script = basename($PHP_SELF);
+    $g_script = basename($_SERVER['PHP_SELF']);
     // Signal SEO-G translation.
     $g_seo_flag = true;
-    $g_seo_url->cache_init($g_seo_url->osc_key);
-    require(basename($PHP_SELF));
-
-  } elseif( file_exists(basename($osc_parse['path']))) {
-    $PHP_SELF = $_SERVER['PHP_SELF'] = $_SERVER['SCRIPT_NAME'] = $osc_parse['path'];
-    if(basename($_SERVER['PHP_SELF']) == 'root.php' ) {
+    if( is_file($g_script) ) {
+      $g_seo_url->cache_init($g_seo_url->osc_key);
+      require($g_script);
+    }
+  } elseif( is_file(basename($osc_parse['path']))) {
+    $_SERVER['PHP_SELF'] = $_SERVER['SCRIPT_NAME'] = $osc_parse['path'];
+    $g_script = basename($_SERVER['PHP_SELF']);
+    if( $g_script == 'root.php' ) {
       echo '<b>SEO-G Error</b>: Invalid Self-Request, passed URI Request: ' . $_SERVER['REQUEST_URI'];
       exit();
     }
-    $g_script = basename($PHP_SELF);
     $g_seo_flag = true;
-    require(basename($osc_parse['path']));
+    require($g_script);
   } else {
     // Script not found. Initiate redirection
     header("HTTP/1.1 " . SEO_DEFAULT_ERROR_HEADER);

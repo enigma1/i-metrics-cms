@@ -28,13 +28,13 @@
     case 'delete_all_confirm':
       if( !isset($_POST['mark']) || !is_array($_POST['mark']) || !count($_POST['mark']) ) {
         $messageStack->add_session(ERROR_NOTHING_SELECTED);
-        tep_redirect(tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action')) ));
+        tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action') ));
       }
       foreach ($_POST['mark'] as $key=>$val) {
         $g_db->query("delete from " . TABLE_VOTES . " where auto_id = '" . (int)$key . "'");
       }
       $messageStack->add_session(SUCCESS_ENTRY_REMOVED, 'success');
-      tep_redirect(tep_href_link(basename($PHP_SELF)));
+      tep_redirect(tep_href_link($g_script));
       break;
     case 'delete_confirm':
       if( isset($_POST['auto_id']) && !empty($_POST['auto_id']) ) {
@@ -42,23 +42,21 @@
         $g_db->query("delete from " . TABLE_VOTES . " where auto_id = '" . (int)$auto_id . "'");
         $messageStack->add_session(WARNING_ENTRY_REMOVED, 'warning');
       }
-      tep_redirect(tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID'))));
+      tep_redirect(tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') ));
       break;
 
     default:
       break;
   }
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php require('includes/objects/html_start_sub2.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
         <div class="maincell">
-          <div class="comboHeading">
-            <div class="pageHeading"><h1><?php echo HEADING_TITLE; ?></h1></div>
+          <div class="comboHeadingTop">
+            <div class="rspacer floater help_page"><?php echo '<a href="' . tep_href_link($g_script, 'action=help') . '" title="' . HEADING_TITLE . '" class="plugins_help" target="_blank">' . tep_image(DIR_WS_ICONS . 'icon_help_32.png', HEADING_TITLE) . '</a>'; ?></div>
+            <div><h1><?php echo HEADING_TITLE; ?></h1></div>
           </div>
 <?php
-    $generic_count = 0;
-    $rows = 0;
-
     $sort_by = '';
     $sortIP = 4;
     $sortDate = 3;
@@ -101,21 +99,25 @@
     if( $g_db->num_rows($votes_query) ) {
 ?>
           <div class="splitLine">
-            <div style="float: left;"><?php echo $votes_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
-            <div style="float: right;"><?php echo $votes_split->display_links(tep_get_all_get_params(array('page'))); ?></div>
+            <div class="floater"><?php echo $votes_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
+            <div class="floatend"><?php echo $votes_split->display_links(tep_get_all_get_params('page')); ?></div>
           </div>
-          <div class="listArea"><?php echo tep_draw_form('votes_form', basename($PHP_SELF),'action=delete_all_confirm', 'post'); ?><table class="tabledata" cellspacing="1">
+          <div class="formArea"><?php echo tep_draw_form('votes_form', $g_script,'action=delete_all_confirm', 'post'); ?><table class="tabledata">
             <tr class="dataTableHeadingRow">
-              <th><?php echo '<a href="javascript:void(0)" onclick="copy_checkboxes(document.votes_form,\'mark\')" title="' . TEXT_PAGE_SELECT . '" class="menuBoxHeadingLink">' . tep_image(DIR_WS_ICONS . 'icon_tick.png', TEXT_PAGE_SELECT) . '</a>'; ?></th>
+              <th class="calign"><?php echo '<a href="#mark" class="page_select" title="' . TEXT_PAGE_SELECT . '">' . tep_image(DIR_WS_ICONS . 'icon_tick.png', TEXT_PAGE_SELECT) . '</a>'; ?></th>
               <th><?php echo TABLE_HEADING_TITLE; ?></th>
               <th><?php echo TABLE_HEADING_TYPE; ?></th>
-              <th><?php echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 's_sort_id')) . 's_sort_id=' . $sortIP) . '">' . TABLE_HEADING_IP . '</a>'; ?></th>
-              <th><?php echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 's_sort_id')) . 's_sort_id=' . $sortRate) . '">' . TABLE_HEADING_RATING . '</a>'; ?></th>
-              <th><?php echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 's_sort_id')) . 's_sort_id=' . $sortDate) . '">' . TABLE_HEADING_DATE_ADDED . '</a>'; ?></th>
+              <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 's_sort_id') . 's_sort_id=' . $sortIP) . '">' . TABLE_HEADING_IP . '</a>'; ?></th>
+              <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 's_sort_id') . 's_sort_id=' . $sortRate) . '">' . TABLE_HEADING_RATING . '</a>'; ?></th>
+              <th><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 's_sort_id') . 's_sort_id=' . $sortDate) . '">' . TABLE_HEADING_DATE_ADDED . '</a>'; ?></th>
               <th class="calign"><?php echo TABLE_HEADING_ACTION; ?></th>
             </tr>
 <?php
+      $rows = 0;
       while( $votes_array = $g_db->fetch_array($votes_query) ) {
+        $rows++;
+        $row_class = ($rows%2)?'dataTableRow':'dataTableRowAlt';
+
        if( $votes_array['votes_type'] == 1 ) {
          $types_query = $g_db->query("select gtext_title as title from " . TABLE_GTEXT . " where gtext_id = '" . (int)$votes_array['votes_id'] . "'");
          $link = tep_href_link(FILENAME_GENERIC_TEXT, 'gtID=' . $votes_array['votes_id'] . '&action=new_generic_text');
@@ -131,15 +133,17 @@
          $votes_array['title'] = TEXT_INFO_NA;
        }
 
-       if( !empty($vtID) && $vtID == $votes_array['auto_id'] ) {
-          $vtInfo = new objectInfo($votes_array);
-        }
-        $generic_count++;
-        $rows++;
+       $inf_link = tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') . 'vtID=' . $votes_array['auto_id']);
+       $votes_array['ip_address'] = $g_http->ip2s($votes_array['ip_address']);
 
-        echo '              <tr class="dataTableRow">' . "\n";
+       if( !empty($vtID) && $vtID == $votes_array['auto_id'] ) {
+         $vtInfo = new objectInfo($votes_array);
+         echo '              <tr class="dataTableRowSelected">' . "\n";
+       } else {
+         echo '              <tr class="' . $row_class . ' row_link" href="' . $inf_link . '">' . "\n";
+       }
 ?>
-              <td><?php echo tep_draw_checkbox_field('mark['.$votes_array['auto_id'].']', 1); ?></td>
+              <td class="calign"><?php echo tep_draw_checkbox_field('mark['.$votes_array['auto_id'].']', 1); ?></td>
               <td><?php echo '<a href="' . $link . '" title="' . $votes_array['title'] . '">' . $votes_array['title'] . '</a>'; ?></td>
               <td><?php echo ($votes_array['votes_type']==1?TEXT_INFO_PAGE:TEXT_INFO_COLLECTION) . '</a>'; ?></td>
               <td><?php echo $votes_array['ip_address']; ?></td>
@@ -147,25 +151,25 @@
               <td><?php echo tep_datetime_short($votes_array['date_added']); ?></td>
               <td class="tinysep calign">
 <?php
-        echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'vtID=' . $votes_array['auto_id'] . '&action=delete_comment') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE) . '</a>';
+        echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') . 'vtID=' . $votes_array['auto_id'] . '&action=delete_vote') . '">' . tep_image(DIR_WS_ICONS . 'icon_delete.png', TEXT_DELETE) . '</a>';
         if (isset($vtInfo) && is_object($vtInfo) && ($votes_array['auto_id'] == $vtInfo->auto_id)) { 
           echo tep_image(DIR_WS_ICONS . 'icon_arrow_right.png', TEXT_SELECTED); 
         } else { 
-          echo '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'vtID=' . $votes_array['auto_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>'; 
+          echo '<a href="' . $inf_link . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>'; 
         }
 ?>
               </td>
             </tr>
 <?php
       }
+      $buttons = array(
+        tep_image_submit('button_delete.gif', IMAGE_DELETE),
+      );
 ?>
-            <tr>
-              <td colspan="8" class="formButtons"><?php echo tep_image_submit('button_delete.gif', IMAGE_DELETE) ?></td>
-            </tr>
-          </table></form></div>
-          <div class="splitLine">
-            <div style="float: left;"><?php echo $votes_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
-            <div style="float: right;"><?php echo $votes_split->display_links(tep_get_all_get_params(array('page'))); ?></div>
+          </table><div class="formButtons"><?php echo implode('', $buttons); ?></div></form></div>
+          <div class="listArea splitLine">
+            <div class="floater"><?php echo $votes_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES); ?></div>
+            <div class="floatend"><?php echo $votes_split->display_links(tep_get_all_get_params('page')); ?></div>
           </div>
 <?php
     }
@@ -175,29 +179,29 @@
     $heading = array();
     $contents = array();
     switch ($action) {
-      case 'delete_comment':
-        if( $rows > 0 && isset($vtInfo) && is_object($vtInfo) ) {
+      case 'delete_vote':
+        if( isset($vtInfo) && is_object($vtInfo) ) {
           $heading[] = array('text' => '<b>' . TEXT_HEADING_DELETE_VOTE . '</b>');
-          $contents[] = array('form' => tep_draw_form('form_comment', basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'vtID=' . $vtInfo->auto_id . '&action=delete_confirm') . tep_draw_hidden_field('auto_id', $vtInfo->auto_id));
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
+          $contents[] = array('form' => tep_draw_form('form_comment', $g_script, tep_get_all_get_params('action', 'vtID') . 'vtID=' . $vtInfo->auto_id . '&action=delete_confirm') . tep_draw_hidden_field('auto_id', $vtInfo->auto_id));
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'final_notice.png', IMAGE_CONFIRM) );
           $contents[] = array('text' => TEXT_INFO_DELETE_VOTE_INTRO);
           $contents[] = array('text' => '<b>' . tep_datetime_short($vtInfo->date_added) . '</b>');
-          $contents[] = array('align' => 'center', 'text' => tep_image_submit('button_delete.gif', IMAGE_DELETE) . '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'vtID=' . $vtInfo->auto_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
+          $contents[] = array('class' => 'calign', 'text' => tep_image_submit('button_delete.gif', IMAGE_DELETE) . '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') . 'vtID=' . $vtInfo->auto_id) . '">' . tep_image_button('button_cancel.gif', IMAGE_CANCEL) . '</a>');
         } else { // create comment dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_SELECT));
+          $contents[] = array('class' => 'calign', 'text' => tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_SELECT));
           $contents[] = array('text' => TEXT_NO_GENERIC);
         }
         break;
       default:
-        if( $rows > 0 && isset($vtInfo) && is_object($vtInfo) ) {
+        if( isset($vtInfo) && is_object($vtInfo) ) {
           $heading[] = array('text' => '<b>' . $vtInfo->ip_address . '</b>');
-          $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'vtID=' . $vtInfo->auto_id . '&action=delete_comment') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
+          $contents[] = array('class' => 'calign', 'text' => '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') . 'vtID=' . $vtInfo->auto_id . '&action=delete_vote') . '">' . tep_image_button('button_delete.gif', IMAGE_DELETE) . '</a>');
           $contents[] = array('text' => TEXT_IP_ADDRESS . '<br />' . $vtInfo->ip_address);
           $contents[] = array('text' => TEXT_DATE_ADDED . '<br />' . tep_datetime_short($vtInfo->date_added));
         } else { // create comment dummy info
           $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
-          $contents[] = array('params' => 'text-align: center', 'text' => '<a href="' . tep_href_link(basename($PHP_SELF), tep_get_all_get_params(array('action', 'vtID')) . 'action=new_comment') . '">' . tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_NEW) . '</a>');
+          $contents[] = array('class' => 'calign', 'text' => '<a href="' . tep_href_link($g_script, tep_get_all_get_params('action', 'vtID') . 'action=new_comment') . '">' . tep_image(DIR_WS_IMAGES . 'invalid_entry.png', IMAGE_NEW) . '</a>');
           $contents[] = array('text' => TEXT_INFO_NO_VOTES);
         }
         break;
@@ -210,4 +214,4 @@
       echo '             </div>';
     }
 ?>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

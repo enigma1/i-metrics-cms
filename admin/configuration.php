@@ -9,15 +9,14 @@
 
 //----------------------------------------------------------------------------
 // Modifications by Asymmetrics
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Admin: Configuration Script
 //----------------------------------------------------------------------------
 // I-Metrics CMS
 //----------------------------------------------------------------------------
-// - Replaced Database functions with Database Class
-// - Added action controls to edit the configuration options for each row
+// - Moved main configuration code into a common module
 // - PHP5 Register Globals off and Long Arrays Off support added
 // - HTML Outer tables replaced with CSS driven divs
 //----------------------------------------------------------------------------
@@ -25,5 +24,5 @@
 //----------------------------------------------------------------------------
 */
   require('includes/application_top.php');
-  require(DIR_WS_MODULES . 'common_config.php');
+  require(DIR_FS_MODULES . 'common_config.php');
 ?>

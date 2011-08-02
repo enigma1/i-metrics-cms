@@ -7,9 +7,21 @@
 
   Copyright (c) 2002 osCommerce
 
-  Released under the GNU General Public License
+// Modifications by Asymmetrics
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Helpdesk Departments Scripts Strings file
+//----------------------------------------------------------------------------
+// Converted for the CMS
+// Added extra strings
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
-
 define('HEADING_TITLE', 'HelpDesk Status Entries');
 
 define('TABLE_HEADING_STATUS', 'Status');

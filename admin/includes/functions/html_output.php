@@ -24,23 +24,22 @@
 // - 03/05/2009: Added Catalog Calculation Image Functions
 // - 03/05/2009: Setup buttons for the Strings Folder
 // - 03/05/2009: Text Button Functions Added
+// - 10/22/2010: Removed Application Globals
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-
 ////
 // The HTML href link wrapper function
   function tep_href_link($page = '', $parameters = '', $url_encode=true) {
 
-    $link = HTTP_SERVER . DIR_WS_ADMIN . $page;
-
+    $link = $page;
     if( !empty($parameters)) {
       $parameters = tep_sort_parameter_string($parameters);
       $link .= '?' . tep_output_string($parameters);
     }
 
-    while( (substr($link, -1) == '&') || (substr($link, -1) == '?') ) $link = substr($link, 0, -1);
+    rtrim($link, '?&');
 
     if( $url_encode ) {
       $link = str_replace('&', '&amp;', $link);
@@ -48,23 +47,23 @@
     return $link;
   }
 
-  function tep_catalog_href_link($page = '', $parameters = '', $connection = 'NONSSL') {
+  function tep_catalog_href_link($page = '', $parameters = '', $connection = 'NONSSL', $url_encode=true) {
+    $link = HTTP_CATALOG_SERVER;
 
-    $link = HTTP_CATALOG_SERVER . DIR_WS_CATALOG;
-
-    if ($connection == 'SSL' && defined('ENABLE_SSL_CATALOG') && ENABLE_SSL_CATALOG == 'true') {
-      $link = HTTPS_CATALOG_SERVER . DIR_WS_CATALOG;
+    if( $connection == 'SSL' && defined('ENABLE_SSL_CATALOG') && ENABLE_SSL_CATALOG == 'true' ) {
+      $link = HTTPS_CATALOG_SERVER;
     }
-    $link .= $page;
+    $link .= DIR_WS_CATALOG . $page;
 
     if( !empty($parameters)) {
       $parameters = tep_sort_parameter_string($parameters);
       $link .= '?' . tep_output_string($parameters);
     }
+    rtrim($link, '?&');
 
-    while ( (substr($link, -1) == '&') || (substr($link, -1) == '?') ) $link = substr($link, 0, -1);
-
-    $link = str_replace('&', '&amp;', $link);
+    if( $url_encode ) {
+      $link = str_replace('&', '&amp;', $link);
+    }
     return $link;
   }
 
@@ -75,15 +74,14 @@
     return tep_image_params($image, $alt, $width, $height, $params);
   }
 
-
 ////
 // The HTML image wrapper function
   function tep_catalog_image($src, $alt = '', $width = '', $height = '', $params = '') {
-    global $g_cserver;
+    extract(tep_load('defs'));
 
     $images_path = tep_front_physical_path(DIR_WS_CATALOG_IMAGES);
     $image_filesize = @filesize($images_path.$src);
-    $src = $g_cserver . DIR_WS_CATALOG_IMAGES . $src;
+    $src = $cDefs->cserver . DIR_WS_CATALOG_IMAGES . $src;
     $image = '<img src="' . $src . '"';
 
     $resize = true;
@@ -121,97 +119,12 @@
   }
 
 
-/*
-////
-// The HTML image wrapper function
-  function tep_catalog_image($src, $alt = '', $width = '', $height = '', $parameters = '') {
-    global $g_cserver;
-
-    $images_path = tep_front_physical_path(DIR_WS_CATALOG_IMAGES);
-    $image_filesize = @filesize($images_path.$src);
-    $src = $g_cserver . DIR_WS_CATALOG_IMAGES . $src;
-
-    if( $image_filesize < 1024 ) {
-      $resize = false;
-    } elseif( empty($width) || empty($height) ) {
-      $resize = false;
-    } elseif( strstr($width,'%') == false && strstr($height,'%') == false) { 
-      $resize = true; 
-    } else {
-      $width = $image_size[0];
-      $height = $image_size[1];
-      $resize = false;
-    }
-
-    if( $resize ) {
-      $image_size = @getimagesize($src);
-      if( empty($image_size) && IMAGE_REQUIRED == 'false') { 
-        return '';
-      }
-      if( !is_array($image_size) || count($image_size) < 2 || !$image_size[0] || !$image_size[1] ) {
-        return '';
-      }
-
-      $ratio = $image_size[1] / $image_size[0];
-
-      // Set the width and height to the proper ratio
-      if( $image_size[0] < $width && $image_size[1] < $height) { 
-        $resize = false;
-      } elseif (!$width && $height) { 
-        $ratio = $height / $image_size[1]; 
-        $width = $image_size[0] * $ratio;
-      } elseif ($width && !$height) { 
-        $ratio = $width / $image_size[0]; 
-        $height = $image_size[1] * $ratio;
-      } elseif (!$width && !$height) { 
-        $width = $image_size[0]; 
-        $height = $image_size[1]; 
-      } 
-
-      if( $resize && ($image_size[0] != $width || $image_size[1] != $height) ) { 
-        $rx = $image_size[0] / $width; 
-        $ry = $image_size[1] / $height; 
-  
-        if ($rx < $ry) { 
-          $width = $height / $ratio;
-        } else { 
-          $height = $width * $ratio;
-        }
-        $width = intval($width); 
-        $height = intval($height);
-      } else {
-        $width = $image_size[0];
-        $height = $image_size[1];
-      }
-    }
-
-    $image = '<img src="' . tep_output_string($src) . '" border="0" alt="' . tep_output_string($alt) . '"';
-
-    if( !empty($alt) ) {
-      $image .= ' title="' . tep_output_string($alt) . '"';
-    }
-
-    if( !empty($width) && !empty($height) ) {
-      $image .= ' width="' . tep_output_string($width) . '" height="' . tep_output_string($height) . '"';
-    }
-
-    if( !empty($parameters)) {
-      $image .= ' ' . $parameters;
-    }
-
-    $image .= ' />';
-
-    return $image;
-  }
-*/
-
   function tep_catalog_calculate_image($src, &$width, &$height, $relative_path = 0) {
-    global $g_crelpath, $g_cserver;
+    extract(tep_load('defs'));
 
     $images_path = tep_front_physical_path(DIR_WS_CATALOG_IMAGES);
-
     if( $relative_path == 1 ) {
-      $rel_path = $g_cserver . DIR_WS_CATALOG_IMAGES;
+      $rel_path = $cDefs->cserver . DIR_WS_CATALOG_IMAGES;
     } elseif($relative_path == 2) {
       $rel_path = '';
     } else {
@@ -229,73 +142,15 @@
       }
 
       if( tep_image_dimensions($width, $height, $image_size[0], $image_size[1]) ) {
-        $image = $g_crelpath . 'fly_thumb.php?no_cache=1&img='. $rel_path . $src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height);
+        $image = $cDefs->crelpath . 'fly_thumb.php?no_cache=1&img='. $rel_path . $src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height);
         return $image;
       } else {
-        $image = $g_cserver . DIR_WS_CATALOG_IMAGES . $src;
+        $image = $cDefs->cserver . DIR_WS_CATALOG_IMAGES . $src;
         return $image;
       }
     } 
     return ''; 
   }
-
-/*
-  function tep_catalog_calculate_image($src, &$width, &$height, $relative_path = 0) {
-    global $g_crelpath, $g_cserver;
-
-    $images_path = tep_front_physical_path(DIR_WS_CATALOG_IMAGES);
-
-    if( $relative_path == 1 ) {
-      $rel_path = $g_cserver . DIR_WS_CATALOG_IMAGES;
-    } elseif($relative_path == 2) {
-      $rel_path = '';
-    } else {
-      $length = strlen(DIR_FS_CATALOG);
-      $rel_path = substr($images_path, $length);
-    }
-
-    $resize = true;
-    // Get the image's information
-    if( $image_size = @getimagesize($images_path.$src) ) { 
-      $ratio = $image_size[1] / $image_size[0];
-      
-      // Set the width and height to the proper ratio
-      if( $image_size[0] < $width && $image_size[1] < $height) { 
-        $resize = false;
-      } elseif (!$width && $height) { 
-        $ratio = $height / $image_size[1]; 
-        $width = $image_size[0] * $ratio;
-      } elseif ($width && !$height) { 
-        $ratio = $width / $image_size[0]; 
-        $height = $image_size[1] * $ratio;
-      } elseif (!$width && !$height) { 
-        $width = $image_size[0]; 
-        $height = $image_size[1]; 
-      } 
-      // Scale the image if not the original size
-      if( $resize && ($image_size[0] != $width || $image_size[1] != $height) ) { 
-        $rx = $image_size[0] / $width; 
-        $ry = $image_size[1] / $height; 
-  
-        if ($rx < $ry) { 
-          $width = $height / $ratio;
-        } else { 
-          $height = $width * $ratio;
-        }
-        $width = intval($width); 
-        $height = intval($height); 
-        $image = $g_crelpath . 'fly_thumb.php?no_cache=1&img='. $rel_path . $src.'&amp;w='.tep_output_string($width).'&amp;h='.tep_output_string($height);
-        return $image;
-      } else {
-        $width = $image_size[0];
-        $height = $image_size[1];
-        $image = $g_cserver . DIR_WS_CATALOG_IMAGES . $src;
-        return $image;
-      }
-    } 
-    return ''; 
-  }
-*/
 
   function tep_image_dimensions(&$x,&$y,$dx,$dy) {
     $result = false;
@@ -351,7 +206,7 @@
       $image .= ' title="' . tep_output_string($alt) . '"';
     }
     $image .= ' alt="' . tep_output_string($alt) . '"';
-    //$image .= ' border="0" />';
+
     $image .= ' />';
     return $image;
   }
@@ -375,7 +230,7 @@
 ////
 // The HTML form submit main image wrapper function
 // Outputs a button in the selected language
-  function tep_main_image_submit($image, $alt = '', $parameters = '') {
+  function tep_main_image_submit($image, $alt = '', $parameters = 'class="dflt"') {
 
     $image_submit = '<input type="image" src="' . $image . '" alt="' . tep_output_string($alt) . '"';
     if( !empty($alt)) {
@@ -401,6 +256,17 @@
     return $text_submit;
   }
 
+  function tep_button_pressed($button, $set = '_POST') {
+    $result = false;
+
+    $area =& $set;
+
+    if( isset($$area[$button . '_x']) || isset($$area[$button . '_y']) || isset($$area[$button]) ) {
+      $result = true;
+    }
+    return $result;
+  }
+
 ////
 // Draw a 1 pixel black line
   function tep_black_line() {
@@ -421,7 +287,10 @@
 
 ////
 // Output a form
-  function tep_draw_form($name, $action, $parameters = '', $method = '', $params = '') {
+  function tep_draw_form($name, $action='', $parameters = '', $method = '', $params = '') {
+    extract(tep_load('defs'));
+
+    if(empty($action)) $action = $cDefs->script;
     $method = strtolower($method);
     $action = basename($action);
     if($method != 'post' && $method != 'get') $method = 'post';
@@ -439,39 +308,34 @@
 
 ////
 // Output a form input field
-  function tep_draw_input_field($name, $value = '', $parameters = '', $required = false, $type = 'text', $reinsert_value = true) {
+  function tep_draw_input_field($name, $value = '', $parameters = '', $type = 'text', $reinsert_value = true) {
     $field = '<input type="' . tep_output_string($type) . '" name="' . tep_output_string($name) . '"';
 
-    if( isset($GLOBALS[$name]) && $reinsert_value == true ) {
-      $field .= ' value="' . tep_output_string(stripslashes($GLOBALS[$name])) . '"';
-    } elseif( !empty($value) ) {
+    if( tep_not_null($value) ) {
       $field .= ' value="' . tep_output_string($value) . '"';
+    } elseif( isset($GLOBALS[$name]) && $reinsert_value == true ) {
+      $field .= ' value="' . tep_output_string(stripslashes($GLOBALS[$name])) . '"';
     }
 
     if( !empty($parameters) ) {
       $field .= ' ' . $parameters;
     }
-
     $field .= ' />';
-
-    if ($required == true) $field .= TEXT_FIELD_REQUIRED;
-
     return $field;
   }
 
 ////
 // Output a form password field
-  function tep_draw_password_field($name, $value = '', $required = false) {
-    $field = tep_draw_input_field($name, $value, 'maxlength="40"', $required, 'password', false);
+  function tep_draw_password_field($name, $value = '', $params='') {
+    $field = tep_draw_input_field($name, $value, $params, 'password', false);
 
     return $field;
   }
 
 ////
-// Output a form filefield
-  function tep_draw_file_field($name, $parameters='', $required = false) {
-    $field = tep_draw_input_field($name, '', $parameters, $required, 'file');
-
+// Output a file field
+  function tep_draw_file_field($name, $parameters='') {
+    $field = tep_draw_input_field($name, '', $parameters, 'file');
     return $field;
   }
 
@@ -509,31 +373,26 @@
 
 ////
 // Output a form textarea field
-  function tep_draw_textarea_field($name, $wrap, $width='', $height='', $text = '', $parameters = '', $reinsert_value = true) {
+  function tep_draw_textarea_field($name, $value = '', $width='', $height='', $parameters = '', $reinsert_value = true) {
     $field = '<textarea name="' . tep_output_string($name) . '"';
-
     if( !empty($width) ) {
       $field .= ' cols="' . tep_output_string($width) . '"';
     }
-
     if( !empty($height) ) {
       $field .= ' rows="' . tep_output_string($height) . '"';
     }
-
     if( !empty($parameters) ) {
       $field .= ' ' . $parameters;
     }
-
     $field .= '>';
 
     if( isset($GLOBALS[$name]) && $reinsert_value == true ) {
       $field .= tep_output_string_protected(stripslashes($GLOBALS[$name]));
-    } elseif( !empty($text) ) {
-      $field .= tep_output_string_protected($text);
+    } elseif( !empty($value) ) {
+      $field .= tep_output_string_protected($value);
     }
 
     $field .= '</textarea>';
-
     return $field;
   }
 
@@ -559,7 +418,7 @@
 
 ////
 // Output a form pull down menu
-  function tep_draw_pull_down_menu($name, $values, $default = '', $parameters = '', $required = false) {
+  function tep_draw_pull_down_menu($name, $values, $default = '', $parameters = '') {
     $field = '<select name="' . tep_output_string($name) . '"';
 
     if( !empty($parameters) ) {
@@ -572,6 +431,16 @@
 
     $values = array_values($values);
     for ($i=0, $j=count($values); $i<$j; $i++) {
+
+      if( isset($values[$i]['group_start']) ) {
+        $field .= '<optgroup label="' . tep_output_string($values[$i]['text'], array('"' => '&quot;', '\'' => '&#039;', '<' => '&lt;', '>' => '&gt;')) . '">';
+        continue;
+      }
+      if( isset($values[$i]['group_end']) ) {
+        $field .= '</optgroup>';
+        continue;
+      }
+
       $field .= '<option value="' . tep_output_string($values[$i]['id']) . '"';
       if ($default == $values[$i]['id']) {
         $field .= ' selected="selected"';
@@ -580,20 +449,17 @@
       $field .= '>' . tep_output_string($values[$i]['text'], array('"' => '&quot;', '\'' => '&#039;', '<' => '&lt;', '>' => '&gt;')) . '</option>';
     }
     $field .= '</select>';
-
-    if ($required == true) $field .= TEXT_FIELD_REQUIRED;
-
     return $field;
   }
 
   function tep_output_media($reset=true) {
-    global $g_media;
-    if( empty($g_media) ) return;
+    extract(tep_load('defs'));
 
-    $g_media = array_values(array_unique($g_media));
-    for($i=0, $j=count($g_media); $i<$j; $i++) {
-      echo $g_media[$i] . "\n";
-    }
-    if( $reset ) $g_media = array();
+    if( empty($cDefs->media) ) return;
+
+    $cDefs->media = array_values(array_unique($cDefs->media));
+    echo implode("\n", $cDefs->media) . "\n";
+
+    if( $reset ) $cDefs->media = array();
   }
 ?>

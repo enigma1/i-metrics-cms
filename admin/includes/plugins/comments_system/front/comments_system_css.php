@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -19,10 +19,14 @@
 //
 */
   require('includes/application_top.php');
-  $g_navigation->remove_current_page();
+  extract(tep_load('history'));
+  $cHistory->remove_current_page();
 
-  header("Cache-Control: no-cache");
-  header("Content-Type: text/css"); 
+  $g_http->set_headers(
+    "Cache-Control: no-cache",
+    "Content-Type: text/css"
+  );
+  $g_http->send_headers();
 
   $storage = $g_session->register('comments_system');
   if( !is_array($storage) ) $storage = array();

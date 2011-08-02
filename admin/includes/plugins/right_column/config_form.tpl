@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------
 */
 ?>
-      <div class="listArea"><?php echo tep_draw_form('rc', $g_script, tep_get_all_get_params(array('action')) . 'action=process_options', 'post'); ?><table class="tabledata" cellspacing="1">
+      <div class="listArea"><?php echo tep_draw_form('rc', $cDefs->script, tep_get_all_get_params('action') . 'action=process_options', 'post'); ?><table class="tabledata">
         <tr class="dataTableHeadingRow">
           <th colspan="2"><?php echo $cStrings->HEADING_DISPLAY_OPTIONS; ?></th>
         </tr>
@@ -34,6 +34,6 @@
           <td><?php echo $cStrings->TEXT_IMAGE_COLLECTIONS; ?></td>
         </tr>
         <tr>
-          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($g_script, tep_get_all_get_params(array('action'))) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
+          <td colspan="2" class="formButtons"><?php echo '<a href="' . tep_href_link($cDefs->script, tep_get_all_get_params('action')) . '">' . tep_image_button('button_back.gif', IMAGE_BACK) . '</a>' . tep_image_submit('button_confirm.gif', IMAGE_CONFIRM); ?></td>
         </tr>
       </table></form></div>

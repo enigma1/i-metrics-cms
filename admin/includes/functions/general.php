@@ -8,7 +8,7 @@
   Copyright (c) 2003 osCommerce
 
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Admin: General Functions
@@ -24,40 +24,246 @@
 // - Added Array Support Functions
 // - Added Template Tagged Support
 // - Transformed script for CMS, removed unrelated functions
+// - Removed application globals
+// - Added dynamic loading of objects
 //----------------------------------------------------------------------------
 // I-Metrics CMS
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
+  function &tep_load() {
+    static $_objects = array();
+    static $_cross = array(
+      'database'      => 'db',
+      'languages'     => 'lng',
+      'http_headers'  => 'http',
+      'message_stack' => 'msg',
+      'plugins_admin' => 'cPlug',
+      'config'        => 'cfg',
+    );
+
+    $result_array = array();
+    $args = func_get_args();
+    if( empty($args) ) return $_objects;
+
+    foreach( $args as $name ) {
+      $result = false;
+
+      $dir = DIR_FS_CLASSES . $name;
+      $file = $dir . '.php';
+
+      if( isset($_cross[$name]) ) {
+        $cname = $_cross[$name];
+      } elseif( strpos($name, '_') !== false) {
+        $cname = $name;
+      } else {
+        $cname = 'c' . ucfirst($name);
+      }
+
+      if( !isset($_objects[$cname]) ) {
+        include_once($file);
+
+        if( !class_exists($name) ) {
+          die('Critical: Invalid Class File: ' . $file);
+        }
+
+        // Check for class overrides and load them if exist
+        if( is_dir($dir) ) {
+          $overrides_array = array_filter(glob($dir . '/' . $name . '*.php'), 'is_file');
+          if( !empty($overrides_array) ) {
+            sort($overrides_array);
+            for($i = 0, $j=count($overrides_array); $i<$j; $i++) {
+              include_once($dir . '/' . $overrides_array[$i]);
+              if( !class_exists($name) ) {
+                die('Critical: Invalid Class File: ' . $overrides_array[$i]);
+              }
+            }
+            $name = tep_get_script_name($overrides_array[$i]);
+          }
+        }
+        $_objects[$cname] = new $name;
+      }
+      $result_array[$cname] =& $_objects[$cname];
+    }
+    return $result_array;
+  }
+
+  function tep_ref() {
+    $result = false;
+    if( !function_exists('debug_backtrace') ) return $result;
+
+    $args = func_get_args();
+    if( version_compare(PHP_VERSION, '5.2.5', 'ge') ) {
+      $stack = debug_backtrace(false);
+    } else {
+      $stack = debug_backtrace();
+    }
+    if( !isset($stack[1]['args']) || !count($stack[1]['args']) ) {
+      return $result;
+    }
+
+    foreach($args as $value ) {
+      if( !isset($stack[1]['args'][0][$value]) ) {
+        return $result;
+      }
+    }
+    $result = $stack[1]['args'][0];
+    return $result;
+  }
+
+  function tep_web_files() {
+    static $_files = array();
+
+    $args = func_get_args();
+    if( empty($_files) || empty($args) ) {
+      $fs_includes = tep_front_physical_path(DIR_WS_CATALOG_INCLUDES);
+      $_files = tep_get_file_array($fs_includes . 'filenames.php');
+      if( empty($args) ) {
+        return $_files;
+      }
+    }
+    $result_array = array();
+    foreach($args as $def) {
+      if( isset($_files[$def]) ) {
+        $result_array[$def] = $_files[$def];
+      }
+    }
+    return $result_array;
+  }
+
+  function tep_log($entry='') {
+    extract(tep_load('debug'));
+
+    static $_log = array();
+
+    if( empty($entry) ) {
+      $result = $_log;
+      $_log = array();
+      return $result;
+    }
+
+    if( !$cDebug->log ) return '';
+
+    if( version_compare(PHP_VERSION, '5.2.5', 'ge') ) {
+      $stack = debug_backtrace(false);
+    } else {
+      $stack = debug_backtrace();
+    }
+    $tmp_array = isset($stack[1])?$stack[1]:$stack[0];
+    $tmp_string = '';
+
+    if( isset($tmp_array['line']) ) {
+      $tmp_string .= $tmp_array['line'] . '. ';
+    }
+
+    if( isset($tmp_array['class']) && isset($tmp_array['function']) ) {
+      $tmp_string = $tmp_array['class'] . ':' . $tmp_array['function'];
+    } elseif( isset($tmp_array['file']) ) { 
+      $tmp_string = $tmp_array['file'];
+    }
+    $tmp_string .= ' - ' . $entry;
+    $_log[] = $tmp_string;
+    return $tmp_string;
+  }
+
+  function tep_cfg_value($cfg_array) {
+    if( empty($cfg_array['use_function']) ) return $cfg_array['configuration_value'];
+
+    $pos = strpos($cfg_array['use_function'], '::');
+    if( $pos !== false && !$pos ) {
+      extract(tep_load('config'));
+      $tmp_array = explode('::', $cfg_array['use_function']);
+      $function = array(&$cfg, $tmp_array[1]);
+    } else {
+      $function = $cfg_array['use_function'];
+    }
+    //$pass_args = array('configuration_value' => &$cfg_array['configuration_value']);
+    return call_user_func_array($function, $cfg_array['configuration_value']);
+  }
+
+  function tep_cfg_set($cInfo) {
+
+    if( empty($cInfo->set_function) ) {
+      $result = tep_draw_input_field('configuration_value', $cInfo->configuration_value);
+    } else {
+      $pos = strpos($cInfo->set_function, '::');
+      if( $pos !== false && !$pos ) {
+        extract(tep_load('config'));
+        $tmp_array = explode('::', $cInfo->set_function);
+        $function = array(&$cfg, $tmp_array[1]);
+        $tmp_array = array_slice($tmp_array, 2);
+      } else {
+        $tmp_array = explode('::', $cInfo->set_function);
+        $function = $tmp_array[0];
+        array_shift($tmp_array);
+      }
+      if( !isset($tmp_array[0]) ) {
+        $args = array();
+      } else {
+        $args = explode(',',$tmp_array[0]);
+      }
+      array_unshift($args, $cInfo->configuration_value);
+      $result = call_user_func_array($function, $args);
+    }
+    return $result;
+  }
+
+  function tep_define_vars($metrics_file) {
+    $vars_array = tep_get_file_array($metrics_file);
+    foreach( $vars_array as $key => $value ) {
+      if( defined($key) ) continue;
+      define($key, $value);
+    }
+    return true;
+  }
+
+  function tep_get_file_array($metrics_file) {
+    if( !is_file($metrics_file) ) return array();
+    require($metrics_file);
+    $vars_array = get_defined_vars();
+    unset($vars_array['metrics_file']);
+    return $vars_array;
+  }
+
+  function tep_load_help($name='', $close=true) {
+    extract(tep_load('defs', 'sessions'));
+
+    if( empty($name) ) $name = $cDefs->script;
+    $filename = DIR_FS_STRINGS . 'help/' . $cDefs->script;
+    if( is_file($filename) ) {
+      require($filename);
+    } else {
+      echo '<div>Error: Could not locate file: <b>' . $filename . '</b></div>';
+    }
+    if( $close ) $cSessions->close();
+    exit();
+  }
 
 ////
 // Redirect to another page or site
-  function tep_redirect($url) {
-    global $logger, $g_session;
+  function tep_redirect($url='') {
+    extract(tep_load('defs', 'sessions', 'logger'));
+
+    $cLogger->timer_stop();
 
     // Will not redirect if headers already sent
     if( headers_sent() ) {
-      if( isset($g_session) && is_object($g_session) ) {
-        $g_session->close();
-      }
-      exit();
+      echo '<pre style="font-weight:bold; color: #FF0000;">Critical: Cannot Redirect, Headers already sent</pre>';
+      $cSessions->has_started()?$cSessions->close():exit();
     }
 
-    if( empty($url) || strstr($url, "\n") != false || strstr($url, "\r") != false ) {
-      tep_redirect(tep_href_link());
+    if( empty($url) ) $url = $cDefs->relpath;
+
+    // Validate url
+    if( strstr($url, "\n") != false || strstr($url, "\r") != false ) {
+      $url = $cDefs->relpath;
     }
 
-    if( class_exists('logger') && defined('STORE_PAGE_PARSE_TIME') && STORE_PAGE_PARSE_TIME == 'true') {
-      if( !isset($logger) || !is_object($logger)) $logger = new logger;
-      $logger->timer_stop();
-    }
+    if( $cSessions->has_started() ) $cSessions->close(false);
+    if( $cDefs->ajax ) exit();
 
-    if( isset($g_session) && is_object($g_session) ) {
-      $g_session->close(false);
-    }
-
-    // No encoded ampersands for redirect
+    // No encoded ampersands for redirects
     $url = str_replace('&amp;', '&', $url);
     header('P3P: CP="NOI ADM DEV PSAi COM NAV STP IND"');
     header('Location: ' . $url);
@@ -65,8 +271,8 @@
   }
 
   function tep_get_site_path() {
-    global $g_crelpath;
-    $tmp_array = explode('://', $g_crelpath);
+    extract(tep_load('defs'));
+    $tmp_array = explode('://', $cDefs->crelpath);
     return $tmp_array[1];
   }
 ////
@@ -87,8 +293,9 @@
     $string = preg_replace($filter, $separator, $string);
     if( !empty($separator) ) {
       $string = trim($string, $separator);
-      $string = str_replace($separator . $separator . $separator, $separator, $string);
-      $string = str_replace($separator . $separator, $separator, $string);
+      $string = preg_replace("/\$separator\$separator+/", $separator, trim($string));
+      //$string = str_replace($separator . $separator . $separator, $separator, $string);
+      //$string = str_replace($separator . $separator, $separator, $string);
     }
     return $string;
   }
@@ -123,19 +330,50 @@
   }
 
 
-  function tep_get_all_get_params($exclude_array = '') {
-    global $g_session;
-    if ($exclude_array == '') $exclude_array = array();
+  function tep_get_all_get_params() {
+    extract(tep_load('defs', 'sessions'));
+
+    $exclude_array = func_get_args();
 
     $get_url = '';
 
+    if( count($_GET) > 20 ) return $get_url;
+
     foreach( $_GET as $key => $value ) {
-      if( $key != $g_session->name() && $key != 'error' && !in_array($key, $exclude_array) ) {
+      if( !empty($cDefs->link_params) && !isset($cDefs->link_params[$key]) ) continue;
+
+      if( $key != $cSessions->name && !in_array($key, $exclude_array) ) {
         $get_url .= $key . '=' . $value . '&';
       }
     }
-
     return $get_url;
+  }
+
+  function tep_get_only_get_params() {
+
+    $args = func_get_args();
+    if(empty($args)) return $args;
+
+    $result = '';
+    foreach( $args as $value ) {
+      if( isset($_GET[$value]) ) {
+        $result .= $value . '=' . $_GET[$value] . '&';
+      }
+    }
+    return $result;
+  }
+
+  function tep_update_get_array() {
+    extract(tep_load('defs'));
+
+    $parse_array = array();
+    if( !empty($cDefs->link_params) ) {
+      foreach( $cDefs->link_params as $key ) {
+        if( !isset($_GET[$key]) ) continue;
+        $parse_array[$key] = $_GET[$key];
+      }
+      $_GET = $parse_array;
+    }
   }
 
   function tep_date_long($raw_date) {
@@ -165,10 +403,10 @@
     $minute = (int)substr($raw_date, 14, 2);
     $second = (int)substr($raw_date, 17, 2);
 
-    if (@date('Y', mktime($hour, $minute, $second, $month, $day, $year)) == $year) {
+    if( @date('Y', mktime($hour, $minute, $second, $month, $day, $year)) == $year) {
       return date(DATE_FORMAT, mktime($hour, $minute, $second, $month, $day, $year));
     } else {
-      return ereg_replace('2037' . '$', $year, date(DATE_FORMAT, mktime($hour, $minute, $second, $month, $day, 2037)));
+      return preg_replace('/2037/', $year, date(DATE_FORMAT, mktime($hour, $minute, $second, $month, $day, 2037)));
     }
 
   }
@@ -187,7 +425,7 @@
   }
 
   function tep_info_image($image, $alt, $width = '', $height = '') {
-    global $g_cserver;
+    extract(tep_load('defs'));
 
     $images_path = tep_front_physical_path(DIR_WS_CATALOG_IMAGES);
     if( !empty($image) && (file_exists($images_path.$image)) ) {
@@ -219,6 +457,50 @@
     return $output;
   }
 
+  function tep_create_random_value($length, $type = 'mixed', $unique = false) {
+    $digits = '1234567890';
+    $chars = 'abcdefghijklmnopqrstuvwxyz';
+    $result = $pattern = '';
+    switch($type) {
+      case 'digits':
+        $pattern = $digits;
+        break;
+      case 'chars':
+        $pattern = $chars . strtoupper($chars);
+        break;
+      case 'chars_lower':
+        $pattern = $chars;
+        break;
+      case 'mixed_upper':
+        $pattern = $digits . strtoupper($chars);
+        break;
+      case 'mixed_lower':
+        $pattern = $digits . $chars;
+        break;
+      default:
+        if( $unique ) {
+          $pattern = $digits . $chars . strtoupper($chars);
+        } else {
+          $pattern = $digits . $chars . strrev($digits) . strtoupper($chars);
+        }
+        break;
+    }
+    for($i=0; $i<$length && strlen($pattern); $i++) {
+      $index = tep_rand(0, strlen($pattern)-1);
+      $result .= substr($pattern, $index, 1);
+      if( $unique ) {
+        if( $index >= strlen($pattern) ) {
+          $pattern = substr($pattern, 0, -1);
+        } elseif( !$index ) {
+          $pattern = substr($pattern, 1);
+        } else {
+          $pattern = substr($pattern, 0, $index) . substr($pattern, $index+1);
+        }
+      }
+    }
+    return $result;
+  }
+
   function tep_not_null($value) {
     if (is_array($value)) {
       if (sizeof($value) > 0) {
@@ -227,41 +509,14 @@
         return false;
       }
     } else {
-      if ( (is_string($value) || is_int($value)) && ($value != '') && ($value != 'NULL') && (strlen(trim($value)) > 0)) {
+      if( is_numeric($value) ) return true;
+      if( is_string($value) && $value != '' && $value != 'NULL' && strlen(trim($value)) > 0) {
         return true;
       } else {
         return false;
       }
     }
   }
-
-  function tep_browser_detect($component) {
-    if( isset($_SERVER['HTTP_USER_AGENT']) ) {
-      return stristr($_SERVER['HTTP_USER_AGENT'], $component);
-    } else {
-      return false;
-    } 
-  }
-
-////
-// Get list of address_format_id's
-  function tep_get_address_formats() {
-    global $g_db;
-    $address_format_query = $g_db->query("select address_format_id from " . TABLE_ADDRESS_FORMAT . " order by address_format_id");
-    $address_format_array = array();
-    while ($address_format_values = $g_db->fetch_array($address_format_query)) {
-      $address_format_array[] = array('id' => $address_format_values['address_format_id'],
-                                      'text' => $address_format_values['address_format_id']);
-    }
-    return $address_format_array;
-  }
-
-////
-// Function to read in text area in admin
- function tep_cfg_textarea($text) {
-    return tep_draw_textarea_field('configuration_value', false, '', 8, $text);
-  }
-
 
 ////
 // Sets timeout for the current script.
@@ -273,45 +528,14 @@
   }
 
 ////
-// Alias function for Store configuration values in the Administration Tool
-  function tep_cfg_select_option($select_array, $key_value, $key = '') {
-    $string = '';
-
-    for ($i=0, $n=sizeof($select_array); $i<$n; $i++) {
-      $name = ((tep_not_null($key)) ? 'configuration[' . $key . ']' : 'configuration_value');
-
-      $string .= '<br /><input type="radio" name="' . $name . '" value="' . $select_array[$i] . '"';
-
-      if ($key_value == $select_array[$i]) $string .= ' CHECKED';
-
-      $string .= '> ' . $select_array[$i];
-    }
-
-    return $string;
-  }
-
-////
-// Alias function for module configuration keys
-  function tep_mod_select_option($select_array, $key_name, $key_value) {
-    reset($select_array);
-    while (list($key, $value) = each($select_array)) {
-      if (is_int($key)) $key = $value;
-      $string .= '<br /><input type="radio" name="configuration[' . $key_name . ']" value="' . $key . '"';
-      if ($key_value == $key) $string .= ' CHECKED';
-      $string .= '> ' . $value;
-    }
-
-    return $string;
-  }
-
-////
 // Retrieve server information
   function tep_get_system_information() {
-    global $g_db;
-    $db_query = $g_db->query("select now() as datetime");
-    $db = $g_db->fetch_array($db_query);
+    extract(tep_load('database'));
 
-    $system=$kernel='';
+    $time_query = $db->query("select now() as datetime");
+    $time_array = $db->fetch_array($time_query);
+
+    $system = $kernel = '';
     $test_array = preg_split('/[\s,]+/', @exec('uname -a'), 5);
 
     if( isset($test_array[0])) {
@@ -319,150 +543,36 @@
     }
     if( isset($test_array[2])) {
       $kernel = $test_array[2];
-    } else {
+    } elseif( isset($_ENV['OS']) ) {
       $kernel = $_ENV['OS'];
     }
 
-    //list($system, $host, $kernel) = preg_split('/[\s,]+/', exec('uname -a'), 5);
-
-    return array('date' => tep_datetime_short(date('Y-m-d H:i:s')),
-                 'system' => $system,
-                 'kernel' => $kernel,
-                 'host' => $_SERVER['HTTP_HOST'],
-                 'ip' => getenv('SERVER_ADDR'),
-                 'uptime' => @exec('uptime'),
-                 'http_server' => $_SERVER['SERVER_SOFTWARE'],
-                 'php' => PHP_VERSION,
-                 'zend' => (function_exists('zend_version') ? zend_version() : ''),
-                 'db_server' => DB_SERVER,
-                 'db_ip' => gethostbyname(DB_SERVER),
-                 'db_version' => 'MySQL ' . (function_exists('mysql_get_server_info') ? mysql_get_server_info() : ''),
-                 'db_date' => tep_datetime_short($db['datetime']));
-  }
-
-
-  function tep_get_file_permissions($mode) {
-// determine type
-    if ( ($mode & 0xC000) == 0xC000) { // unix domain socket
-      $type = 's';
-    } elseif ( ($mode & 0x4000) == 0x4000) { // directory
-      $type = 'd';
-    } elseif ( ($mode & 0xA000) == 0xA000) { // symbolic link
-      $type = 'l';
-    } elseif ( ($mode & 0x8000) == 0x8000) { // regular file
-      $type = '-';
-    } elseif ( ($mode & 0x6000) == 0x6000) { //bBlock special file
-      $type = 'b';
-    } elseif ( ($mode & 0x2000) == 0x2000) { // character special file
-      $type = 'c';
-    } elseif ( ($mode & 0x1000) == 0x1000) { // named pipe
-      $type = 'p';
-    } else { // unknown
-      $type = '?';
-    }
-
-// determine permissions
-    $owner['read']    = ($mode & 00400) ? 'r' : '-';
-    $owner['write']   = ($mode & 00200) ? 'w' : '-';
-    $owner['execute'] = ($mode & 00100) ? 'x' : '-';
-    $group['read']    = ($mode & 00040) ? 'r' : '-';
-    $group['write']   = ($mode & 00020) ? 'w' : '-';
-    $group['execute'] = ($mode & 00010) ? 'x' : '-';
-    $world['read']    = ($mode & 00004) ? 'r' : '-';
-    $world['write']   = ($mode & 00002) ? 'w' : '-';
-    $world['execute'] = ($mode & 00001) ? 'x' : '-';
-
-// adjust for SUID, SGID and sticky bit
-    if ($mode & 0x800 ) $owner['execute'] = ($owner['execute'] == 'x') ? 's' : 'S';
-    if ($mode & 0x400 ) $group['execute'] = ($group['execute'] == 'x') ? 's' : 'S';
-    if ($mode & 0x200 ) $world['execute'] = ($world['execute'] == 'x') ? 't' : 'T';
-
-    return $type .
-           $owner['read'] . $owner['write'] . $owner['execute'] .
-           $group['read'] . $group['write'] . $group['execute'] .
-           $world['read'] . $world['write'] . $world['execute'];
-  }
-
-  function tep_remove($source) {
-    global $messageStack, $tep_remove_error;
-
-    if (isset($tep_remove_error)) $tep_remove_error = false;
-
-    if (is_dir($source)) {
-      $dir = dir($source);
-      while ($file = $dir->read()) {
-        if ( ($file != '.') && ($file != '..') ) {
-          if (is_writeable($source . '/' . $file)) {
-            tep_remove($source . '/' . $file);
-          } else {
-            $messageStack->add(sprintf(ERROR_FILE_NOT_REMOVEABLE, $source . '/' . $file), 'error');
-            $tep_remove_error = true;
-          }
-        }
-      }
-      $dir->close();
-
-      if (is_writeable($source)) {
-        rmdir($source);
-      } else {
-        $messageStack->add(sprintf(ERROR_DIRECTORY_NOT_REMOVEABLE, $source), 'error');
-        $tep_remove_error = true;
-      }
-    } else {
-      if (is_writeable($source)) {
-        unlink($source);
-      } else {
-        $messageStack->add(sprintf(ERROR_FILE_NOT_REMOVEABLE, $source), 'error');
-        $tep_remove_error = true;
-      }
-    }
-  }
-
-
-  function tep_mail($to_name, $to_email_address, $email_subject, $email_text, $from_email_name, $from_email_address) {
-    if (SEND_EMAILS != 'true') return false;
-
-    // Instantiate a new mail object
-    $message = new email(array('X-Mailer: I-Metrics Mailer'));
-
-    // Build the text version
-    $text = strip_tags($email_text);
-    if (EMAIL_USE_HTML == 'true') {
-      $message->add_html($email_text, $text);
-    } else {
-      $message->add_text($text);
-    }
-
-    // Send message
-    $message->build_message();
-    $message->send($to_name, $to_email_address, $from_email_name, $from_email_address, $email_subject);
-  }
-
-
-  function tep_banner_image_extension() {
-    if (function_exists('imagetypes')) {
-      if (imagetypes() & IMG_PNG) {
-        return 'png';
-      } elseif (imagetypes() & IMG_JPG) {
-        return 'jpg';
-      } elseif (imagetypes() & IMG_GIF) {
-        return 'gif';
-      }
-    } elseif (function_exists('imagecreatefrompng') && function_exists('imagepng')) {
-      return 'png';
-    } elseif (function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {
-      return 'jpg';
-    } elseif (function_exists('imagecreatefromgif') && function_exists('imagegif')) {
-      return 'gif';
-    }
-
-    return false;
+    $result_array = array(
+      'date' => tep_datetime_short(date('Y-m-d H:i:s')),
+      'system' => $system,
+      'kernel' => $kernel,
+      'host' => $_SERVER['HTTP_HOST'],
+      'ip' => getenv('SERVER_ADDR'),
+      'uptime' => @exec('uptime'),
+      'http_server' => $_SERVER['SERVER_SOFTWARE'],
+      'php' => PHP_VERSION,
+      'zend' => (function_exists('zend_version') ? zend_version() : ''),
+      'db_server' => DB_SERVER,
+      'db_ip' => gethostbyname(DB_SERVER),
+      'db_version' => 'MySQL ' . (function_exists('mysql_get_server_info') ? mysql_get_server_info() : ''),
+      'db_date' => tep_datetime_short($time_array['datetime'])
+    );
+    return $result_array;
   }
 
 ////
 // Wrapper function for round()
   function tep_round($n, $d = 0) {
+    $result ='';
     $n = $n - 0;
+    $org_n = $n;
+    $n = abs($n);
+
     if ($d === NULL) $d = 2;
 
     $f = pow(10, $d);
@@ -471,35 +581,28 @@
     $n += pow(10, - ($d + 1));
     $n += '';
 
-    if ( $d == 0 )
-      return substr($n, 0, strpos($n, '.'));
-    else
-      return substr($n, 0, strpos($n, '.') + $d + 1);
-  }
-
-
-  function tep_call_function($function, $parameter, $object = '') {
-    if ($object == '') {
-      return call_user_func($function, $parameter);
-    } elseif (PHP_VERSION < 4) {
-      return call_user_method($function, $object, $parameter);
+    if( $d == 0 ) {
+      $result = substr($n, 0, strpos($n, '.'));
     } else {
-      return call_user_func(array($object, $function), $parameter);
+      $result = substr($n, 0, strpos($n, '.') + $d + 1);
     }
+    if( $org_n < 0 ) {
+      $result = '-' . $result;
+    }
+    return $result;
   }
-
 
 ////
 // Return a random value
   function tep_rand($min = null, $max = null) {
     static $seeded;
 
-    if (!$seeded) {
+    if( !$seeded ) {
       mt_srand((double)microtime()*1000000);
       $seeded = true;
     }
 
-    if (isset($min) && isset($max)) {
+    if( isset($min) && isset($max) ) {
       if ($min >= $max) {
         return $min;
       } else {
@@ -510,132 +613,45 @@
     }
   }
 
-  function tep_get_ip_address() {
-    return $_SERVER['REMOTE_ADDR'];
-  }
-
 // nl2br() prior PHP 4.2.0 did not convert linefeeds on all OSs (it only converted \n)
   function tep_convert_linefeeds($from, $to, $string) {
-    if ((PHP_VERSION < "4.0.5") && is_array($from)) {
-      return ereg_replace('(' . implode('|', $from) . ')', $to, $string);
-    } else {
-      return str_replace($from, $to, $string);
-    }
+    return str_replace($from, $to, $string);
   }
 
   function tep_get_script_name($page='') {
-    global $g_script;
+    extract(tep_load('defs'));
     if( empty($page) ) {
-      $page = $g_script;
+      $page = $cDefs->script;
     }
-    if( strlen($page) > 4 ) {
-      $page = substr($page, 0, -4);
-    }
-    return $page;
+    return basename($page,'.php'); 
   }
 
 
 //-MS- Generic Text Added
   function tep_set_generic_text_status($gtext_id, $status) {
-    global $g_db;
+    extract(tep_load('database'));
+
     if ($status == '1') {
-      return $g_db->query("update " . TABLE_GTEXT . " set status = '1' where gtext_id = '" . (int)$gtext_id . "'");
+      return $db->query("update " . TABLE_GTEXT . " set status = '1' where gtext_id = '" . (int)$gtext_id . "'");
     } elseif ($status == '0') {
-      return $g_db->query("update " . TABLE_GTEXT . " set status = '0' where gtext_id = '" . (int)$gtext_id . "'");
+      return $db->query("update " . TABLE_GTEXT . " set status = '0' where gtext_id = '" . (int)$gtext_id . "'");
     } else {
       return -1;
     }
   }
 
   function tep_set_generic_sub_status($gtext_id, $sub) {
-    global $g_db;
+    extract(tep_load('database'));
+
     if ($sub == '1') {
-      return $g_db->query("update " . TABLE_GTEXT . " set sub = '1' where gtext_id = '" . (int)$gtext_id . "'");
+      return $db->query("update " . TABLE_GTEXT . " set sub = '1' where gtext_id = '" . (int)$gtext_id . "'");
     } elseif ($sub == '0') {
-      return $g_db->query("update " . TABLE_GTEXT . " set sub = '0' where gtext_id = '" . (int)$gtext_id . "'");
+      return $db->query("update " . TABLE_GTEXT . " set sub = '0' where gtext_id = '" . (int)$gtext_id . "'");
     } else {
       return -1;
     }
   }
 //-MS- Generic Text Added EOM
-
-//-MS- Abstract Zones support functions added
-  function tep_cfg_pull_down_gtext_entries($gtext_id, $key = '') {
-    global $g_db;
-
-    $name = (($key) ? 'configuration[' . $key . ']' : 'configuration_value');
-
-    $gtext_array = array();
-    $gtext_query = $g_db->query("select gtext_id, gtext_title from " . TABLE_GTEXT . "");
-    while ($gtext = $g_db->fetch_array($gtext_query)) {
-      $gtext_array[] = array('id' => $gtext['gtext_id'],
-                             'text' => $gtext['gtext_title']);
-    }
-
-    return tep_draw_pull_down_menu($name, $gtext_array, $gtext_id, 'style="width: 100%"');
-  }
-
-  function tep_get_gtext_title($gtext_id) {
-    global $g_db;
-    $gtext_query = $g_db->query("select gtext_title from " . TABLE_GTEXT . " where gtext_id = '" . (int)$gtext_id . "'");
-    $gtext = $g_db->fetch_array($gtext_query);
-
-    return $gtext['gtext_title'];
-  }
-
-
-  function tep_cfg_pull_down_text_zones($abstract_zone_id, $key = '') {
-    global $g_db;
-    $name = (($key) ? 'configuration[' . $key . ']' : 'configuration_value');
-
-    $abstract_array = array();
-    $abstract_query = $g_db->query("select az.abstract_zone_id, az.abstract_zone_name from " . TABLE_ABSTRACT_ZONES . " az left join " . TABLE_ABSTRACT_TYPES . " abt on (abt.abstract_types_id=az.abstract_types_id) where abstract_types_class='generic_zones'");
-    while ($abstract = $g_db->fetch_array($abstract_query)) {
-      $abstract_array[] = array('id' => $abstract['abstract_zone_id'],
-                                'text' => $abstract['abstract_zone_name']);
-    }
-
-    return tep_draw_pull_down_menu($name, $abstract_array, $abstract_zone_id, 'style="width: 100%"');
-  }
-
-  function tep_cfg_pull_down_super_zones($abstract_zone_id, $key = '') {
-    global $g_db;
-    $name = (($key) ? 'configuration[' . $key . ']' : 'configuration_value');
-
-    $abstract_array = array();
-    $abstract_query = $g_db->query("select az.abstract_zone_id, az.abstract_zone_name from " . TABLE_ABSTRACT_ZONES . " az left join " . TABLE_ABSTRACT_TYPES . " abt on (abt.abstract_types_id=az.abstract_types_id) where abstract_types_class='super_zones'");
-    while ($abstract = $g_db->fetch_array($abstract_query)) {
-      $abstract_array[] = array('id' => $abstract['abstract_zone_id'],
-                                'text' => $abstract['abstract_zone_name']);
-    }
-
-    return tep_draw_pull_down_menu($name, $abstract_array, $abstract_zone_id, 'style="width: 100%"');
-  }
-
-  function tep_cfg_pull_down_image_zones($zone_id, $key = '') {
-    global $g_db;
-    $name = (($key) ? 'configuration[' . $key . ']' : 'configuration_value');
-
-    $abstract_array = array();
-    $abstract_query = $g_db->query("select az.abstract_zone_id, az.abstract_zone_name from " . TABLE_ABSTRACT_ZONES . " az left join " . TABLE_ABSTRACT_TYPES . " abt on (abt.abstract_types_id=az.abstract_types_id) where abstract_types_class='image_zones'");
-    while ($abstract = $g_db->fetch_array($abstract_query)) {
-      $abstract_array[] = array('id' => $abstract['abstract_zone_id'],
-                                'text' => $abstract['abstract_zone_name']);
-    }
-
-    return tep_draw_pull_down_menu($name, $abstract_array, $abstract_zone_id, 'style="width: 100%"');
-  }
-
-
-  function tep_get_abstract_zone_name($abstract_zone_id) {
-    global $g_db;
-    $abstract_query = $g_db->query("select abstract_zone_name from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id = '" . (int)$abstract_zone_id . "'");
-    $abstract = $g_db->fetch_array($abstract_query);
-
-    return $abstract['abstract_zone_name'];
-  }
-//-MS- Abstract Zones support functions added EOM
-
 
 
 //-MS- Tagged Templates Support Added
@@ -754,6 +770,37 @@
     return $result_array;
   }
 
+  // Merges 2 array from a given common key
+  // The common key is the last key in the trail array and is also present in the lead_array
+  // Will remove from lead array all elements till it finds the common key
+  // It will then append the lead array into trail array
+  function tep_array_splice_from_key($lead_array, $trail_array, $index) {
+
+    end($trail_array);
+    $k = key($trail_array);
+    array_pop($trail_array);
+
+    foreach($lead_array as $key => $value) {
+      if( $key == $index ) break;
+      unset($lead_array[$key]);
+    }
+
+    $trail_array += $lead_array;
+    return $trail_array;
+  }
+
+  function tep_swap_array_elements($src_array, $index) {
+    if( empty($src_array) || !is_array($src_array) || count($src_array) < 2 ) return $src_array;
+
+    $index = max($index, 1);
+    $index = min($index, count($src_array-1));
+
+    $replace = $src_array[$index];
+    array_splice($src_array, $index-1, 0, $replace);
+    array_splice($src_array, $index+1, 1);
+    return $src_array;
+  }
+
   function tep_array_rename_elements($input_array, $data_array) {
     $result_array = array();
     for($i=0, $j=count($input_array); $i<$j; $i++) {
@@ -783,7 +830,7 @@
     $params_array = explode('&', $string);
     foreach($params_array as $value) {
       $tmp_array = explode('=', $value);
-      if( count($tmp_array) != 2) continue;
+      if( empty($tmp_array[0]) || count($tmp_array) != 2 ) continue;
       $result[$tmp_array[0]] = $tmp_array[1];
     }
     return $result;
@@ -795,7 +842,7 @@
 
     $result_array = array();
     foreach($array as $key => $value) {
-      if( empty($key) ) continue;
+      if( !tep_not_null($key) ) continue;
       $result_array[] = $key . $sep . $value;
     }
     $result = implode($glue, $result_array);
@@ -806,12 +853,17 @@
     $result = false;
     $contents = '';
 
-    $fp = @fopen($filename, 'r');
-    if( $fp ) {
-      $contents = fread($fp, filesize($filename));
-      fclose($fp);
-      $result = true;
-    }
+    if( !is_file($filename) ) return $result;
+
+    $size = filesize($filename);
+    if( !$size ) return $result;
+
+    $fp = @fopen($filename, 'rb');
+    if( !$fp ) return $result;
+
+    $contents = fread($fp, $size);
+    fclose($fp);
+    $result = true;
     return $result;
   }
 
@@ -826,7 +878,26 @@
     return $result;
   }
 
+  function tep_read_file($filename, $buffer_size = 1048576) {
+    $result = false;
+
+    if( !is_file($filename) ) return $result;
+
+    $fp = fopen($filename, 'rb');
+    if( !$fp ) return $result;
+
+    while( !feof($fp) ) {
+      $buffer = fread($fp, $buffer_size);
+      echo $buffer;
+    }
+    fclose($fp);
+    $result = true;
+    return $result;
+  }
+
   function tep_erase_dir($path) {
+    if( empty($path) || !is_dir($path) ) return;
+
     closedir(opendir($path));
     $sub_array = glob($path.'*');
     if( empty($sub_array) ) return;
@@ -840,8 +911,17 @@
     }
   }
 
+  function tep_mkdir($path) {
+    if( is_dir($path) ) return true;
+
+    $old_mask = umask(0);
+    $result = @mkdir($path, 0777);
+    umask($old_mask);
+    return $result;
+  }
+
   function tep_copy_dir($src, $dst) {
-    global $messageStack;
+    extract(tep_load('message_stack'));
 
     //closedir(opendir($src));
     //closedir(opendir($dst));
@@ -850,9 +930,12 @@
     $dst = rtrim($dst, '/');
     if( empty($src) || empty($dst) || !is_dir($src) ) return;
 
-    if( !is_dir($dst) ) {
-      @mkdir($dst);
+    $result = tep_mkdir($dst);
+    if( !$result ) {
+      $msg->add_session(sprintf(ERROR_CREATE_DIR, $dst));
+      return;
     }
+
     $sub_array = glob($src.'/*');
     if( empty($sub_array) ) {
       return;
@@ -864,11 +947,11 @@
       if( is_file($sub) ) {
         $contents = '';
         if( !tep_read_contents($src.'/'.$entry, $contents) ) {
-          $messageStack->add_session(ERROR_INVALID_FILE);
+          $msg->add_session(sprintf(ERROR_INVALID_FILE,$src.'/'.$entry));
           continue;
         }
         if( !tep_write_contents($dst . '/' . $entry, $contents) ) {
-          $messageStack->add_session(ERROR_WRITING_FILE);
+          $msg->add_session(sprintf(ERROR_WRITING_FILE, $src.'/'.$entry));
           continue;
         }
       } else {
@@ -879,18 +962,32 @@
     closedir(opendir($dst));
   }
 
-  // Converts relative path to physical targeting the webfront
   function tep_front_physical_path($path='', $trailer=true) {
+    $path = trim($path, ' /');
+    if( strpos($path, '\'') !== false || strpos($path, '..') !== false || strpos($path, '\\') !== false ) {
+      die('Critical: Cannot setup requested path - invalid characters detected');
+    }
+
     $fs_root = substr(DIR_FS_CATALOG, 0, -strlen(DIR_WS_CATALOG) );
     $fs_root = rtrim($fs_root, ' /');
-    if( !empty($path) ) {
-      $fs_root .= $path;
-      $fs_root = rtrim($fs_root, ' /');
-    }
+    $fs_root .= '/' . $path;
+    $fs_root = rtrim($fs_root, ' /');
+
     if( $trailer ) {
       $fs_root .= '/';
     }
     return $fs_root;
+  }
+
+  function tep_trail_path($path, $right_only=false) {
+    if( !empty($path) ) {
+      if(!$right_only) {
+        $path = trim($path, ' /') . '/';
+      } else {
+        $path = rtrim($path, ' /') . '/';
+      }
+    }
+    return $path;
   }
 
   // $area = 0-admin, 1 - webfront
@@ -903,6 +1000,7 @@
     }
     rtrim($fs_dir, ' /');
     $cDir = dir($fs_dir);
+    if( !is_object($cDir) ) return;
     while( false !== ($script = $cDir->read()) ) {
       if( !empty($ext) ) {
         $check_array = explode('.', $script);
@@ -926,7 +1024,6 @@
     return $scripts_array;
   }
 
-
   function tep_string_length($string) {
     $size = tep_utf8_size($string);
     $length = (int)(strlen($string)/$size);
@@ -934,8 +1031,12 @@
   }
 
   function tep_utf8_size($string) {
-    $check_int = ord($string);
+    $string = trim($string);
     $size = 1;
+    if( empty($string) ) return $size;
+
+    $check_int = ord($string);
+
     if( ($check_int & 0xE0) == 0xC0 ) {
       $size = 2;
     } elseif( ($check_int & 0xF0) == 0xE0 ) {
@@ -948,6 +1049,15 @@
       $size = 6;
     }
     return $size;
+  }
+
+  function tep_set_lightbox() {
+    extract(tep_load('defs'));
+
+    //$cDefs->media[] = '<script type="text/javascript" src="' . DIR_WS_JS . 'fancybox/jquery.fancybox.pack.js"></script>';
+$cDefs->media[] = '<script type="text/javascript" src="' . DIR_WS_JS . 'fancybox/jquery.fancybox.js"></script>';
+    $cDefs->media[] = '<script type="text/javascript" src="' . DIR_WS_JS . 'fancybox/jquery.mousewheel.pack.js"></script>';
+    $cDefs->media[] = '<link rel="stylesheet" type="text/css" href="' . DIR_WS_JS . 'fancybox/jquery.fancybox.css" media="screen" />';
   }
 
 ?>

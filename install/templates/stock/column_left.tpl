@@ -18,11 +18,21 @@
 */
   $box_array = array('super_left_box.tpl');
 ?>
-        <div class="leftcontent">
+        <div id="leftcontent">
 <?php
-  $g_plugins->invoke('html_left');
+  $args = array('box_array' => &$box_array);
+  $cPlug->invoke('html_left', $args);
+
   for($i=0, $j=count($box_array); $i<$j; $i++) {
-    include(DIR_WS_TEMPLATE . $box_array[$i]);
+    include(DIR_FS_TEMPLATE . $box_array[$i]);
+  }
+
+  $box_array = array();
+  $args = array('box_array' => &$box_array);
+  $cPlug->invoke('html_left_end', $args);
+
+  for($i=0, $j=count($box_array); $i<$j; $i++) {
+    include(DIR_FS_TEMPLATE . $box_array[$i]);
   }
 ?>
         </div>

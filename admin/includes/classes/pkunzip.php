@@ -54,8 +54,10 @@
   define('ZIPOPT_FILE_OUTPUT', 1);
   // Only applies when ZIPOPT_FILE_OUTPUT is set, whether or not to overwrite existing files.
   define('ZIPOPT_OVERWRITE_EXISTING', 2);
- // Only applies when ZIPOPT_FILE_OUTPUT is set, where to extract the files to (Must be writeable!)
+  // Only applies when ZIPOPT_FILE_OUTPUT is set, where to extract the files to (Must be writeable!)
   define('ZIPOPT_OUTPUT_PATH', 3);
+  // Extract only files specified in the limit_array
+  define('ZIPOPT_LIMIT_FILES', 4);
 
  // File States Processing Constants
   define('S_FILE_HEADER',  1);           // Ready to read a local file header
@@ -85,576 +87,444 @@
  * @uses       ZipFileEntry
  *
  */
-class pkunzip {
-  /**
-   * Indicates if a zip file was successfully opened for reading
-   *
-   * @var boolean
-   */
-  var $open;
-  /**
-   * Array of {@link ZipFileEntry} objects representing the files and directories in the archive
-   *
-   * @var array
-   */
-  var $files;
-  /**
-   * The ZIP file comment text, if any
-   *
-   * @var string
-   */
-  var $comment;
-  /**
-   * The error encountered while parsing the file
-   *
-   * @var int
-   */
-  var $error;
-  /**
-   * The error message associated with the error
-   *
-   * @var unknown_type
-   */
-  var $error_str;
+  class pkunzip {
+    /**
+     * Class constructor - Initialize variables
+     *
+     * @return ReadZip
+     */
+    function pkunzip() {
+      // The current state of file processing
+      $this->state = S_ERROR;
+      // Indicates if a zip file was successfully opened for reading
+      $this->open            = false;
+      // File pointer to the current location in the zip file
+      $this->fp              = false;
 
+      // Array of {@link ZipFileEntry} objects representing the files and directories in the archive
+      $this->files           = array();
 
-  /**
-   * The ZIP file to open
-   *
-   * @access private
-   * @var string
-   */
-  var $zip_file;
-  /**
-   * File pointer to the current location in the zip file
-   *
-   * @access private
-   * @var resource
-   */
-  var $fp;
-  /**
-   * The current state of file processing
-   *
-   * @access private
-   * @var int
-   */
-  var $state;
-  /**
-   * If in a break state and should break from the current operation. Means an error was encountered
-   *
-   * @access private
-   * @var boolean
-   */
-  var $break;
-  /**
-   * Minimum version required to extract
-   *
-   * @access private
-   * @var unknown_type
-   */
-  var $min_version;
+      // The ZIP file comment text, if any
+      $this->comment         = '';
 
-  /**
-   * Output contents to file or leave in file object
-   *
-   * @access private
-   * @var boolean
-   */
-  var $read_to_file;
-  /**
-   * Overwrite existing files
-   *
-   * @var boolean
-   */
-  var $overwrite_existing_files;
-  /**
-   * Where to output the files
-   *
-   * @var string
-   */
-  var $output_file_path;
+      // If in a break state and should break from the current operation. Means an error was encountered
+      $this->break           = false;
+      //The error encountered while parsing the file
+      $this->error           = E_NO_ERROR;
+      //The error message associated with the error
+      $this->error_str       = '';
 
-  /**
-   * PKZip encryption keys
-   *
-   * @access private
-   * @var unknown_type
-   */
-  var $key;
-  /**
-   * CRC polynomials
-   *
-   * @access private
-   * @var array
-   */
-  var $crc_table;
+      $this->limit_array     = array();
 
-  /**
-   * Class constructor - Initialize variables
-   *
-   * @return ReadZip
-   */
-  function pkunzip()
-  {
-    $this->open      = false;
-    $this->files     = array();
-    $this->comment   = '';
-    $this->break     = false;
-    $this->error     = E_NO_ERROR;
-    $this->error_str = '';
+      //Minimum version required to extract
+      $this->min_version     = '';
 
-    $this->key = array();
-
-    $this->read_to_file             = false;
-    $this->overwrite_existing_files = false;
-    $this->output_file_path         = './';
-  }
-
-  /**
-   * Set an option for the ZIP file processing
-   *
-   * @param int $long_option    The option constant to set
-   * @param mixed $value        The value to set
-   * @return boolean            true if the value was set, false if not
-   */
-  function SetOption($long_option, $value)
-  {
-    switch($long_option)
-    {
-      //case ZIPOPT_READSIZE: $this->read_chunk_size = $value; break;
-      case ZIPOPT_FILE_OUTPUT: $this->read_to_file = $value == true; break;
-      case ZIPOPT_OVERWRITE_EXISTING: $this->overwrite_existing_files = $value == true; break;
-      case ZIPOPT_OUTPUT_PATH: $this->output_file_path = $value; break;
-
-      default: return false;
+      // Output contents to file or leave in file object
+      $this->read_to_file             = false;
+      // Overwrite existing files
+      $this->overwrite_existing_files = false;
+      // Where to output the files
+      $this->output_file_path         = './';
     }
 
-    return true;
-  }
+    /**
+     * Set an option for the ZIP file processing
+     *
+     * @param int $long_option    The option constant to set
+     * @param mixed $value        The value to set
+     * @return boolean            true if the value was set, false if not
+     */
+    function SetOption($long_option, $value) {
+      switch($long_option) {
+        //case ZIPOPT_READSIZE: $this->read_chunk_size = $value; break;
+        case ZIPOPT_FILE_OUTPUT: $this->read_to_file = $value == true; break;
+        case ZIPOPT_OVERWRITE_EXISTING: $this->overwrite_existing_files = $value == true; break;
+        case ZIPOPT_OUTPUT_PATH: $this->output_file_path = $value; break;
+        case ZIPOPT_LIMIT_FILES: $this->limit_array = $value; break;
 
-  /**
-   * Open a zip file for reading
-   * Note: Individual zip file entries can contain errors and this can still return true
-   *
-   * @param string $file  The ZIP file to open
-   * @return boolean  true if file was opened, false on error
-   */
-  function Open($file)
-  {
-    $this->fp = @fopen($file, 'rb');
-    if (!$this->fp) {
-      trigger_error('Failed to open file "' . $file . '"', E_USER_WARNING);
-      $this->open = false;
-      $this->error = E_NOOPEN;
-      $this->error_str = 'Failed to open file';
-      return false;
+        default: return false;
+      }
+      return true;
     }
 
-    $this->open = true;
-    return true;
-  }
-
-  /**
-   * Read the contents of the ZIP file
-   * If set for file output, the ZipFileEntry object's data will be null
-   *
-   * @return boolean
-   */
-  function Read()
-  {
-    if (!$this->open) {
-      $this->error = E_NO_FILE;
-      $this->error = 'No ZIP file has been opened';
-      return false;
+    /**
+     * Open a zip file for reading
+     * Note: Individual zip file entries can contain errors and this can still return true
+     *
+     * @param string $file  The ZIP file to open
+     * @return boolean  true if file was opened, false on error
+     */
+    function Open($file) {
+      $this->fp = @fopen($file, 'rb');
+      if (!$this->fp) {
+        trigger_error('Failed to open file "' . $file . '"', E_USER_WARNING);
+        $this->open = false;
+        $this->error = E_NOOPEN;
+        $this->error_str = 'Failed to open file';
+        return false;
+      }
+      $this->open = true;
+      return true;
     }
 
-    $this->state = S_FILE_HEADER; // ready to read for the header
-    $p           =& $this->fp;    // shorthand
-    $file        = null;          // file object
-    $first_read  = true;          // haven't read any data, to check for a non zip file
+    /**
+     * Read the contents of the ZIP file
+     * If set for file output, the ZipFileEntry object's data will be null
+     *
+     * @return boolean
+     */
+    function Read() {
+      if (!$this->open) {
+        $this->error = E_NO_FILE;
+        $this->error = 'No ZIP file has been opened';
+        return false;
+      }
 
-    while ( !feof($p) && $this->state != S_EOF ) { // read to end or until we say we have reached the end
-      switch($this->state)
-      {
-        case S_FILE_HEADER:
-          $header = fread($p, 4);  // 4 bytes for header data
-          // end of file check used throughout, sets $this->break to true and the error to unexpected eof
-          $this->check_end($p, 4);
-          if ($this->break == true) break;
+      $this->state = S_FILE_HEADER; // ready to read for the header
+      $p           =& $this->fp;    // shorthand
+      $file        = null;          // file object
+      $first_read  = true;          // haven't read any data, to check for a non zip file
 
-          if (strcmp($header, "\x50\x4b\x03\x04") == 0) { // local file header
-            $this->state = S_FILE_HEADER_DATA;
-          } else if (strcmp($header, "\x50\x4b\x01\x02") == 0) { // central directory record
-            $this->state = S_CENTRAL_DIRECTORY;
-          } else if (strcmp($header, "\x50\x4b\x05\x06") == 0) { // end of central directory record
-            $this->state = S_END_CENTRAL;
-          } else {
-            if ($first_read == true) { // first 4 bytes were not a zip header
-              $this->error = E_NOTZIP;
-              $this->error_str = 'File does not appear to be a zipfile';
-            } else { // junk data or we did something wrong somewhere else
-              $this->error = E_DATA_ERROR;
-              $this->error_str = 'Unexpected data encountered while reading file';
-            }
-            $this->state = S_EOF; // break out
-          }
-
-          $first_read = false;
-          $file       = new ZipFileEntry(); // initialize for next file
-          break;
-
-        case S_FILE_HEADER_DATA:
-          $data = fread($p, 26);
-          $this->check_end($data, 26);
-          if ($this->break == true) break;
-
-          // get the header data
-          $fields = unpack("vVER/vGPF/vCM/vMTIME/vMDATE/VCRC/VCSIZE/VUSIZE/vFNLEN/vEFLEN", $data);
-
-          $file->crc = sprintf('%u', $fields['CRC']);
-
-          $file->time = mktime(  ($fields['MTIME'] >> 11) & 0x0f,
-                                 ($fields['MTIME'] >> 5)  & 0x1f,
-                                  $fields['MTIME'] & 0x0f,
-                                 ($fields['MDATE'] >>  5) & 0x0f,
-                                  $fields['MDATE'] & 0x1f,
-                                (($fields['MDATE'] >>  9) & 0x7f) + 1980 );
-
-          $file->size              = $fields['USIZE'];
-          $file->compressed_size   = $fields['CSIZE'];
-
-          $this->min_version = $fields['VER'];
-
-          if ($fields['USIZE'] == 0) {
-            $file->compression_ratio = 0;
-          } else {
-            $file->compression_ratio = number_format( ($fields['CSIZE'] / $fields['USIZE']) * 100, 2);
-          }
-
-          $this->state = S_FILE_FILENAME; // read file header, ready to get the file name
-          break;
-
-        case S_FILE_FILENAME:
-          $fname = fread($p, $fields['FNLEN']);
-          $this->check_end($fname, $fields['FNLEN']);
-          if ($this->break == true) break;
-
-          // set up path and file name
-          $file->name = basename($fname);
-          $file->path = (dirname($fname) == '.' || dirname($fname) == '') ? '' : dirname($fname);
-          $this->state = S_FILE_EXTRA; // extra data?
-
-          break;
-
-        case S_FILE_EXTRA:
-          if ($fields['EFLEN'] > 0) {
-            $extra = fread($p, $fields['EFLEN']);
-            $this->check_end($extra, $fields['EFLEN']);
-            if ($this->break == true) break;
-          } else {
-            $extra = '';
-          }
-          $this->state = S_FILE_DATA; // read the file itself
-          break;
-
-        case S_FILE_DATA:
-          if ($fields['CSIZE'] > 0) { // there is file data
-            $file->data = fread($p, $fields['CSIZE']);
-            $this->check_end($file->data, $fields['CSIZE']);
-
-            if ($fields['GPF'] & 0x01) { // File is encrypted
-              $file->error = E_FILE_ENCRYPTED;
-
-
-              $tmp = substr($file->data, 0, 12);
-              for ($i = 0; $i < 12; ++$i) echo dechex(ord($tmp{$i})) . ' ';
-              echo "encrypted buffer\n";
-              //0C C9 34 67 C7 61 F6 1C D0 F0 06 81
-              $this->InitPassword('password');
-              $this->PKEncDecryptHeader( substr($file->data, 0, 12 ) );
-              echo dechex($file->crc+0) . " file crc\n";
-              echo "\n";
-
-
-              $file->data = substr($file->data, 12);
-              for ($i = 0; $i < strlen($file->data); ++$i) {
-                $c   = $file->data{$i};
-                $tmp = ord($c) ^ $this->PKEncDecryptByte();
-                $this->PKEncUpdateKeys($tmp);
-                $file->data{$i} = chr($tmp);
-              }
-              echo $file->data;
-
-              exit;
-
-            } else if ($fields['CM'] == 8) { // inflate
-
-              if (extension_loaded('zlib')) { // check for gzinflate
-                $file->data = @gzinflate($file->data);
-                if ($file->data === false) { // error during inflation
-                  $file->data = null;
-                  $file->error = E_INFLATE_ERROR;
-                }
-              } else {
-                $file->error = E_METHOD_NOT_SUPPORTED;
-              }
-
-            } else if ($fields['CM'] == 12) { // bzip
-
-              if (extension_loaded('bz2')) { // check for bzdecompress
-                $file->data = @bzdecompress($file->data);
-                if (!is_string($file->data)) { // error returns an integer
-                  $file->data == null;
-                  $file->error = E_BZIP_ERROR;
-                }
-              } else {
-                $file->error = E_METHOD_NOT_SUPPORTED;
-              }
-
-            }
-
-            if ($file->error == E_NO_ERROR) { // there was no file error, encryption, inflate error, check crc
-              if ( sprintf('%u', crc32($file->data)) != sprintf('%u', $fields['CRC']) ) {
-                $file->error = E_CRC_MISMATCH;
-              }
-            }
-
-            if ($this->read_to_file == true) {
-              // write the data out and free up the memory
-              $this->WriteDataToFile($file->data, $file->name, $file->path, $file->time);
-              $file->data = null;
-            }
-          } else { /* size > 0 */
-            $file->data = ''; // no file data
-          }
-
-          if ($this->break == false) { // if no errors encountered, ready to continue
-            $this->state = S_DATA_DESCRIPTOR;
-          }
-
-          break;
-
-        case S_DATA_DESCRIPTOR:
-          if ($fields['GPF'] & 0x03 > 0) { // data descriptor exists, would only exist if data written to std out or something non seekable
-            $desc_data = fread($p, 4);
-            $this->check_end($desc_data, 4);
+      while ( !feof($p) && $this->state != S_EOF ) { // read to end or until we say we have reached the end
+        switch( $this->state ) {
+          case S_FILE_HEADER:
+            $header = fread($p, 4);  // 4 bytes for header data
+            // end of file check used throughout, sets $this->break to true and the error to unexpected eof
+            $this->check_end($p, 4);
             if ($this->break == true) break;
 
-            if (strcmp($desc_data, "\x50\x4b\x07\x08") == 0) { // non standard descriptor signature is present
-              $desc_data = fread($p, 12); // read data and discard signature
-              $this->check_end($desc_data, 12);
-              if ($this->break == true) break;
-            } else { // no signature
-              $desc_data .= fread($p, 8); // read the remaining bytes for the descriptor
-              $this->check_end($desc_data, 8);
-              if ($this->break == true) break;
+            if (strcmp($header, "\x50\x4b\x03\x04") == 0) { // local file header
+              $this->state = S_FILE_HEADER_DATA;
+            } else if (strcmp($header, "\x50\x4b\x01\x02") == 0) { // central directory record
+              $this->state = S_CENTRAL_DIRECTORY;
+            } else if (strcmp($header, "\x50\x4b\x05\x06") == 0) { // end of central directory record
+              $this->state = S_END_CENTRAL;
+            } else {
+              if ($first_read == true) { // first 4 bytes were not a zip header
+                $this->error = E_NOTZIP;
+                $this->error_str = 'File does not appear to be a zipfile';
+              } else { // junk data or we did something wrong somewhere else
+                $this->error = E_DATA_ERROR;
+                $this->error_str = 'Unexpected data encountered while reading file';
+              }
+              $this->state = S_EOF; // break out
             }
 
-            $desc_fields = unpack("VCRC/VCSIZE/VUSIZE", $desc_data);
-          } else {
-            $desc_data = '';
-          }
-          $this->state = S_FILE_PROCESSED;
-          break;
+            $first_read = false;
+            $file       = new ZipFileEntry(); // initialize for next file
+            break;
 
-        case S_FILE_PROCESSED:
-          // completely processed the current file, add to files and move back to a header read
-          $this->files[] = $file;
-          $this->state = S_FILE_HEADER;
-          break;
+          case S_FILE_HEADER_DATA:
+            $data = fread($p, 26);
+            $this->check_end($data, 26);
+            if ($this->break == true) break;
 
-        case S_CENTRAL_DIRECTORY:
-          // read over central directory records
-          $cd_fields = fread($p, 42);
-          $this->check_end($cd_fields, 42);
+            // get the header data
+            $fields = unpack("vVER/vGPF/vCM/vMTIME/vMDATE/VCRC/VCSIZE/VUSIZE/vFNLEN/vEFLEN", $data);
+
+            $file->crc = sprintf('%u', $fields['CRC']);
+
+            $file->time = mktime(  
+              ($fields['MTIME'] >> 11) & 0x0f,
+              ($fields['MTIME'] >> 5)  & 0x1f,
+              $fields['MTIME'] & 0x0f,
+              ($fields['MDATE'] >>  5) & 0x0f,
+              $fields['MDATE'] & 0x1f,
+              (($fields['MDATE'] >>  9) & 0x7f) + 1980
+            );
+
+            $file->size              = $fields['USIZE'];
+            $file->compressed_size   = $fields['CSIZE'];
+
+            $this->min_version = $fields['VER'];
+
+            if ($fields['USIZE'] == 0) {
+              $file->compression_ratio = 0;
+            } else {
+              $file->compression_ratio = number_format( ($fields['CSIZE'] / $fields['USIZE']) * 100, 2);
+            }
+
+            $this->state = S_FILE_FILENAME; // read file header, ready to get the file name
+            break;
+
+          case S_FILE_FILENAME:
+            $fname = fread($p, $fields['FNLEN']);
+            $this->check_end($fname, $fields['FNLEN']);
+            if ($this->break == true) break;
+
+            // set up path and file name
+            $file->name = basename($fname);
+            $file->path = (dirname($fname) == '.' || dirname($fname) == '') ? '' : dirname($fname);
+
+            $file->full = $file->path;
+            if( !empty($file->full) ) {
+              $file->full .= '/';
+            }
+            $file->full .= $file->name;
+
+            $this->state = S_FILE_EXTRA; // extra data?
+
+            break;
+
+          case S_FILE_EXTRA:
+            if ($fields['EFLEN'] > 0) {
+              $extra = fread($p, $fields['EFLEN']);
+              $this->check_end($extra, $fields['EFLEN']);
+              if ($this->break == true) break;
+            } else {
+              $extra = '';
+            }
+            $this->state = S_FILE_DATA; // read the file itself
+            break;
+
+          case S_FILE_DATA:
+            if ($fields['CSIZE'] > 0) { // there is file data
+              $file->data = fread($p, $fields['CSIZE']);
+              $this->check_end($file->data, $fields['CSIZE']);
+
+              if ($fields['GPF'] & 0x01) { // File is encrypted
+                $file->error = E_FILE_ENCRYPTED;
+
+
+                $tmp = substr($file->data, 0, 12);
+                for ($i = 0; $i < 12; ++$i) echo dechex(ord($tmp{$i})) . ' ';
+                echo "encrypted buffer\n";
+                //0C C9 34 67 C7 61 F6 1C D0 F0 06 81
+                $this->InitPassword('password');
+                $this->PKEncDecryptHeader( substr($file->data, 0, 12 ) );
+                echo dechex($file->crc+0) . " file crc\n";
+                echo "\n";
+
+
+                $file->data = substr($file->data, 12);
+                for ($i = 0; $i < strlen($file->data); ++$i) {
+                  $c   = $file->data{$i};
+                  $tmp = ord($c) ^ $this->PKEncDecryptByte();
+                  $this->PKEncUpdateKeys($tmp);
+                  $file->data{$i} = chr($tmp);
+                }
+                echo $file->data;
+
+                exit;
+
+              } else if ($fields['CM'] == 8) { // inflate
+
+                if (extension_loaded('zlib')) { // check for gzinflate
+                  $file->data = @gzinflate($file->data);
+                  if ($file->data === false) { // error during inflation
+                    $file->data = null;
+                    $file->error = E_INFLATE_ERROR;
+                  }
+                } else {
+                  $file->error = E_METHOD_NOT_SUPPORTED;
+                }
+
+              } else if ($fields['CM'] == 12) { // bzip
+
+                if (extension_loaded('bz2')) { // check for bzdecompress
+                  $file->data = @bzdecompress($file->data);
+                  if (!is_string($file->data)) { // error returns an integer
+                    $file->data == null;
+                    $file->error = E_BZIP_ERROR;
+                  }
+                } else {
+                  $file->error = E_METHOD_NOT_SUPPORTED;
+                }
+
+              }
+
+              if ($file->error == E_NO_ERROR) { // there was no file error, encryption, inflate error, check crc
+                if ( sprintf('%u', crc32($file->data)) != sprintf('%u', $fields['CRC']) ) {
+                  $file->error = E_CRC_MISMATCH;
+                }
+              }
+
+              if( $this->read_to_file == true ) {
+                if( empty($this->limit_array) || in_array($file->full, $this->limit_array) ) {
+                // write the data out and free up the memory
+                  $this->WriteDataToFile($file->data, $file->name, $file->path, $file->time);
+                }
+                $file->data = null;
+              }
+            } else { /* size > 0 */
+              $file->data = ''; // no file data
+            }
+
+            if ($this->break == false) { // if no errors encountered, ready to continue
+              $this->state = S_DATA_DESCRIPTOR;
+            }
+
+            break;
+
+          case S_DATA_DESCRIPTOR:
+            if ($fields['GPF'] & 0x03 > 0) { // data descriptor exists, would only exist if data written to std out or something non seekable
+              $desc_data = fread($p, 4);
+              $this->check_end($desc_data, 4);
+              if ($this->break == true) break;
+
+              if (strcmp($desc_data, "\x50\x4b\x07\x08") == 0) { // non standard descriptor signature is present
+                $desc_data = fread($p, 12); // read data and discard signature
+                $this->check_end($desc_data, 12);
+                if ($this->break == true) break;
+              } else { // no signature
+                $desc_data .= fread($p, 8); // read the remaining bytes for the descriptor
+                $this->check_end($desc_data, 8);
+                if ($this->break == true) break;
+              }
+
+              $desc_fields = unpack("VCRC/VCSIZE/VUSIZE", $desc_data);
+            } else {
+              $desc_data = '';
+            }
+            $this->state = S_FILE_PROCESSED;
+            break;
+
+          case S_FILE_PROCESSED:
+            // completely processed the current file, add to files and move back to a header read
+            if( empty($this->limit_array) || in_array($file->full, $this->limit_array) ) {
+              $this->files[$file->full] = $file;
+            }
+            $this->state = S_FILE_HEADER;
+            break;
+
+          case S_CENTRAL_DIRECTORY:
+            // read over central directory records
+            $cd_fields = fread($p, 42);
+            $this->check_end($cd_fields, 42);
+            if ($this->break == true) break;
+
+            // not doing much with this data as of version 1
+            $cd_fields = unpack("vVER/vVEXT/vGPF/vCM/vMTIME/vMDATE/VCRC/VCSIZE/VUSIZE/vFNLEN/vEFLEN/vFCLEN/vDSTART/vFATTR/vEATTR/VOFFSET", $cd_fields);
+            if ($cd_fields['FNLEN'] > 0) { $tmp = fread($p, $cd_fields['FNLEN']); $this->check_end($tmp, $cd_fields['FNLEN']); if ($this->break == true) break; }
+            if ($cd_fields['EFLEN'] > 0) { $tmp = fread($p, $cd_fields['EFLEN']); $this->check_end($tmp, $cd_fields['EFLEN']); if ($this->break == true) break; }
+            if ($cd_fields['FCLEN'] > 0) { $tmp = fread($p, $cd_fields['FCLEN']); $this->check_end($tmp, $cd_fields['FCLEN']); if ($this->break == true) break; }
+
+            $this->state = S_FILE_HEADER;
+            break;
+
+        case S_END_CENTRAL:
+          // last part of file
+          $ecd_fields = fread($p, 18);
+          $this->check_end($ecd_fields, 18);
           if ($this->break == true) break;
 
-          // not doing much with this data as of version 1
-          $cd_fields = unpack("vVER/vVEXT/vGPF/vCM/vMTIME/vMDATE/VCRC/VCSIZE/VUSIZE/vFNLEN/vEFLEN/vFCLEN/vDSTART/vFATTR/vEATTR/VOFFSET", $cd_fields);
+          // all we really care about as of version 1 is the zip file comment if any
 
-          if ($cd_fields['FNLEN'] > 0) { $tmp = fread($p, $cd_fields['FNLEN']); $this->check_end($tmp, $cd_fields['FNLEN']); if ($this->break == true) break; }
-          if ($cd_fields['EFLEN'] > 0) { $tmp = fread($p, $cd_fields['EFLEN']); $this->check_end($tmp, $cd_fields['EFLEN']); if ($this->break == true) break; }
-          if ($cd_fields['FCLEN'] > 0) { $tmp = fread($p, $cd_fields['FCLEN']); $this->check_end($tmp, $cd_fields['FCLEN']); if ($this->break == true) break; }
+          $ecd_fields = unpack("vDNUM/vDNUMSCD/vNUMENTRIES/vTNUMENTRIES/VCDSIZE/VOFFSET/vCLEN", $ecd_fields);
+          if ($ecd_fields['CLEN'] > 0) {
+            $this->comment = fread($p, $ecd_fields['CLEN']);
+          }
 
-          $this->state = S_FILE_HEADER;
+          $this->state = S_EOF; // should be at eof, set this state to prevent error if more data is present for some reason
           break;
-
-      case S_END_CENTRAL:
-        // last part of file
-        $ecd_fields = fread($p, 18);
-        $this->check_end($ecd_fields, 18);
-        if ($this->break == true) break;
-
-        // all we really care about as of version 1 is the zip file comment if any
-
-        $ecd_fields = unpack("vDNUM/vDNUMSCD/vNUMENTRIES/vTNUMENTRIES/VCDSIZE/VOFFSET/vCLEN", $ecd_fields);
-        if ($ecd_fields['CLEN'] > 0) {
-          $this->comment = fread($p, $ecd_fields['CLEN']);
         }
+      }
 
-        $this->state = S_EOF; // should be at eof, set this state to prevent error if more data is present for some reason
-        break;
+      fclose($this->fp);
+
+      if ($this->error != E_NO_ERROR) { // no major read error was encountered
+        return false;
+      } else {
+        return true;
       }
     }
 
-    fclose($this->fp);
-
-    if ($this->error != E_NO_ERROR) { // no major read error was encountered
-      return false;
-    } else {
-      return true;
+    /**
+     * Checks for premature end of data
+     *
+     * @access private
+     * @param string $str  String read
+     * @param int $length  Expected length
+     */
+    function check_end($str, $length) {
+      if (strlen($str) < $length) {
+        $this->error = E_UNEXPECTED_END;
+        $this->error_str = 'Unexpected end of file';
+        $this->state = S_EOF;
+        $this->break = true;
+      }
     }
-  }
 
-  /**
-   * Checks for premature end of data
-   *
-   * @access private
-   * @param string $str  String read
-   * @param int $length  Expected length
-   */
-  function check_end($str, $length)
-  {
-    if (strlen($str) < $length) {
-      $this->error = E_UNEXPECTED_END;
-      $this->error_str = 'Unexpected end of file';
-      $this->state = S_EOF;
-      $this->break = true;
-    }
-  }
+    /**
+     * Writes a file inside the ZIP to a local file
+     *
+     * @access private
+     * @param string $data  The file data
+     * @param string $name  The file name
+     * @param string $path  The file path (if any)
+     * @param int $time     The file mod time
+     * @return boolean
+     */
+    function WriteDataToFile($data, $name, $path, $time = null) {
+      if (substr($this->output_file_path, -1) != '/' && $this->output_file_path != '') $this->output_file_path .= '/';
 
-  /**
-   * Writes a file inside the ZIP to a local file
-   *
-   * @access private
-   * @param string $data  The file data
-   * @param string $name  The file name
-   * @param string $path  The file path (if any)
-   * @param int $time     The file mod time
-   * @return boolean
-   */
-  function WriteDataToFile($data, $name, $path, $time = null)
-  {
-    if (substr($this->output_file_path, -1) != '/' && $this->output_file_path != '') $this->output_file_path .= '/';
-
-    if (!is_writeable($this->output_file_path)) { // make sure we can write to the output directory
-      trigger_error("Unable to write to output file path \"$this->output_file_path\"", E_USER_WARNING);
-      return false;
-    } else {
-      $directory_string = ''; // used for paths in the zip file
-      if ($path != '') {
-        clearstatcache();
-        $directories = explode('/', $path); // get a path for the zip file
-        foreach($directories as $directory) { // iterate over each directory and concatenate the directory string
-          $directory_string .= $directory;
-          if (!file_exists( $this->output_file_path . $directory_string ) ) { // haven't created this path yet
-            $old_mask = umask(0);
-            if (!@mkdir($this->output_file_path . $directory_string, 0777)) {
-              umask($old_mask);
+      if (!is_writeable($this->output_file_path)) { // make sure we can write to the output directory
+        trigger_error("Unable to write to output file path \"$this->output_file_path\"", E_USER_WARNING);
+        return false;
+      } else {
+        $directory_string = ''; // used for paths in the zip file
+        if ($path != '') {
+          clearstatcache();
+          $directories = explode('/', $path); // get a path for the zip file
+          foreach($directories as $directory) { // iterate over each directory and concatenate the directory string
+            $directory_string .= $directory;
+            if( !tep_mkdir($this->output_file_path . $directory_string) ) {
               // tried to make the folder, failed, cant write this file, sorry
               trigger_error("Unable to create directory \"{$this->output_file_path}$directory_string\"", E_USER_WARNING);
               return false;
             }
-            umask($old_mask);
+            $directory_string .= '/'; // append trailing slash for next round
           }
-          $directory_string .= '/'; // append trailing slash for next round
         }
-      }
 
-      $filename = $this->output_file_path . $directory_string . $name;
-      if (file_exists($filename) && $this->overwrite_existing_files == false) { // check existance and overwrite directive
-        trigger_error("File \"$filename\" already exists", E_USER_WARNING);
-        return false;
-      }
+        $filename = $this->output_file_path . $directory_string . $name;
+        if (file_exists($filename) && $this->overwrite_existing_files == false) { // check existance and overwrite directive
+          trigger_error("File \"$filename\" already exists", E_USER_WARNING);
+          return false;
+        }
 
-      $fp = @fopen($filename, 'w+b'); // open output file
-      if (!$fp) {
-        trigger_error("Failed to open \"{$this->output_file_path}$directory_string\" for writing", E_USER_WARNING);
-        return false;
+        $fp = @fopen($filename, 'w+b'); // open output file
+        if (!$fp) {
+          trigger_error("Failed to open \"{$this->output_file_path}$directory_string\" for writing", E_USER_WARNING);
+          return false;
+        }
+        fwrite($fp, $data);
+        fclose($fp);
+        if ($time != null) touch($filename, $time); // set mtime
+        return true;
       }
-      fwrite($fp, $data);
-      fclose($fp);
-      if ($time != null) touch($filename, $time); // set mtime
-      return true;
+    }
+
+    function get_file($filename) {
+      if( isset($this->files[$filename]) ) {
+        return $this->files[$filename];
+      }
+      return false;
+    }
+
+  }
+
+  // Object for a file in the ZIP archive
+  class ZipFileEntry {
+    function ZipFileEntry() {
+      // The stored CRC32 from the archive in hex format
+      $this->crc = '';
+      // The uncompressed size of the file
+      $this->size = 0;
+      // The compressed size of the file
+      $this->compressed_size = 0;
+      // The compression ratio for compressed files
+      $this->compression_ratio = 0;
+      // Any error encountered while processing the file
+      $this->error = E_NO_ERROR;
+      // The decompressed file data or null if outputting to files
+      $this->data = '';
+      // The file name
+      $this->name = '';
+      // The path of the file
+      $this->path = '';
+      // The file modification timestamp
+      $this->time = 0;
     }
   }
-}
-
-/**
- * Object for a file in the ZIP archive
- *
- * @package Classes
- * @subpackage Unzip
- *
- */
-class ZipFileEntry {
-  /**
-   * The stored CRC32 from the archive in hex format
-   *
-   * @var string
-   */
-  var $crc;
-  /**
-   * The uncompressed size of the file
-   *
-   * @var int
-   */
-  var $size;
-  /**
-   * The compressed size of the file
-   *
-   * @var int
-   */
-  var $compressed_size;
-  /**
-   * The compression ratio for compressed files
-   *
-   * @var float
-   */
-  var $compression_ratio;
-  /**
-   * Any error encountered while processing the file
-   *
-   * @var int
-   */
-  var $error;
-  /**
-   * The decompressed file data or null if outputting to files
-   *
-   * @var string
-   */
-  var $data;
-  /**
-   * The file name
-   *
-   * @var string
-   */
-  var $name;
-  /**
-   * The path of the file
-   *
-   * @var string
-   */
-  var $path;
-  /**
-   * The file modification timestamp
-   *
-   * @var int
-   */
-  var $time;
-
-  function ZipFileEntry()
-  {
-    $this->crc = '';
-    $this->size = 0;
-    $this->compressed_size = 0;
-    $this->compression_ratio = 0;
-    $this->error = E_NO_ERROR;
-    $this->data = '';
-    $this->name = '';
-    $this->path = '';
-    $this->time = 0;
-  }
-}
-
 ?>

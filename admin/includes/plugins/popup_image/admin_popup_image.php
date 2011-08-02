@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -29,34 +29,34 @@
     }
 
     function html_start() {
-      global $g_media, $g_script;
-      if( $this->options['back_all'] || isset($this->options['back_scripts'][$g_script]) ) {
-        $g_media[] = '<script type="text/javascript" src="' . $this->admin_path . 'fancybox/jquery.fancybox-1.3.0.pack.js"></script>';
-        $g_media[] = '<script type="text/javascript" src="' . $this->admin_path . 'fancybox/jquery.mousewheel-3.0.2.pack.js"></script>';
-        $g_media[] = '<link rel="stylesheet" type="text/css" href="' . $this->admin_path . 'fancybox/jquery.fancybox-1.3.0.css" media="screen" />';
+      extract(tep_load('defs'));
+
+      if( $this->options['back_all'] || isset($this->options['back_scripts'][$cDefs->script]) ) {
+        tep_set_lightbox();
         return true;
       }
       return false;
     }
 
     function html_end() {
-      global $g_script, $g_media;
+      extract(tep_load('defs'));
+
       $result = false;
-      if( $this->options['back_all'] || isset($this->options['back_scripts'][$g_script]) ) {
+      if( $this->options['back_all'] || isset($this->options['back_scripts'][$cDefs->script]) ) {
 
         $contents = '';
-        $launcher = $this->admin_path . 'fancybox/launcher.tpl';
+        $launcher = $this->admin_path . 'launcher.tpl';
         $result = tep_read_contents($launcher, $contents);
 
         if($result) {
-          if( isset($this->options['back_scripts'][$g_script]) ) {
+          if( isset($this->options['back_scripts'][$cDefs->script]) ) {
           } else {
             $selector = $this->options['back_common_selector'];
           }
           $contents_array = array(
             'POPUP_IMAGE_SELECTOR' => $selector
           );
-          $g_media[] = tep_templates_replace_entities($contents, $contents_array);
+          $cDefs->media[] = tep_templates_replace_entities($contents, $contents_array);
         }
       }
       return $result;

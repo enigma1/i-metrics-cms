@@ -9,7 +9,7 @@
 
 //----------------------------------------------------------------------------
 // Modifications by Asymmetrics
-// Copyright (c) 2007-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2007-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Front: Split results into multiple pages
@@ -17,22 +17,22 @@
 // I-Metrics CMS
 //----------------------------------------------------------------------------
 // Modifications:
-// - 07/05/2007: Renamed to post_page_results.php
-// - 07/05/2007: PHP5 Register Globals and Long Arrays Off support added
-// - 07/06/2007: PHP5 Long Arrays Off support added
-// - 09/24/2009: Rewritten constructor to support SQL conbinations for 
-//               ordering, grouping, sorting. Removed POST dependencies.
-// - 09/25/2009: Rewritten display_links function to process POST forms
-// - 09/26/2009: Added POST handling instead of GET to hide searches
+// - Renamed to post_page_results.php
+// - PHP5 Register Globals and Long Arrays Off support added
+// - PHP5 Long Arrays Off support added
+// - Rewritten constructor to support SQL conbinations for 
+//   ordering, grouping, sorting. Removed POST dependencies.
+// - Rewritten display_links function to process POST forms
+// - Added POST handling instead of GET to hide searches
+// - Removed global variables
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
   class postPageResults {
-    var $sql_query, $number_of_rows, $current_page_number, $number_of_pages, $number_of_rows_per_page, $page_name;
-
+    // compatibility constructor
     function postPageResults($query, $max_rows, $count_key = '*', $page_holder = 'page') {
-      global $g_db;
+      extract(tep_load('database'));
 
       $this->sql_query = $query;
       $this->page_name = $page_holder;
@@ -59,14 +59,15 @@
       $pos_order_by = strpos($this->sql_query, ' order by', $pos_from);
       if (($pos_order_by < $pos_to) && ($pos_order_by !== false)) $pos_to = $pos_order_by;
 
-      if (strpos($this->sql_query, 'distinct') || strpos($this->sql_query, 'group by')) {
-        $count_string = 'distinct ' . $g_db->input($count_key);
+      //if (strpos($this->sql_query, 'distinct') || strpos($this->sql_query, 'group by')) {
+      if( strpos($this->sql_query, 'distinct') ) {
+        $count_string = 'distinct ' . $db->input($count_key);
       } else {
-        $count_string = $g_db->input($count_key);
+        $count_string = $db->input($count_key);
       }
 
-      $count_query = $g_db->query("select count(" . $count_string . ") as total " . substr($this->sql_query, $pos_from, ($pos_to - $pos_from)));
-      $count = $g_db->fetch_array($count_query);
+      $count_query = $db->fly("select count(" . $count_string . ") as total " . substr($this->sql_query, $pos_from, ($pos_to - $pos_from)));
+      $count = $db->fetch_array($count_query);
       $this->number_of_rows = $count['total'];
 
       $this->number_of_pages = ceil($this->number_of_rows / $this->number_of_rows_per_page);
@@ -75,14 +76,15 @@
         $this->current_page_number = $this->number_of_pages;
       }
 
-      $offset = ($this->number_of_rows_per_page * ($this->current_page_number - 1));
-
-      $this->sql_query .= " limit " . max($offset, 0) . ", " . $this->number_of_rows_per_page;
+      if( $this->number_of_pages > 1 ) {
+        $offset = ($this->number_of_rows_per_page * ($this->current_page_number - 1));
+        $this->sql_query .= " limit " . max($offset, 0) . ", " . $this->number_of_rows_per_page;
+      }
     }
 
-// display split-page-number-links
+    // display split-page-number-links
     function display_links($max_page_links, $post_array, $parameters = '') {
-      global $PHP_SELF, $request_type;
+      extract(tep_load('defs'));
 
       $display_links_string = '';
 
@@ -96,66 +98,66 @@
         $hidden_string .= tep_draw_hidden_field($key, $value);
       }
 
-// previous button - not displayed on first page
+      // previous button - not displayed on first page
       if( $this->current_page_number == 2 ) { 
-        $display_links_string .= tep_draw_form('split_page_previous', tep_href_link(basename($PHP_SELF), $parameters, $request_type), '', 'class="floater"');
+        $display_links_string .= tep_draw_form('split_page_previous', tep_href_link($cDefs->script, $parameters, $cDefs->request_type), '', 'class="floater"');
         $display_links_string .= $hidden_string;
         $display_links_string .= tep_text_submit('split_name_previous', TEXT_PREVIOUS);
         $display_links_string .= '</form>';
       } else {
         if ($this->current_page_number > 1) {
-          $display_links_string .= tep_draw_form('split_page_p' . ($this->current_page_number - 1), tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . ($this->current_page_number - 1), $request_type), '', 'class="floater"');
+          $display_links_string .= tep_draw_form('split_page_p' . ($this->current_page_number - 1), tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . ($this->current_page_number - 1), $cDefs->request_type), '', 'class="floater"');
           $display_links_string .= $hidden_string;
           $display_links_string .= tep_text_submit('split_name_p' . ($this->current_page_number - 1), TEXT_PREVIOUS);
           $display_links_string .= '</form>';
         }
       }
 
-// check if number_of_pages > $max_page_links
+      // check if number_of_pages > $max_page_links
       $cur_window_num = intval($this->current_page_number / $max_page_links);
       if ($this->current_page_number % $max_page_links) $cur_window_num++;
 
       $max_window_num = intval($this->number_of_pages / $max_page_links);
       if ($this->number_of_pages % $max_page_links) $max_window_num++;
 
-// previous window of pages
+      // previous window of pages
       if ($cur_window_num > 1) {
         $index = (($cur_window_num - 1) * $max_page_links);
-        $display_links_string .= tep_draw_form('split_page_' . $index, tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . $index, $request_type), '', 'class="floater"');
+        $display_links_string .= tep_draw_form('split_page_' . $index, tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . $index, $cDefs->request_type), '', 'class="floater"');
         $display_links_string .= $hidden_string;
         $display_links_string .= tep_text_submit('split_name_' . $index, '...');
         $display_links_string .= '</form>';
       }
 
-// page nn button
+      // page nn button
       for ($jump_to_page = 1 + (($cur_window_num - 1) * $max_page_links); ($jump_to_page <= ($cur_window_num * $max_page_links)) && ($jump_to_page <= $this->number_of_pages); $jump_to_page++) {
         if( $jump_to_page == $this->current_page_number) {
           $display_links_string .= '<b>' . $jump_to_page . '</b>';
         } elseif( $jump_to_page == 1) {
-          $display_links_string .= tep_draw_form('split_page_' . $jump_to_page, tep_href_link(basename($PHP_SELF), $parameters, $request_type), '', 'class="floater"');
+          $display_links_string .= tep_draw_form('split_page_' . $jump_to_page, tep_href_link($cDefs->script, $parameters, $cDefs->request_type), '', 'class="floater"');
           $display_links_string .= $hidden_string;
           $display_links_string .= tep_text_submit('split_name' . $jump_to_page, $jump_to_page);
           $display_links_string .= '</form>';
         } else {
-          $display_links_string .= tep_draw_form('split_page_' . $jump_to_page, tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . $jump_to_page, $request_type), '', 'class="floater"');
+          $display_links_string .= tep_draw_form('split_page_' . $jump_to_page, tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . $jump_to_page, $cDefs->request_type), '', 'class="floater"');
           $display_links_string .= $hidden_string;
           $display_links_string .= tep_text_submit('split_name' . $jump_to_page, $jump_to_page);
           $display_links_string .= '</form>';
         }
       }
 
-// next window of pages
+      // next window of pages
       if ($cur_window_num < $max_window_num) {
         $index = (($cur_window_num) * $max_page_links + 1);
-        $display_links_string .= tep_draw_form('split_page_' . $index, tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . $index, $request_type), '', 'class="floater"');
+        $display_links_string .= tep_draw_form('split_page_' . $index, tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . $index, $cDefs->request_type), '', 'class="floater"');
         $display_links_string .= $hidden_string;
         $display_links_string .= tep_text_submit('split_name_' . $index, '...');
         $display_links_string .= '</form>';
       }
 
-// next button
+      // next button
       if (($this->current_page_number < $this->number_of_pages) && ($this->number_of_pages != 1)) {
-        $display_links_string .= tep_draw_form('split_page_n' . ($this->current_page_number + 1), tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . ($this->current_page_number + 1), $request_type), '', 'class="floater"');
+        $display_links_string .= tep_draw_form('split_page_n' . ($this->current_page_number + 1), tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . ($this->current_page_number + 1), $cDefs->request_type), '', 'class="floater"');
         $display_links_string .= $hidden_string;
         $display_links_string .= tep_text_submit('split_name_n' . ($this->current_page_number + 1), TEXT_NEXT);
         $display_links_string .= '</form>';

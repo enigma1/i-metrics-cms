@@ -7,19 +7,37 @@
 
   Copyright (c) 2003 osCommerce
 
-  Released under the GNU General Public License
+//----------------------------------------------------------------------------
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
+// Author: Mark Samios
+// http://www.asymmetrics.com
+// Admin: Log timer class
+//----------------------------------------------------------------------------
+// Modifications by Asymmetrics
+//----------------------------------------------------------------------------
+// - PHP5 Register Globals off and Long Arrays Off support added
+// - Removed timer start call from the constructor
+// - Added initialization of variables
+// - Added enabled control variable
+// - Transformed script for CMS, removed unrelated functions
+//----------------------------------------------------------------------------
+// I-Metrics CMS
+//----------------------------------------------------------------------------
+// Released under the GNU General Public License
+//----------------------------------------------------------------------------
 */
-
   class logger {
-    var $timer_start, $timer_stop, $timer_total;
 
-// class constructor
+    // Compatibility Constructor
     function logger() {
-      $this->timer_start();
+      $this->enabled = (defined('STORE_PAGE_PARSE_TIME') && STORE_PAGE_PARSE_TIME == 'true')?true:false;
+      $this->timer_start = $this->timer_stop = $this->timer_total = 0;
     }
 
     function timer_start() {
-      if (defined("PAGE_PARSE_START_TIME")) {
+      if( !$this->enabled ) return false;
+
+      if( defined("PAGE_PARSE_START_TIME") ) {
         $this->timer_start = PAGE_PARSE_START_TIME;
       } else {
         $this->timer_start = microtime();
@@ -27,6 +45,8 @@
     }
 
     function timer_stop($display = 'false') {
+      if( !$this->enabled ) return false;
+
       $this->timer_stop = microtime();
 
       $time_start = explode(' ', $this->timer_start);
@@ -39,6 +59,7 @@
       if ($display == 'true') {
         return $this->timer_display();
       }
+      return false;
     }
 
     function timer_display() {

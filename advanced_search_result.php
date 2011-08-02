@@ -30,7 +30,7 @@
   require('includes/application_top.php');
 
   // split page-results via post
-  require(DIR_WS_CLASSES . 'post_page_results.php');
+  require(DIR_FS_CLASSES . 'post_page_results.php');
   $error_script = FILENAME_DEFAULT;
 
   $result_array = $g_validator->post_validate(array(
@@ -49,21 +49,21 @@
   $adv_array = array(
     'keywords' => $keywords,
   );
-  $keywords_array = array();
+  $keywords_array = $keywords_exclude_array = array();
 
-  if(!tep_parse_search_string($keywords, $keywords_array)) {
+  if(!tep_parse_search_string($keywords, $keywords_array, $keywords_exclude_array)) {
     $messageStack->add_session(ERROR_INVALID_KEYWORDS, 'error', tep_get_script_name($error_script));
     tep_redirect(tep_href_link());
   }
-  $breadcrumb->add(NAVBAR_TITLE_1, tep_href_link(FILENAME_ADVANCED_SEARCH_RESULT));
-//  $breadcrumb->add(NAVBAR_TITLE_2, tep_href_link(FILENAME_ADVANCED_SEARCH_RESULT));
-  header("Cache-Control: public");
+  $g_breadcrumb->add(NAVBAR_TITLE_1, tep_href_link(FILENAME_ADVANCED_SEARCH_RESULT));
+//  $g_breadcrumb->add(NAVBAR_TITLE_2, tep_href_link(FILENAME_ADVANCED_SEARCH_RESULT));
+  $g_http->set_headers("Cache-Control: public");
 ?>
-<?php require('includes/objects/html_start_sub1.php'); ?>
-<?php require('includes/objects/html_start_sub2.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub1.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_start_sub2.php'); ?>
 <?php
   $heading_row = true;
-  require('includes/objects/html_body_header.php');
+  require(DIR_FS_OBJECTS . 'html_body_header.php');
 ?>
         <div><h1><?php echo HEADING_TITLE_2; ?></h1></div>
 <?php
@@ -73,22 +73,31 @@
 
   $key_str = '';
   $score_array = array();
+
   if (isset($keywords_array) && (sizeof($keywords_array) > 0)) {
     //$where_str .= " and (";
     $key_str .= " and (";
     for ($i=0, $n=sizeof($keywords_array); $i<$n; $i++ ) {
       switch ($keywords_array[$i]) {
-        case '(':
-        case ')':
-        case 'and':
-        case 'or':
+        //case '(':
+        //case ')':
+        //case 'and':
+        //case 'or':
           //$where_str .= " " . $keywords_array[$i] . " ";
-          $key_str .= " " . $keywords_array[$i] . " ";
-          break;
+        //  $key_str .= " " . $keywords_array[$i] . " ";
+        //  break;
         default:
+          if( $i ) $key_str .= ' and ';
           $keyword = $g_db->prepare_input($keywords_array[$i]);
-          $key_str .= "(gt.gtext_title like '%" . $g_db->input($keyword) . "%' or gt.gtext_description like '%" . $g_db->input($keyword) . "%'";
-          $tmp_str = "(" . "(gt.gtext_title like '%" . $g_db->input($keyword) . "%' or gt.gtext_description like '%" . $g_db->input($keyword) . "%'";
+          $key_str .= "(gt.gtext_title like '" . $g_db->input($keyword) . "%' or gt.gtext_title like '% " . $g_db->input($keyword) . "%'";
+          $key_str .= " or gt.gtext_description like '" . $g_db->input($keyword) . "%' or gt.gtext_description like '% " . $g_db->input($keyword) . "%'";
+          $key_str .= " or gt.gtext_description like '%-" . $g_db->input($keyword) . "%' or gt.gtext_description like '%," . $g_db->input($keyword) . "%'";
+          $key_str .= " or gt.gtext_description like '%." . $g_db->input($keyword) . "%' or gt.gtext_description like '%(" . $g_db->input($keyword) . "%'";
+
+          $tmp_str = "(" . "(gt.gtext_title like '" . $g_db->input($keyword) . "%' or gt.gtext_title like '% " . $g_db->input($keyword) . "%'";
+          $tmp_str .= " or gt.gtext_description like '" . $g_db->input($keyword) . "%' or gt.gtext_description like '% " . $g_db->input($keyword) . "%'";
+          $tmp_str .= " or gt.gtext_description like '%-" . $g_db->input($keyword) . "%' or gt.gtext_description like '%," . $g_db->input($keyword) . "%'";
+          $tmp_str .= " or gt.gtext_description like '%." . $g_db->input($keyword) . "%' or gt.gtext_description like '%(" . $g_db->input($keyword) . "%'";
 
           $key_str .= ')';
           $tmp_str .= '))';
@@ -118,12 +127,6 @@
     for($i=0, $n=sizeof($keywords_array); $i<$n; $i++ ) {
       $found_flag = false;
       switch($keywords_array[$i]) {
-        case '(':
-        case ')':
-        case 'and':
-        case 'or':
-          //$key_str .= " " . $keywords_array[$i] . " ";
-          break;
         default:
           if( isset($score_array[md5($keywords_array[$i])]) ) {
             continue;
@@ -260,6 +263,6 @@
   }
   $html_lines_array = array();
   $html_lines_array[] = '<div class="main"><a href="' . tep_href_link() . '">' . tep_image_button('button_back.gif', IMAGE_BUTTON_BACK) . '</a></div>' . "\n";
-  require('includes/objects/html_content_bottom.php'); 
+  require(DIR_FS_OBJECTS . 'html_content_bottom.php'); 
 ?>
-<?php require('includes/objects/html_end.php'); ?>
+<?php require(DIR_FS_OBJECTS . 'html_end.php'); ?>

@@ -20,23 +20,25 @@
 // - Added CMS and SEO components
 // - Removed Products related boxes
 // - Changed HTML removed tables, added DIVs
+// - Added Plugin General Calls 
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
 ?>
-         <div>
+       <div>
 <?php
-  require(DIR_WS_BOXES . 'configuration.php');
-  require(DIR_WS_BOXES . 'abstract_zones.php');
-  require(DIR_WS_BOXES . 'helpdesk.php');
-  require(DIR_WS_BOXES . 'seo_g.php');
-  require(DIR_WS_BOXES . 'meta_g.php');
-  require(DIR_WS_BOXES . 'cache.php');
-  require(DIR_WS_BOXES . 'plugins.php');
-  require(DIR_WS_BOXES . 'tools.php');
-  require(DIR_WS_BOXES . 'other.php');
-  //require(DIR_WS_BOXES . 'history.php');
-  $g_plugins->invoke('html_left_last');
+  $cPlug->invoke('html_left_first');
+  require(DIR_FS_BOXES . 'configuration.php');
+  require(DIR_FS_BOXES . 'abstract_zones.php');
+  require(DIR_FS_BOXES . 'languages.php');
+  require(DIR_FS_BOXES . 'helpdesk.php');
+  require(DIR_FS_BOXES . 'seo_g.php');
+  require(DIR_FS_BOXES . 'meta_g.php');
+  require(DIR_FS_BOXES . 'cache.php');
+  require(DIR_FS_BOXES . 'plugins.php');
+  require(DIR_FS_BOXES . 'tools.php');
+  require(DIR_FS_BOXES . 'other.php');
+  $cPlug->invoke('html_left_last');
 ?>
-        </div>
+      </div>

@@ -4,7 +4,7 @@
 // Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
-// Front Plugin: Comments System template form
+// Front Plugin: Right Column template
 //----------------------------------------------------------------------------
 // I-Metrics CMS
 //----------------------------------------------------------------------------

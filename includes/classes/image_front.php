@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -22,7 +22,7 @@
   class image_front extends abstract_front {
     var $entries_array, $entries_string;
 
-// class constructor
+    // class constructor
     function image_front() {
       parent::abstract_front();
       $this->entries_array = array();
@@ -30,7 +30,7 @@
     }
 
     function get_entries($zone, $tflag=true, $dflag=true, $raw=false) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $this->entries_array = array();
       $zone_id = $this->get_zone($zone);
@@ -46,17 +46,16 @@
         $select_string .= ', image_title';
       }
 
+      $this->entries_string = "select image_file" . $select_string . " from " . TABLE_IMAGE_ZONES . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order";
+
       if( $raw ) {
-        $this->entries_string = "select image_file" . $select_string . " from " . TABLE_IMAGE_ZONES . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order";
         return $this->entries_string;
       } else {
-        $zone_query = $g_db->query("select image_file" . $select_string . " from " . TABLE_IMAGE_ZONES . " where abstract_zone_id = '" . (int)$zone_id . "' order by sequence_order");
-        if( !$g_db->num_rows($zone_query) ) {
+        $tmp_array = $db->query_to_array($this->entries_string);
+        if( !count($tmp_array) ) {
           return $this->entries_array;
         }
-        while( $zone = $g_db->fetch_array($zone_query) ) {
-          $this->entries_array[] = $zone;
-        }
+        $this->entries_array = $tmp_array;
         return $this->entries_array;
       }
     }

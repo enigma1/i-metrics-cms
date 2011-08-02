@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software. Innovation & Excellence.
+// Copyright (c) 2006-2011 Asymmetric Software. Innovation & Excellence.
 // Author: Mark Samios
 // http://www.asymmetrics.com
 //----------------------------------------------------------------------------
@@ -16,41 +16,47 @@
 ------------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
-//
 */
   class comments_system extends plugins_base {
-    // Force this plugin to operate only with the following scripts
-    var $scripts_array = array(
-      FILENAME_GENERIC_PAGES,
-      FILENAME_IMAGE_PAGES,
-    );
-    // The form name
-    var $form_box = 'process_comments_system';
-    var $storage = array();
-    var $max_buttons = 50;
-
     // Compatibility constructor
     function comments_system() {
+      // Force this plugin to operate only with the following scripts
+      $this->scripts_array = array(
+        FILENAME_GENERIC_PAGES,
+        FILENAME_COLLECTIONS,
+      );
+      $this->form_box = 'process_comments_system';
+      $this->storage =  array(
+        'css_buttons' => array(),
+        'visible_button' => '',
+        'process' => false
+      );
+      $this->entry_result = array();
+      $this->max_buttons = 50;
+      $this->form_show = false;
       // Call the parent to set operation path and activation conditions
       parent::plugins_base();
       // Load plugin configuration settings
       $this->options = $this->load_options();
       // Load the plugin specific strings
-      $this->strings = tep_get_strings($this->web_template_path . 'web_strings.php');
+      $strings_array = array('web_strings.php');
+      $this->strings = $this->load_strings($strings_array);
+
       // Load the plugin definitions files/tables
-      require_once($this->web_path . 'files.php');
-      require_once($this->web_path . 'tables.php');
+      tep_define_vars($this->fs_path . 'defs.php');
       // Prepare and validate the comments templates, disable plugin on errors
-      $this->comments_form = $this->web_template_path . 'comments_form.tpl';
-      $this->comments_posted = $this->web_template_path . 'comments_posted.tpl';
-      if( !file_exists($this->comments_form) ) $this->change(false);
-      if( !file_exists($this->comments_posted) ) $this->change(false);
+      $this->comments_form = $this->fs_template_path . 'comments_form.tpl';
+      $this->comments_posted = $this->fs_template_path . 'comments_posted.tpl';
+
+      if( !is_file($this->comments_form) || !is_file($this->comments_posted) ) $this->change(false);
     }
 
     function plugin_form_process() {
-      global $g_db, $g_script, $g_session, $g_validator, $messageStack, $current_gtext_id, $current_abstract_id;
+      extract(tep_load('defs', 'http_validator', 'database', 'sessions', 'validator', 'message_stack'));
+
+      if( empty($this->entry_result) ) return false;
       $cStrings =& $this->strings;
-      $this->storage =& $g_session->register($this->key);
+      $this->storage =& $cSessions->register($this->key, $this->storage);
 
       $buttons_array = array();
       if( $this->options['anti_bot'] ) {
@@ -71,7 +77,7 @@
         $min_rating = 0;
       }
 
-      $result_array = $g_validator->post_validate(array(
+      $result_array = $cValidator->post_validate(array(
         'email'     => array('max' => 100, 'min' => 7),
         'rating'    => array('max' => $this->options['rating_steps'], 'min' => $min_rating, 'type' => 'range'),
         'name'      => array('max' => 64, 'min' => 3),
@@ -80,44 +86,34 @@
       ));
 
       // Get the validated parameters only
-      $params = $g_validator->convert_to_get();
+      $params = $cValidator->convert_to_get();
 
-      $type_id = 0;
-      if( $current_gtext_id && $this->options['text_pages'] ) {
-        $type_id=1;
-        $id=$current_gtext_id;
-      } elseif( $current_abstract_id ) {
-        $result = $this->check_collection();
-        if( $result !== false ) {
-          $type_id=2;
-          $id=$current_abstract_id;
-        }
-      }
+      $idx_array = $this->get_content_indices();
 
-      if( !$type_id ) {
-        $messageStack->add_session($cStrings->ERROR_PLUGIN_INVALID_PAGE);
-        tep_redirect(tep_href_link($g_script, $params));
+      if( empty($idx_array) ) {
+        $msg->add_session($cStrings->ERROR_PLUGIN_INVALID_PAGE);
+        tep_redirect(tep_href_link($cDefs->script, $params));
       }
 
       $error = false;
       if( !empty($result_array['rating']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_RATING);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_RATING);
         $error = true;
       }
       if( !empty($result_array['name']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_NAME);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_NAME);
         $error = true;
       }
       if( !empty($result_array['comment']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_COMMENT);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_COMMENT);
         $error = true;
       }
       if( !empty($result_array['url']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_URL);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_URL);
         $error = true;
       }
       if( !empty($result_array['email']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_EMAIL);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_EMAIL);
         $error = true;
       }
       if( $error ) {
@@ -125,137 +121,145 @@
       }
 
       $error = false;
-      $body = $g_db->prepare_input($_POST['comment'], false);
+      $body = $db->prepare_input($_POST['comment'], false);
       $body_key = md5($body);
       if( $this->check_reentry($body_key) ) {
-        $messageStack->add_session($cStrings->ERROR_PLUGIN_ALREADY_SUBMITTED);
-        tep_redirect(tep_href_link($g_script, $params));
+        $msg->add_session($cStrings->ERROR_PLUGIN_ALREADY_SUBMITTED);
+        tep_redirect(tep_href_link($cDefs->script, $params));
       }
 
       if( !tep_validate_email($_POST['email']) ) {
-        $messageStack->add($cStrings->ERROR_PLUGIN_INVALID_EMAIL);
+        $msg->add($cStrings->ERROR_PLUGIN_INVALID_EMAIL);
         $error = true;
       }
-      if( $error ) {
-        return true;
-      }
 
-      $url = $g_db->prepare_input($_POST['url']);
+      $url = $db->prepare_input($_POST['url']);
       if( !tep_validate_url($url) ) {
+        if( !empty($_POST['url']) ) {
+          $msg->add($cStrings->ERROR_PLUGIN_INVALID_URL);
+          $error = true;
+        }
         $url = '';
       }
       if( !empty($url) && substr($url, 0, 7) != 'http://' ) {
         $url = 'http://' . $url;
       }
 
-      $body = $g_db->prepare_input($_POST['comment'], false);
+      if( $error ) {
+        return true;
+      }
+
+      $body = $db->prepare_input($_POST['comment'], false);
       $sql_data_array = array(
-        'comments_id'     => (int)$id,
-        'content_type'    => (int)$type_id,
-        'comments_author' => $g_db->prepare_input($_POST['name']),
-        'comments_email'  => $g_db->prepare_input($_POST['email']),
+        'comments_id'     => (int)$idx_array['id'],
+        'content_type'    => (int)$idx_array['type_id'],
+        'comments_author' => $db->prepare_input($_POST['name']),
+        'comments_email'  => $db->prepare_input($_POST['email']),
         'comments_url'    => $url,
         'comments_body'   => $body,
         'comments_key'    => $body_key,
-        'ip_address'      => $g_db->prepare_input(tep_get_ip_address()),
+        'ip_address'      => $db->prepare_input($http->ip_string),
         'comments_rating' => (int)$_POST['rating'],
         'resolution'      => (int)$this->options['rating_steps'],
         'date_added'      => 'now()',
         'status_id'       => (int)$this->options['auto_display'],
       );
-      $g_db->perform(TABLE_COMMENTS, $sql_data_array);
+      $db->perform(TABLE_COMMENTS, $sql_data_array);
 
-      $messageStack->add_session($cStrings->SUCCESS_PLUGIN_COMMENT_ACCEPTED, 'success');
-      $g_session->unregister($this->key);
-      tep_redirect(tep_href_link($g_script, $params));
+      $msg->add_session($cStrings->SUCCESS_PLUGIN_COMMENT_ACCEPTED, 'success');
+      $cSessions->unregister($this->key);
+      tep_redirect(tep_href_link($cDefs->script, $params));
       return false;
     }
 
+    function init_post() {
+      $result_array = $this->get_entry_details();
+      if( empty($result_array) ) return $result_array;
+
+      if( $this->check_entry($result_array['id'], $result_array['type_id']) ) {
+        $this->form_show = true;
+      }
+      $this->entry_result = $result_array;
+      return true;
+    }
+
     function html_start() {
-      global $g_session, $g_media;
+      extract(tep_load('defs', 'sessions'));
 
       // Disable the anti-bot on spider presence
-      if( !$g_session->has_started() ) {
+      if( !$cSessions->has_started() ) {
         $this->options['anti_bot'] = false;
       }
 
-      $this->storage =& $g_session->register($this->key);
-      if( !$g_session->is_registered($this->key) ) {
-        $this->storage = array(
-          'css_buttons' => '',
-          'visible_button' => '',
-          'process' => false
-        );
-      }
-
+      $cStrings =& $this->strings;
+      $this->storage =& $cSessions->register($this->key, $this->storage);
       if( $this->options['anti_bot'] ) {
-        $g_media[] = '<link rel="stylesheet" type="text/css" href="' . $this->web_path . 'cscss.css" media="screen" />';
+        $cDefs->media[] = '<link rel="stylesheet" type="text/css" href="' . $this->web_path . 'cscss.css" media="screen" />';
         if( empty($this->storage['css_buttons']) || $this->options['anti_bot_strict'] || $this->storage['visible_button'] == $this->form_box ) {
           $this->storage['css_buttons'] = tep_random_buttons_css($this->storage['visible_button'], '#cscss_buttons', $this->max_buttons);
         }
-        $g_media[] = '<link rel="stylesheet" type="text/css" href="' . tep_href_link(FILENAME_COMMENTS_SYSTEM_CSS) . '" media="screen" />';
+        $cDefs->media[] = '<link rel="stylesheet" type="text/css" href="' . tep_href_link(FILENAME_COMMENTS_SYSTEM_CSS) . '" media="screen" />';
       } else  {
         $this->storage['visible_button'] = $this->form_box;
       }
+
+      if( $this->options['rss'] && $this->get_comments_count() ) {
+        $rss_array = $this->get_entry_details();
+        $cDefs->media[] = '<link rel="alternate" type="application/rss+xml" title="' . sprintf($cStrings->TEXT_RSS_TITLE, $rss_array['title']) . '" href="' . tep_href_link(FILENAME_COMMENTS_SYSTEM_RSS, 'comments_id=' . $rss_array['id'] . '&type_id=' . $rss_array['type_id']) . '" />';
+      }
+/*
+<link rel="alternate" type="application/rss+xml" title="Ben Maynard&#039;s blog about anything &raquo; OpenCart Secured Comments Feed" href="http://blog.visionsource.org/2010/02/14/opencart-secured/feed/" />
+*/
       return true;
     }
 
     function html_main_content_end() {
-      global $g_db, $g_session, $g_script, $current_gtext_id, $current_abstract_id;
+      extract(tep_load('defs', 'sessions'));
 
       $this->storage['process'] = false;
-      if( $current_gtext_id && $this->options['text_pages'] ) {
-        $id = $current_gtext_id;
-        $type_id = 1;
 
-        $desc_query = $g_db->query("select gtext_title from " . TABLE_GTEXT . " where gtext_id = '" . (int)$current_gtext_id . "'");
-        $desc_array = $g_db->fetch_array($desc_query);
-        $desc = $desc_array['gtext_title'];
+      $result_array = $this->entry_result;
+      if( empty($result_array) ) {
+        return false;
+      }
 
-        $link = tep_href_link(FILENAME_GENERIC_PAGES, 'gtext_id=' . $current_gtext_id . '&action=plugin_form_process');
+      if( $result_array['type_id'] == 1 ) {
+        $result_array['link'] = tep_href_link(FILENAME_GENERIC_PAGES, 'gtext_id=' . $cDefs->gtext_id . '&action=plugin_form_process');
       } else {
-        $result = $this->check_collection();
-        switch($result) {
+        switch($result_array['class']) {
+          case 'super_zones':
           case 'image_zones':
-            $link = tep_href_link(FILENAME_IMAGE_PAGES, 'abz_id=' . $current_abstract_id . '&action=plugin_form_process');
-            break;
           case 'generic_zones':
-            $link = tep_href_link(FILENAME_GENERIC_PAGES, 'abz_id=' . $current_abstract_id . '&action=plugin_form_process');
+            $result_array['link'] = tep_href_link(FILENAME_COLLECTIONS, 'abz_id=' . $cDefs->abstract_id . '&action=plugin_form_process');
             break;
           default:
             return false;
         }
-
-        $id = $current_abstract_id;
-        $type_id = 2;
-
-        $desc_query = $g_db->query("select abstract_zone_name from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id = '" . (int)$current_abstract_id . "'");
-        $desc_array = $g_db->fetch_array($desc_query);
-        $desc = $desc_array['abstract_zone_name'];
       }
-      if( !$this->check_entry($id, $type_id) ) return false;
 
-      $this->display_posts($id, $type_id, $desc);
-      $this->display_form($link, $desc);
-      $this->storage =& $g_session->register($this->key);
-      $this->storage['process'] = true;
+      $this->display_posts($result_array['id'], $result_array['type_id'], $result_array['title']);
+
+      if( $this->form_show ) {
+        $this->display_form($result_array['link'], $result_array['title']);
+        $this->storage =& $cSessions->register($this->key);
+        $this->storage['process'] = true;
+      }
       return true;
     }
 
     function check_reentry($key) {
-      global $g_db;
+      extract(tep_load('database'));
 
-      $ip_address = tep_get_ip_address();
-      $check_query = $g_db->query("select count(*) as total from " . TABLE_COMMENTS . " where comments_key = '" . $g_db->filter($key) . "'");
-      $check_array = $g_db->fetch_array($check_query);
+      $check_query = $db->query("select count(*) as total from " . TABLE_COMMENTS . " where comments_key = '" . $db->filter($key) . "'");
+      $check_array = $db->fetch_array($check_query);
       return ($check_array['total'] > 0);
     }
 
     function check_entry($id, $type_id) {
-      global $g_db;
+      extract(tep_load('database'));
 
-      $check_query = $g_db->query("select count(*) as total from " . TABLE_COMMENTS_TO_CONTENT . " where comments_id = '" . (int)$id . "' and content_type= '" . (int)$type_id . "'");
-      $check_array = $g_db->fetch_array($check_query);
+      $check_query = $db->query("select count(*) as total from " . TABLE_COMMENTS_TO_CONTENT . " where comments_id = '" . (int)$id . "' and content_type= '" . (int)$type_id . "'");
+      $check_array = $db->fetch_array($check_query);
 
       $mode = 1;
       if( $type_id == 1 && $this->options['text_include'] ) {
@@ -267,13 +271,23 @@
       return (($check_array['total']^$mode) > 0);
     }
 
+    function check_posted_comments() {
+      extract(tep_load('database'));
+
+      $result_array = $this->get_content_indices();
+      $check_query = $db->query("select count(*) as total from " . TABLE_COMMENTS_TO_CONTENT . " where comments_id = '" . (int)$result_array['id'] . "' and content_type= '" . (int)$result_array['type_id'] . "'");
+      $check_array = $db->fetch_array($check_query);
+      return $check_array['total'];   
+    }
+
+
     function check_collection() {
-      global $current_abstract_id;
+      extract(tep_load('defs'));
 
       $result = false;
-      if( !$current_abstract_id ) return $result;
+      if( !$cDefs->abstract_id ) return $result;
       $cAbstract = new abstract_front();
-      $zone_class = $cAbstract->get_zone_class($current_abstract_id);
+      $zone_class = $cAbstract->get_zone_class($cDefs->abstract_id);
       switch($zone_class) {
         case 'generic_zones':
           if( !$this->options['text_collections']) return $result;
@@ -281,6 +295,10 @@
           break;           
         case 'image_zones':
           if( !$this->options['image_collections']) return $result;
+          $result = $zone_class;
+          break;
+        case 'super_zones':
+          if( !$this->options['mixed_collections']) return $result;
           $result = $zone_class;
           break;
         default:
@@ -297,21 +315,73 @@
     function display_posts($id, $type_id, $comments_title) {
       $cStrings =& $this->strings;
       $comments_array = $this->get_posted_comments($id, $type_id);
+      if( empty($comments_array) && !$this->form_show ) return;
+
       $rating_array = $this->get_rating($id, $type_id);
       require($this->comments_posted);
     }
 
     function get_posted_comments($id, $type_id) {
-      global $g_db;
+      extract(tep_load('database'));
+
       $comments_query_raw = "select comments_author, comments_body, comments_url, date_added, comments_rating, resolution from " . TABLE_COMMENTS . " where comments_id = '" . (int)$id . "' and content_type= '" . (int)$type_id . "' and status_id='1' order by auto_id desc";
-      return $g_db->query_to_array($comments_query_raw);
+      return $db->query_to_array($comments_query_raw);
     }
 
     function get_rating($id, $type_id) {
-      global $g_db;
-      $rating_query = $g_db->query("select if(sum(comments_rating), sum(comments_rating), 0) as total_rating, if(sum(resolution), sum(resolution), 0) as total_resolution from " . TABLE_COMMENTS . " where comments_id = '" . (int)$id . "' and content_type= '" . (int)$type_id . "' and status_id='1'");
-      $rating_array = $g_db->fetch_array($rating_query);
+      extract(tep_load('database'));
+
+      $rating_query = $db->query("select if(sum(comments_rating), sum(comments_rating), 0) as total_rating, if(sum(resolution), sum(resolution), 0) as total_resolution from " . TABLE_COMMENTS . " where comments_id = '" . (int)$id . "' and content_type= '" . (int)$type_id . "' and status_id='1'");
+      $rating_array = $db->fetch_array($rating_query);
       return $rating_array;
+    }
+
+    function get_comments_count() {
+      extract(tep_load('database'));
+
+      $result_array = $this->get_content_indices();
+      if( empty($result_array) ) return 0;
+
+      $check_query = $db->query("select count(*) as total from " . TABLE_COMMENTS . " where comments_id = '" . (int)$result_array['id'] . "' and content_type= '" . (int)$result_array['type_id'] . "' and status_id='1'");
+      $check_array = $db->fetch_array($check_query);
+      return $check_array['total'];
+    }
+
+    function get_entry_details() {
+      extract(tep_load('defs', 'database'));
+
+      $result_array = $this->get_content_indices();
+      if( empty($result_array)) return $result_array;
+
+      if( $result_array['type_id'] == 1 ) {
+        $tmp_query = $db->query("select gtext_title as title from " . TABLE_GTEXT . " where gtext_id = '" . (int)$cDefs->gtext_id . "'");
+        $tmp_array = $db->fetch_array($tmp_query);
+        $result_array = array_merge($result_array, $tmp_array);
+      } elseif( $result_array['type_id'] == 2 ) {
+        $tmp_query = $db->query("select abstract_zone_name as title from " . TABLE_ABSTRACT_ZONES . " where abstract_zone_id = '" . (int)$cDefs->abstract_id . "'");
+        $tmp_array = $db->fetch_array($tmp_query);
+        $result_array = array_merge($result_array, $tmp_array);
+      }
+      return $result_array;
+    }
+
+    function get_content_indices() {
+      extract(tep_load('defs'));
+
+      $result_array = array();
+      if( $cDefs->gtext_id ) {
+        $result_array['type_id'] = 1;
+        $result_array['id'] = $cDefs->gtext_id;;
+        $result_array['class'] = '';
+      } elseif( $cDefs->abstract_id ) {
+        $result = $this->check_collection();
+        if( $result !== false ) {
+          $result_array['type_id'] = 2;
+          $result_array['id'] = $cDefs->abstract_id;
+          $result_array['class'] = $result;
+        }
+      }
+      return $result_array;
     }
   }
 ?>

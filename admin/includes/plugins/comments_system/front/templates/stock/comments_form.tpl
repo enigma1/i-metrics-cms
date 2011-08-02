@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------
 */
 ?>
-            <div class="form_group cleaner"><?php echo tep_draw_form($this->form_box, $link); ?><fieldset><legend><?php echo $cStrings->TEXT_ENTER_COMMENT; ?></legend>
+            <div class="form_group bounder"><?php echo tep_draw_form($this->form_box, $link); ?><fieldset><legend><?php echo $cStrings->TEXT_ENTER_COMMENT; ?></legend>
               <div class="form_label"><?php echo $cStrings->TEXT_ENTRY_NAME; ?></div>
               <div class="form_input"><?php echo tep_draw_input_field('name'); ?></div>
               <div class="form_label"><?php echo $cStrings->TEXT_ENTRY_EMAIL; ?></div>
@@ -25,8 +25,8 @@
               <div class="form_label"><?php echo $cStrings->TEXT_ENTRY_URL; ?></div>
               <div class="form_input"><?php echo tep_draw_input_field('url'); ?></div>
               <div class="form_label"><?php echo $cStrings->TEXT_ENTRY_COMMENT; ?></div>
-              <div class="form_texta"><?php echo tep_draw_textarea_field('comment', 'soft', '40', '10'); ?></div>
-              <div class="formButtons" style="margin-top: 8px; padding-top: 16px;">
+              <div class="form_texta rpad"><?php echo tep_draw_textarea_field('comment', '', '', '10'); ?></div>
+              <div class="bounder"><div class="formButtons" style="margin-top: 8px; padding-top: 16px;">
 <?php
   if( $this->options['display_rating'] ) {
 ?>
@@ -52,5 +52,5 @@
   }
 ?>
                 </div>
-              </div>
+              </div></div>
             </fieldset></form></div>

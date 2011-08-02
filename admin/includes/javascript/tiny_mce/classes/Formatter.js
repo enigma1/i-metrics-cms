@@ -42,24 +42,23 @@
 			forcedRootBlock = ed.settings.forced_root_block,
 			nodeIndex = dom.nodeIndex,
 			INVISIBLE_CHAR = '\uFEFF',
+			MCE_ATTR_RE = /^(src|href|style)$/,
 			FALSE = false,
 			TRUE = true,
 			undefined,
-			caretHandler,
-			pendingFormats;
+			pendingFormats = {apply : [], remove : []};
+
+		function isArray(obj) {
+			return obj instanceof Array;
+		};
 
 		function getParents(node, selector) {
 			return dom.getParents(node, selector, dom.getRoot());
 		};
 
-		function resetPending() {
-			// Needs reset
-			if (!pendingFormats || pendingFormats.apply.length || pendingFormats.remove.length)
-				pendingFormats = {apply : [], remove : []};
+		function isCaretNode(node) {
+			return node.nodeType === 1 && (node.face === 'mceinline' || node.style.fontFamily === 'mceinline');
 		};
-
-		ed.onMouseUp.add(resetPending);
-		resetPending();
 
 		// Public functions
 
@@ -99,11 +98,17 @@
 
 						// Default to true
 						if (format.split === undefined)
-							format.split = !format.selector;
+							format.split = !format.selector || format.inline;
 
 						// Default to true
-						if (format.remove === undefined && format.selector)
+						if (format.remove === undefined && format.selector && !format.inline)
 							format.remove = 'none';
+
+						// Mark format as a mixed format inline + block level
+						if (format.selector && format.inline) {
+							format.mixed = true;
+							format.block_expand = true;
+						}
 
 						// Split classes if needed
 						if (typeof(format.classes) === 'string')
@@ -136,11 +141,16 @@
 
 				// Move startContainer/startOffset in to a suitable node
 				if (container.nodeType == 1 || container.nodeValue === "") {
-					walker = new TreeWalker(container.childNodes[offset]);
-					for (node = walker.current(); node; node = walker.next()) {
-						if (node.nodeType == 3 && !isBlock(node.parentNode) && !isWhiteSpaceNode(node)) {
-							rng.setStart(node, 0);
-							break;
+					container = container.nodeType == 1 ? container.childNodes[offset] : container;
+
+					// Might fail if the offset is behind the last element in it's container
+					if (container) {
+						walker = new TreeWalker(container, container.parentNode);
+						for (node = walker.current(); node; node = walker.next()) {
+							if (node.nodeType == 3 && !isWhiteSpaceNode(node)) {
+								rng.setStart(node, 0);
+								break;
+							}
 						}
 					}
 				}
@@ -184,7 +194,7 @@
 					 * Process a list of nodes wrap them.
 					 */
 					function process(node) {
-						var nodeName = node.nodeName.toLowerCase(), parentName = node.parentNode.nodeName.toLowerCase();
+						var nodeName = node.nodeName.toLowerCase(), parentName = node.parentNode.nodeName.toLowerCase(), found;
 
 						// Stop wrapping on br elements
 						if (isEq(nodeName, 'br')) {
@@ -216,11 +226,17 @@
 						if (format.selector) {
 							// Look for matching formats
 							each(formatList, function(format) {
-								if (dom.is(node, format.selector))
+								if (dom.is(node, format.selector) && !isCaretNode(node)) {
 									setElementFormat(node, format);
+									found = true;
+								}
 							});
 
-							return;
+							// Continue processing if a selector match wasn't found and a inline element is defined
+							if (!format.inline || found) {
+								currentWrapElm = 0;
+								return;
+							}
 						}
 
 						// Is it valid to wrap this item
@@ -268,7 +284,7 @@
 						var child, clone;
 
 						each(node.childNodes, function(node) {
-							if (node.nodeType == 1 && !isBookmarkNode(node)) {
+							if (node.nodeType == 1 && !isBookmarkNode(node) && !isCaretNode(node)) {
 								child = node;
 								return FALSE; // break loop
 							}
@@ -281,9 +297,9 @@
 
 							dom.replace(clone, node, TRUE);
 							dom.remove(child, 1);
-
-							return TRUE;
 						}
+
+						return clone || node;
 					};
 
 					childCount = getChildCount(node);
@@ -296,10 +312,8 @@
 
 					if (format.inline || format.wrapper) {
 						// Merges the current node with it's children of similar type to reduce the number of elements
-						if (!format.exact && childCount === 1) {
-							if (mergeStyles(node))
-								return;
-						}
+						if (!format.exact && childCount === 1)
+							node = mergeStyles(node);
 
 						// Remove/merge children
 						each(formatList, function(format) {
@@ -311,14 +325,23 @@
 							});
 						});
 
+						// Remove child if direct parent is of same type
+						if (matchNode(node.parentNode, name, vars)) {
+							dom.remove(node, 1);
+							node = 0;
+							return TRUE;
+						}
+
 						// Look for parent with similar style format
-						dom.getParent(node.parentNode, function(parent) {
-							if (matchNode(parent, name, vars)) {
-								dom.remove(node, 1);
-								node = 0;
-								return TRUE;
-							}
-						});
+						if (format.merge_with_parents) {
+							dom.getParent(node.parentNode, function(parent) {
+								if (matchNode(parent, name, vars)) {
+									dom.remove(node, 1);
+									node = 0;
+									return TRUE;
+								}
+							});
+						}
 
 						// Merge next and previous siblings if they are similar <b>text</b><b>text</b> becomes <b>texttext</b>
 						if (node) {
@@ -336,7 +359,7 @@
 					rng.setStartBefore(node);
 					rng.setEndAfter(node);
 
-					applyRngStyle(rng);
+					applyRngStyle(expandRng(rng, formatList));
 				} else {
 					if (!selection.isCollapsed() || !format.inline) {
 						// Apply formatting to selection
@@ -363,26 +386,65 @@
 		function remove(name, vars, node) {
 			var formatList = get(name), format = formatList[0], bookmark, i, rng;
 
+			/**
+			 * Moves the start to the first suitable text node.
+			 */
+			function moveStart(rng) {
+				var container = rng.startContainer,
+					offset = rng.startOffset,
+					walker, node, nodes, tmpNode;
+
+				// Convert text node into index if possible
+				if (container.nodeType == 3 && offset >= container.nodeValue.length - 1) {
+					container = container.parentNode;
+					offset = nodeIndex(container) + 1;
+				}
+
+				// Move startContainer/startOffset in to a suitable node
+				if (container.nodeType == 1) {
+					nodes = container.childNodes;
+					container = nodes[Math.min(offset, nodes.length - 1)];
+					walker = new TreeWalker(container);
+
+					// If offset is at end of the parent node walk to the next one
+					if (offset > nodes.length - 1)
+						walker.next();
+
+					for (node = walker.current(); node; node = walker.next()) {
+						if (node.nodeType == 3 && !isWhiteSpaceNode(node)) {
+							// IE has a "neat" feature where it moves the start node into the closest element
+							// we can avoid this by inserting an element before it and then remove it after we set the selection
+							tmpNode = dom.create('a', null, INVISIBLE_CHAR);
+							node.parentNode.insertBefore(tmpNode, node);
+
+							// Set selection and remove tmpNode
+							rng.setStart(node, 0);
+							selection.setRng(rng);
+							dom.remove(tmpNode);
+
+							return;
+						}
+					}
+				}
+			};
+
 			// Merges the styles for each node
 			function process(node) {
-				var children;
+				var children, i, l;
 
 				// Grab the children first since the nodelist might be changed
 				children = tinymce.grep(node.childNodes);
 
 				// Process current node
-				each(formatList, function(format) {
-					if (removeFormat(format, vars, node, node))
-						return FALSE; // Break loop
-				});
+				for (i = 0, l = formatList.length; i < l; i++) {
+					if (removeFormat(formatList[i], vars, node, node))
+						break;
+				}
 
 				// Process the children
 				if (format.deep) {
-					each(formatList, function(format) {
-						each(children, function(node) {
-							process(node);
-						});
-					});
+					for (i = 0, l = children.length; i < l; i++)
+						process(children[i]);
 				}
 			};
 
@@ -391,10 +453,13 @@
 
 				// Find format root
 				each(getParents(container.parentNode).reverse(), function(parent) {
+					var format;
+
 					// Find format root element
 					if (!formatRoot && parent.id != '_start' && parent.id != '_end') {
-						// If the matched format has a remove none flag we shouldn't split it
-						if (!isBlock(parent) && matchNode(parent, name, vars))
+						// Is the node matching the format we are looking for
+						format = matchNode(parent, name, vars);
+						if (format && format.split !== false)
 							formatRoot = parent;
 					}
 				});
@@ -431,7 +496,8 @@
 						}
 					}
 
-					if (split)
+					// Never split block elements if the format is mixed
+					if (split && (!format.mixed || !isBlock(format_root)))
 						container = dom.split(format_root, container);
 
 					// Wrap container in cloned formats
@@ -452,7 +518,13 @@
 				var node = dom.get(start ? '_start' : '_end'),
 					out = node[start ? 'firstChild' : 'lastChild'];
 
-				dom.remove(node, 1);
+				// If the end is placed within the start the result will be removed
+				// So this checks if the out node is a bookmark node if it is it
+				// checks for another more suitable node
+				if (isBookmarkNode(out))
+					out = out[start ? 'firstChild' : 'lastChild'];
+
+				dom.remove(node, true);
 
 				return out;
 			};
@@ -509,13 +581,19 @@
 				bookmark = selection.getBookmark();
 				removeRngStyle(selection.getRng(TRUE));
 				selection.moveToBookmark(bookmark);
+
+				// Check if start element still has formatting then we are at: "<b>text|</b>text" and need to move the start into the next text node
+				if (match(name, vars, selection.getStart())) {
+					moveStart(selection.getRng(true));
+				}
+
 				ed.nodeChanged();
 			} else
 				performCaretAction('remove', name, vars);
 		};
 
 		/**
-		 * Toggles the specifed format on/off.
+		 * Toggles the specified format on/off.
 		 *
 		 * @method toggle
 		 * @param {String} name Name of format to apply/remove.
@@ -536,9 +614,10 @@
 		 * @param {Node} node Node to check the format on.
 		 * @param {String} name Format name to check.
 		 * @param {Object} vars Optional list of variables to replace before checking it.
-		 * @returns {boolean} True/false state if the format matches or not.
+		 * @param {Boolean} similar Match format that has similar properties.
+		 * @return {Object} Returns the format object it matches or undefined if it doesn't match.
 		 */
-		function matchNode(node, name, vars) {
+		function matchNode(node, name, vars, similar) {
 			var formatList = get(name), format, i, classes;
 
 			function matchItems(node, format, item_name) {
@@ -555,7 +634,10 @@
 								else
 									value = getStyle(node, key);
 
-								if (!isEq(value, replaceVars(items[key], vars)))
+								if (similar && !value && !format.exact)
+									return;
+
+								if ((!similar || format.exact) && !isEq(value, replaceVars(items[key], vars)))
 									return;
 							}
 						}
@@ -563,12 +645,12 @@
 						// Only one match needed for indexed arrays
 						for (i = 0; i < items.length; i++) {
 							if (item_name === 'attributes' ? dom.getAttrib(node, items[i]) : getStyle(node, items[i]))
-								return TRUE;
+								return format;
 						}
 					}
 				}
 
-				return TRUE;
+				return format;
 			};
 
 			if (formatList && node) {
@@ -586,14 +668,14 @@
 							}
 						}
 
-						return TRUE;
+						return format;
 					}
 				}
 			}
 		};
 
 		/**
-		 * Matches the current selection or specifed node against the specified format name.
+		 * Matches the current selection or specified node against the specified format name.
 		 *
 		 * @method match
 		 * @param {String} name Name of format to match.
@@ -607,7 +689,7 @@
 			function matchParents(node) {
 				// Find first node with similar format settings
 				node = dom.getParent(node, function(node) {
-					return !!matchNode(node, name, vars);
+					return !!matchNode(node, name, vars, true);
 				});
 
 				// Do an exact check on the similar format element
@@ -649,6 +731,62 @@
 		};
 
 		/**
+		 * Matches the current selection against the array of formats and returns a new array with matching formats.
+		 *
+		 * @method matchAll
+		 * @param {Array} names Name of format to match.
+		 * @param {Object} vars Optional list of variables to replace before checking it.
+		 * @return {Array} Array with matched formats.
+		 */
+		function matchAll(names, vars) {
+			var startElement, matchedFormatNames = [], checkedMap = {}, i, ni, name;
+
+			// If the selection is collapsed then check pending formats
+			if (selection.isCollapsed()) {
+				for (ni = 0; ni < names.length; ni++) {
+					// If the name is to be removed, then stop it from being added
+					for (i = pendingFormats.remove.length - 1; i >= 0; i--) {
+						name = names[ni];
+
+						if (pendingFormats.remove[i].name == name) {
+							checkedMap[name] = true;
+							break;
+						}
+					}
+				}
+
+				// If the format is to be applied
+				for (i = pendingFormats.apply.length - 1; i >= 0; i--) {
+					for (ni = 0; ni < names.length; ni++) {
+						name = names[ni];
+
+						if (!checkedMap[name] && pendingFormats.apply[i].name == name) {
+							checkedMap[name] = true;
+							matchedFormatNames.push(name);
+						}
+					}
+				}
+			}
+
+			// Check start of selection for formats
+			startElement = selection.getStart();
+			dom.getParent(startElement, function(node) {
+				var i, name;
+
+				for (i = 0; i < names.length; i++) {
+					name = names[i];
+
+					if (!checkedMap[name] && matchNode(node, name, vars)) {
+						checkedMap[name] = true;
+						matchedFormatNames.push(name);
+					}
+				}
+			});
+
+			return matchedFormatNames;
+		};
+
+		/**
 		 * Returns true/false if the specified format can be applied to the current selection or not. It will currently only check the state for selector formats, it returns true on all other format types.
 		 *
 		 * @method canApply
@@ -687,6 +825,7 @@
 			remove : remove,
 			toggle : toggle,
 			match : match,
+			matchAll : matchAll,
 			matchNode : matchNode,
 			canApply : canApply
 		});
@@ -697,7 +836,7 @@
 		 * Checks if the specified nodes name matches the format inline/block or selector.
 		 *
 		 * @private
-		 * @param {Node} node Node to match agains the specified format.
+		 * @param {Node} node Node to match against the specified format.
 		 * @param {Object} format Format object o match with.
 		 * @return {boolean} true/false if the format matches.
 		 */
@@ -727,8 +866,8 @@
 			str1 = str1 || '';
 			str2 = str2 || '';
 
-			str1 = str1.nodeName || str1;
-			str2 = str2.nodeName || str2;
+			str1 = '' + (str1.nodeName || str1);
+			str2 = '' + (str2.nodeName || str2);
 
 			return str1.toLowerCase() == str2.toLowerCase();
 		};
@@ -777,7 +916,7 @@
 		};
 
 		function isWhiteSpaceNode(node) {
-			return node && node.nodeType === 3 && /^\s*$/.test(node.nodeValue);
+			return node && node.nodeType === 3 && /^([\s\r\n]+|)$/.test(node.nodeValue);
 		};
 
 		function wrap(node, name, attrs) {
@@ -875,7 +1014,7 @@
 			}
 
 			// Expand start/end container to matching selector
-			if (format[0].selector && format[0].expand !== FALSE) {
+			if (format[0].selector && format[0].expand !== FALSE && !format[0].inline) {
 				function findSelectorEndPoint(container, sibling_name) {
 					var parents, i, y;
 
@@ -937,11 +1076,13 @@
 				endContainer = findBlockEndPoint(endContainer, 'nextSibling');
 
 				// Non block element then try to expand up the leaf
-				if (!isBlock(startContainer))
-					startContainer = findParentContainer(startContainer, 'firstChild', 'nextSibling');
+				if (format[0].block) {
+					if (!isBlock(startContainer))
+						startContainer = findParentContainer(startContainer, 'firstChild', 'nextSibling');
 
-				if (!isBlock(endContainer))
-					endContainer = findParentContainer(endContainer, 'lastChild', 'previousSibling');
+					if (!isBlock(endContainer))
+						endContainer = findParentContainer(endContainer, 'lastChild', 'previousSibling');
+				}
 			}
 
 			// Setup index for startContainer
@@ -973,7 +1114,7 @@
 		 * @param {Object} format Format object with items to remove from node.
 		 * @param {Object} vars Name/value object with variables to apply to format.
 		 * @param {Node} node Node to remove the format styles on.
-		 * @param {Node} compare_node Optional compare node, if specidied the styles will be compared to that node.
+		 * @param {Node} compare_node Optional compare node, if specified the styles will be compared to that node.
 		 * @return {Boolean} True/false if the node was removed or not.
 		 */
 		function removeFormat(format, vars, node, compare_node) {
@@ -1042,6 +1183,10 @@
 						// IE6 has a bug where the attribute doesn't get removed correctly
 						if (name == "class")
 							node.removeAttribute('className');
+
+						// Remove mce prefixed attributes
+						if (MCE_ATTR_RE.test(name))
+							node.removeAttribute('_mce_' + name);
 
 						node.removeAttribute(name);
 					}
@@ -1125,6 +1270,10 @@
 				}
 			}
 
+			// Never remove nodes that isn't the specified inline element if a selector is specified too
+			if (format.selector && format.inline && !isEq(format.inline, node))
+				return;
+
 			dom.remove(node, 1);
 		};
 
@@ -1175,7 +1324,7 @@
 			 *
 			 * @private
 			 * @param {Node} node1 First node to compare with.
-			 * @param {Node} node2 Secont node to compare with.
+			 * @param {Node} node2 Second node to compare with.
 			 * @return {boolean} True/false if the nodes are the same or not.
 			 */
 			function compareElements(node1, node2) {
@@ -1196,8 +1345,8 @@
 					each(dom.getAttribs(node), function(attr) {
 						var name = attr.nodeName.toLowerCase();
 
-						// Don't compare internal attributes or style/class
-						if (name.indexOf('_') !== 0 && name !== 'class' && name !== 'style')
+						// Don't compare internal attributes or style
+						if (name.indexOf('_') !== 0 && name !== 'style')
 							attribs[name] = dom.getAttrib(node, name);
 					});
 
@@ -1304,7 +1453,7 @@
 		 * @return {boolean} True/false if the node is a text block.
 		 */
 		function isTextBlock(name) {
-			return /^(h[1-6]|p|div|pre|address)$/.test(name);
+			return /^(h[1-6]|p|div|pre|address|dl|dt|dd)$/.test(name);
 		};
 
 		function getContainer(rng, start) {
@@ -1326,34 +1475,16 @@
 		};
 
 		function performCaretAction(type, name, vars) {
-			var i, rng, selectedNode = selection.getNode().parentNode,
-				doc = ed.getDoc(), marker = 'mceinline',
-				events = ['onKeyDown', 'onKeyUp', 'onKeyPress'],
-				currentPendingFormats = pendingFormats[type],
+			var i, currentPendingFormats = pendingFormats[type],
 				otherPendingFormats = pendingFormats[type == 'apply' ? 'remove' : 'apply'];
 
-			// Check if it already exists
-			for (i = currentPendingFormats.length - 1; i >= 0; i--) {
-				if (currentPendingFormats[i].name == name)
-					return;
-			}
+			function hasPending() {
+				return pendingFormats.apply.length || pendingFormats.remove.length;
+			};
 
-			currentPendingFormats.push({name : name, vars : vars});
-
-			// Check if it's in the oter type
-			for (i = otherPendingFormats.length - 1; i >= 0; i--) {
-				if (otherPendingFormats[i].name == name)
-					otherPendingFormats.splice(i, 1);
-			}
-
-			function unbind() {
-				if (caretHandler) {
-					each(events, function(event) {
-						ed[event].remove(caretHandler);
-					});
-
-					caretHandler = 0;
-				}
+			function resetPending() {
+				pendingFormats.apply = [];
+				pendingFormats.remove = [];
 			};
 
 			function perform(caret_node) {
@@ -1371,59 +1502,73 @@
 				resetPending();
 			};
 
-			function isMarker(node) {
-				return node.face == marker || node.style.fontFamily == marker;
-			};
-
-			unbind();
-
-			doc.execCommand('FontName', false, marker);
-
-			// IE will convert the current word
-			each(dom.select('font,span', selectedNode), function(node) {
-				var bookmark;
-
-				if (isMarker(node)) {
-					bookmark = selection.getBookmark();
-					perform(node);
-					selection.moveToBookmark(bookmark);
-					ed.nodeChanged();
-					selectedNode = 0;
-				}
-			});
-
-			if (selectedNode) {
-				caretHandler = function(ed, e) {
-					each(dom.select('font,span', selectedNode), function(node) {
-						var bookmark, textNode;
-
-						// Look for marker
-						if (node.face == marker || node.style.fontFamily == marker) {
-							textNode = node.firstChild;
-
-							perform(node);
-
-							rng = dom.createRng();
-							rng.setStart(textNode, textNode.nodeValue.length);
-							rng.setEnd(textNode, textNode.nodeValue.length);
-							selection.setRng(rng);
-							ed.nodeChanged();
-
-							unbind();
-						}
-					});
-
-					// Always unbind and clear pending styles on keyup
-					if (e.type == 'keyup') {
-						unbind();
-						resetPending();
-					}
-				};
-
-				each(events, function(event) {
-					ed[event].addToTop(caretHandler);
-				});
+			// Check if it already exists then ignore it
+			for (i = currentPendingFormats.length - 1; i >= 0; i--) {
+				if (currentPendingFormats[i].name == name)
+					return;
 			}
-		}
+
+			currentPendingFormats.push({name : name, vars : vars});
+
+			// Check if it's in the other type, then remove it
+			for (i = otherPendingFormats.length - 1; i >= 0; i--) {
+				if (otherPendingFormats[i].name == name)
+					otherPendingFormats.splice(i, 1);
+			}
+
+			// Pending apply or remove formats
+			if (hasPending()) {
+				ed.getDoc().execCommand('FontName', false, 'mceinline');
+				pendingFormats.lastRng = selection.getRng();
+
+				// IE will convert the current word
+				each(dom.select('font,span'), function(node) {
+					var bookmark;
+
+					if (isCaretNode(node)) {
+						bookmark = selection.getBookmark();
+						perform(node);
+						selection.moveToBookmark(bookmark);
+						ed.nodeChanged();
+					}
+				});
+
+				// Only register listeners once if we need to
+				if (!pendingFormats.isListening && hasPending()) {
+					pendingFormats.isListening = true;
+
+					each('onKeyDown,onKeyUp,onKeyPress,onMouseUp'.split(','), function(event) {
+						ed[event].addToTop(function(ed, e) {
+							// Do we have pending formats and is the selection moved has moved
+							if (hasPending() && !tinymce.dom.RangeUtils.compareRanges(pendingFormats.lastRng, selection.getRng())) {
+								each(dom.select('font,span'), function(node) {
+									var textNode, rng;
+
+									// Look for marker
+									if (isCaretNode(node)) {
+										textNode = node.firstChild;
+
+										if (textNode) {
+											perform(node);
+
+											rng = dom.createRng();
+											rng.setStart(textNode, textNode.nodeValue.length);
+											rng.setEnd(textNode, textNode.nodeValue.length);
+											selection.setRng(rng);
+											ed.nodeChanged();
+										} else
+											dom.remove(node);
+									}
+								});
+
+								// Always unbind and clear pending styles on keyup
+								if (e.type == 'keyup' || e.type == 'mouseup')
+									resetPending();
+							}
+						});
+					});
+				}
+			}
+		};
 	};
 })(tinymce);

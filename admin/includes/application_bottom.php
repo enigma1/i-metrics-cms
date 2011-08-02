@@ -11,15 +11,19 @@
 */
 
 // close session (store variables)
-  $g_session->close(false);
+  extract(tep_load('http_headers', 'sessions', 'logger'));
 
-  if( STORE_PAGE_PARSE_TIME == 'true' || DISPLAY_PAGE_PARSE_TIME == 'true') {
-    if(!isset($logger) || !is_object($logger)) $logger = new logger;
-    echo $logger->timer_stop(DISPLAY_PAGE_PARSE_TIME);
-  }
+  $cSessions->close(false);
+  echo $cLogger->timer_stop(DISPLAY_PAGE_PARSE_TIME);
 
+/*
   if( GZIP_COMPRESSION == 'true' && isset($ext_zlib_loaded) && $ext_zlib_loaded == true && $ini_zlib_output_compression < 1 ) {
-    include('functions/gzip_compression.php');
+    require_once(DIR_FS_FUNCTIONS . 'compression.php');
+    tep_gzip_output(GZIP_LEVEL);
+  }
+*/
+  if( GZIP_COMPRESSION == 'true' ) {
+    require_once(DIR_FS_FUNCTIONS . 'compression.php');
     tep_gzip_output(GZIP_LEVEL);
   }
 ?>

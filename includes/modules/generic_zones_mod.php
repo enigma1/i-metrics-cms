@@ -30,7 +30,7 @@
     function output($display=false) {
       $html_output = '';
       $html_output .=
-      '  <div><h2><a href="' . tep_href_link(FILENAME_GENERIC_PAGES, 'abz_id=' . $this->zone_id) . '">' . $this->main_array['abstract_zone_name'] . '</a></h2></div>' . "\n" . 
+      '  <div><h2><a href="' . tep_href_link(FILENAME_COLLECTIONS, 'abz_id=' . $this->zone_id) . '">' . $this->main_array['abstract_zone_name'] . '</a></h2></div>' . "\n" . 
       '  <div class="contentBoxContents">' . tep_truncate_string($this->main_array['abstract_zone_desc']) . '</div>' . "\n";
       $html_output .= 
       '  <div class="cleaner">' . "\n";

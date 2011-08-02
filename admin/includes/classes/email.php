@@ -18,21 +18,14 @@
 */
 
   class email {
-    var $html;
-    var $text;
-    var $output;
-    var $html_text;
-    var $html_images;
-    var $image_types;
-    var $build_params;
-    var $attachments;
-    var $headers;
 
     function email($headers = '') {
-      if ($headers == '') $headers = array();
+      require_once(DIR_FS_CLASSES . 'mime.php');
 
-      $this->html_images = array();
-      $this->headers = array();
+      $this->charset = CHARSET;
+      $this->reset();
+
+      if ($headers == '') $headers = array();
 
       if (EMAIL_LINEFEED == 'CRLF') {
         $this->lf = "\r\n";
@@ -40,63 +33,76 @@
         $this->lf = "\n";
       }
 
-/**
- * If you want the auto load functionality
- * to find other mime-image/file types, add the
- * extension and content type here.
- */
+      // If you want the auto load functionality
+      // to find other mime-image/file types, add the
+      // extension and content type here.
+      $this->image_types = array(
+        'gif' => 'image/gif',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'jpe' => 'image/jpeg',
+        'bmp' => 'image/bmp',
+        'png' => 'image/png',
+        'tif' => 'image/tiff',
+        'tiff' => 'image/tiff',
+        'swf' => 'application/x-shockwave-flash'
+      );
+    }
 
-      $this->image_types = array('gif' => 'image/gif',
-                                 'jpg' => 'image/jpeg',
-                                 'jpeg' => 'image/jpeg',
-                                 'jpe' => 'image/jpeg',
-                                 'bmp' => 'image/bmp',
-                                 'png' => 'image/png',
-                                 'tif' => 'image/tiff',
-                                 'tiff' => 'image/tiff',
-                                 'swf' => 'application/x-shockwave-flash');
+    function reset() {
+      $this->headers = $this->html_images = $this->headers = $this->attachments = array();
+      $this->output = $this->text = $this->html = $this->html_text = $this->html_images = '';
 
-      $this->build_params['html_encoding'] = 'quoted-printable';
-      $this->build_params['text_encoding'] = '7bit';
-      $this->build_params['html_charset'] = constant('CHARSET');
-      $this->build_params['text_charset'] = constant('CHARSET');
-      $this->build_params['text_wrap'] = 998;
+      // Setup defaults
+      $this->build_params = array(
+        'html_encoding' => 'quoted-printable',
+        'text_encoding' => '7bit',
+        'html_charset' => $this->charset,
+        'text_charset' => $this->charset,
+        'text_wrap' => 998
+      );
 
-/**
- * Make sure the MIME version header is first.
- */
+     // Make sure the MIME version header is first.
+      $this->set_headers(
+        'MIME-Version: 1.0',
+        'X-Mailer: I-Metrics Mailer'
+      );
+    }
 
-      $this->headers[] = 'MIME-Version: 1.0';
-
-      reset($headers);
-      while (list(,$value) = each($headers)) {
-        if (tep_not_null($value)) {
-          $this->headers[] = $value;
-        }
+    function set_headers() {
+      $args = func_get_args();
+      foreach($args as $header) {
+        if( empty($header) ) continue;
+        $this->headers[] = $header;
       }
     }
 
-/**
- * This function will read a file in
- * from a supplied filename and return
- * it. This can then be given as the first
- * argument of the the functions
- * add_html_image() or add_attachment().
- */
+//
+// Send email wrapper (text/html) using MIME
+// This is the central mail function. The SMTP Server should be configured
+// correct in php.ini
+// Parameters:
+// $to_name           The name of the recipient, e.g. "Jan Wildeboer"
+// $to_email_address  The eMail address of the recipient,
+//                    e.g. jan.wildeboer@gmx.de
+// $email_subject     The subject of the eMail
+// $email_text        The text of the eMail, may contain HTML entities
+// $from_email_name   The name of the sender, e.g. Shop Administration
+// $from_email_adress The eMail address of the sender,
+//                    e.g. info@mytepshop.com
+    function send_mail($to_name, $to_email_address, $email_subject, $email_text, $from_email_name, $from_email_address) {
+      if (SEND_EMAILS != 'true') return false;
 
-    function get_file($filename) {
-      $return = '';
-
-      if ($fp = fopen($filename, 'rb')) {
-        while (!feof($fp)) {
-          $return .= fread($fp, 1024);
-        }
-        fclose($fp);
-
-        return $return;
+      // Build the text version
+      $text = strip_tags($email_text);
+      if (EMAIL_USE_HTML == 'true') {
+        $this->add_html($email_text, $text);
       } else {
-        return false;
+        $this->add_text($text);
       }
+      // Send message
+      $this->build_message();
+      return $this->send($to_name, $to_email_address, $from_email_name, $from_email_address, $email_subject);
     }
 
 /**
@@ -117,24 +123,27 @@
         $extensions[] = $key;
       }
 
-      preg_match_all('/"([^"]+\.(' . implode('|', $extensions).'))"/Ui', $this->html, $images);
+      $html_images = array();
 
+      preg_match_all('/"([^"]+\.(' . implode('|', $extensions).'))"/Ui', $this->html, $images);
       for ($i=0; $i<count($images[1]); $i++) {
-        if (file_exists($images_dir . $images[1][$i])) {
-          $html_images[] = $images[1][$i];
+        basename($images[1][$i]);
+        if( is_file($images_dir . basename($images[1][$i]) )) {
+          $html_images[] = basename($images[1][$i]);
           $this->html = str_replace($images[1][$i], basename($images[1][$i]), $this->html);
         }
       }
 
-      if (tep_not_null($html_images)) {
+      if( !empty($html_images) ) {
 // If duplicate images are embedded, they may show up as attachments, so remove them.
         $html_images = array_unique($html_images);
         sort($html_images);
 
         for ($i=0; $i<count($html_images); $i++) {
-          if ($image = $this->get_file($images_dir . $html_images[$i])) {
+          $image = '';
+          if( tep_read_contents($images_dir . $html_images[$i], $image) ) {
             $content_type = $this->image_types[substr($html_images[$i], strrpos($html_images[$i], '.') + 1)];
-            $this->add_html_image($image, basename($html_images[$i]), $content_type);
+            $this->add_html_image($image, $html_images[$i], $content_type);
           }
         }
       }
@@ -172,10 +181,12 @@
  */
 
     function add_html_image($file, $name = '', $c_type='application/octet-stream') {
-      $this->html_images[] = array('body' => $file,
-                                   'name' => $name,
-                                   'c_type' => $c_type,
-                                   'cid' => md5(uniqid(time())));
+      $this->html_images[] = array(
+        'body' => $file,
+        'name' => $name,
+        'c_type' => $c_type,
+        'cid' => md5(uniqid(time()))
+      );
     }
 
 /**
@@ -183,10 +194,12 @@
  */
 
     function add_attachment($file, $name = '', $c_type='application/octet-stream', $encoding = 'base64') {
-      $this->attachments[] = array('body' => $file,
-                                   'name' => $name,
-                                   'c_type' => $c_type,
-                                   'encoding' => $encoding);
+      $this->attachments[] = array(
+        'body' => $file,
+        'name' => $name,
+        'c_type' => $c_type,
+        'encoding' => $encoding
+      );
     }
 
 /**
@@ -475,6 +488,8 @@
  */
 
     function send($to_name, $to_addr, $from_name, $from_addr, $subject = '', $headers = '') {
+      if (SEND_EMAILS != 'true') return false;
+
       if ((strstr($to_name, "\n") != false) || (strstr($to_name, "\r") != false)) {
         return false;
       }
@@ -502,6 +517,8 @@
         $headers = explode($this->lf, trim($headers));
       }
 
+      $xtra_headers = array();
+
       for ($i=0; $i<count($headers); $i++) {
         if (is_array($headers[$i])) {
           for ($j=0; $j<count($headers[$i]); $j++) {
@@ -516,16 +533,15 @@
         }
       }
 
-      if (!isset($xtra_headers)) {
-        $xtra_headers = array();
-      }
-
       if (EMAIL_TRANSPORT == 'smtp') {
-        return mail($to_addr, $subject, $this->output, 'From: ' . $from . $this->lf . 'To: ' . $to . $this->lf . implode($this->lf, $this->headers) . $this->lf . implode($this->lf, $xtra_headers));
+        $old_mail = ini_get('sendmail_from');
+        ini_set('sendmail_from', $from_addr);
+        $result = mail($to_addr, $subject, $this->output, 'From: ' . $from . $this->lf . 'To: ' . $to . $this->lf . implode($this->lf, $this->headers) . $this->lf . implode($this->lf, $xtra_headers));
+        ini_set('sendmail_from', $old_mail);
       } else {
-        //return mail($to, $subject, $this->output, 'From: '.$from.$this->lf.implode($this->lf, $this->headers).$this->lf.implode($this->lf, $xtra_headers));
-        return mail($to, $subject, $this->output, 'From: '.$from.$this->lf.implode($this->lf, $this->headers).$this->lf.implode($this->lf, $xtra_headers), '-f' . $from_addr);
+        $result = mail($to, $subject, $this->output, 'From: '.$from.$this->lf.implode($this->lf, $this->headers).$this->lf.implode($this->lf, $xtra_headers), '-f' . $from_addr . ' -r' . $from_addr);
       }
+      return $result;
     }
 
 /**

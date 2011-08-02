@@ -416,7 +416,7 @@
 				custom_undo_redo_keyboard_shortcuts : 1,
 				custom_undo_redo_restore_selection : 1,
 				custom_undo_redo : 1,
-				doctype : '<!DOCTYPE>',
+				doctype : tinymce.isIE6 ? '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' : '<!DOCTYPE>', // Use old doctype on IE 6 to avoid horizontal scroll
 				visual_table_class : 'mceItemTable',
 				visual : 1,
 				font_size_style_values : 'xx-small,x-small,small,medium,large,x-large,xx-large',
@@ -478,6 +478,12 @@
 
 			// Element not found, then skip initialization
 			if (!t.getElement())
+				return;
+
+			// Is a iPad/iPhone, then skip initialization. We need to sniff here since the
+			// browser says it has contentEditable support but there is no visible caret
+			// We will remove this check ones Apple implements full contentEditable support
+			if (tinymce.isIDevice)
 				return;
 
 			// Add hidden input for non input elements inside form elements
@@ -916,18 +922,19 @@
 				hilitecolor : {inline : 'span', styles : {backgroundColor : '%value'}},
 				fontname : {inline : 'span', styles : {fontFamily : '%value'}},
 				fontsize : {inline : 'span', styles : {fontSize : '%value'}},
-				blockquote : {block : 'blockquote', wrapper : 1},
+				fontsize_class : {inline : 'span', attributes : {'class' : '%value'}},
+				blockquote : {block : 'blockquote', wrapper : 1, remove : 'all'},
 
 				removeformat : [
 					{selector : 'b,strong,em,i,font,u,strike', remove : 'all', split : true, expand : false, block_expand : true, deep : true},
 					{selector : 'span', attributes : ['style', 'class'], remove : 'empty', split : true, expand : false, deep : true},
-					{selector : '*', attributes : ['style', 'class'], expand : false, deep : true}
+					{selector : '*', attributes : ['style', 'class'], split : false, expand : false, deep : true}
 				]
 			});
 
 			// Register default block formats
 			each('p h1 h2 h3 h4 h5 h6 div address pre div code dt dd samp'.split(/\s/), function(name) {
-				t.formatter.register(name, {block : name});
+				t.formatter.register(name, {block : name, remove : 'all'});
 			});
 
 			// Register user defined formats
@@ -1321,14 +1328,27 @@
 		 * @param {Boolean} sf Skip DOM focus. Just set is as the active editor.
 		 */
 		focus : function(sf) {
-			var oed, t = this, ce = t.settings.content_editable;
+			var oed, t = this, ce = t.settings.content_editable, ieRng, controlElm, doc = t.getDoc();
 
 			if (!sf) {
-				// Is not content editable or the selection is outside the area in IE
-				// the IE statement is needed to avoid bluring if element selections inside layers since
-				// the layer is like it's own document in IE
-				if (!ce && (!isIE || t.selection.getNode().ownerDocument != t.getDoc()))
+				// Get selected control element
+				ieRng = t.selection.getRng();
+				if (ieRng.item) {
+					controlElm = ieRng.item(0);
+				}
+
+				// Is not content editable
+				if (!ce)
 					t.getWin().focus();
+
+				// Restore selected control element
+				// This is needed when for example an image is selected within a
+				// layer a call to focus will then remove the control selection
+				if (controlElm && controlElm.ownerDocument == doc) {
+					ieRng = doc.body.createControlRange();
+					ieRng.addElement(controlElm);
+					ieRng.select();
+				}
 
 				// #ifdef contentEditable
 
@@ -1459,7 +1479,7 @@
 		 * @param {Object} o Optional object to pass along for the node changed event.
 		 */
 		nodeChanged : function(o) {
-			var t = this, s = t.selection, n = s.getNode() || t.getBody();
+			var t = this, s = t.selection, n = (isIE ? s.getNode() : s.getStart()) || t.getBody();
 
 			// Fix for bug #1896577 it seems that this can not be fired while the editor is loading
 			if (t.initialized) {
@@ -2218,7 +2238,7 @@
 
 		_addEvents : function() {
 			// 'focus', 'blur', 'dblclick', 'beforedeactivate', submit, reset
-			var t = this, i, s = t.settings, lo = {
+			var t = this, i, s = t.settings, dom = t.dom, lo = {
 				mouseup : 'onMouseUp',
 				mousedown : 'onMouseDown',
 				click : 'onClick',
@@ -2252,33 +2272,33 @@
 					case 'contextmenu':
 						if (tinymce.isOpera) {
 							// Fake contextmenu on Opera
-							t.dom.bind(t.getBody(), 'mousedown', function(e) {
+							dom.bind(t.getBody(), 'mousedown', function(e) {
 								if (e.ctrlKey) {
 									e.fakeType = 'contextmenu';
 									eventHandler(e);
 								}
 							});
 						} else
-							t.dom.bind(t.getBody(), k, eventHandler);
+							dom.bind(t.getBody(), k, eventHandler);
 						break;
 
 					case 'paste':
-						t.dom.bind(t.getBody(), k, function(e) {
+						dom.bind(t.getBody(), k, function(e) {
 							eventHandler(e);
 						});
 						break;
 
 					case 'submit':
 					case 'reset':
-						t.dom.bind(t.getElement().form || DOM.getParent(t.id, 'form'), k, eventHandler);
+						dom.bind(t.getElement().form || DOM.getParent(t.id, 'form'), k, eventHandler);
 						break;
 
 					default:
-						t.dom.bind(s.content_editable ? t.getBody() : t.getDoc(), k, eventHandler);
+						dom.bind(s.content_editable ? t.getBody() : t.getDoc(), k, eventHandler);
 				}
 			});
 
-			t.dom.bind(s.content_editable ? t.getBody() : (isGecko ? t.getDoc() : t.getWin()), 'focus', function(e) {
+			dom.bind(s.content_editable ? t.getBody() : (isGecko ? t.getDoc() : t.getWin()), 'focus', function(e) {
 				t.focus(true);
 			});
 
@@ -2290,8 +2310,8 @@
 					t.focus(true);
 				};
 
-				t.dom.bind(t.getBody(), 'click', doFocus);
-				t.dom.bind(t.getBody(), 'keydown', doFocus);
+				dom.bind(t.getBody(), 'click', doFocus);
+				dom.bind(t.getBody(), 'keydown', doFocus);
 			}
 
 			// #endif
@@ -2299,17 +2319,7 @@
 			// Fixes bug where a specified document_base_uri could result in broken images
 			// This will also fix drag drop of images in Gecko
 			if (tinymce.isGecko) {
-				// Convert all images to absolute URLs
-/*				t.onSetContent.add(function(ed, o) {
-					each(ed.dom.select('img'), function(e) {
-						var v;
-
-						if (v = e.getAttribute('_mce_src'))
-							e.src = t.documentBaseURI.toAbsolute(v);
-					})
-				});*/
-
-				t.dom.bind(t.getDoc(), 'DOMNodeInserted', function(e) {
+				dom.bind(t.getDoc(), 'DOMNodeInserted', function(e) {
 					var v;
 
 					e = e.target;
@@ -2357,19 +2367,22 @@
 
 			// Workaround for bug, http://bugs.webkit.org/show_bug.cgi?id=12250
 			// WebKit can't even do simple things like selecting an image
+			// This also fixes so it's possible to select mceItemAnchors
 			if (tinymce.isWebKit) {
 				t.onClick.add(function(ed, e) {
 					e = e.target;
 
 					// Needs tobe the setBaseAndExtend or it will fail to select floated images
-					if (e.nodeName == 'IMG')
+					if (e.nodeName == 'IMG' || (e.nodeName == 'A' && dom.hasClass(e, 'mceItemAnchor'))) {
 						t.selection.getSel().setBaseAndExtent(e, 0, e, 1);
+						t.nodeChanged();
+					}
 				});
 			}
 
 			// Add node change handlers
 			t.onMouseUp.add(t.nodeChanged);
-			t.onClick.add(t.nodeChanged);
+			//t.onClick.add(t.nodeChanged);
 			t.onKeyUp.add(function(ed, e) {
 				var c = e.keyCode;
 
@@ -2390,11 +2403,9 @@
 				}
 
 				// Add default shortcuts for gecko
-				if (isGecko) {
-					t.addShortcut('ctrl+b', t.getLang('bold_desc'), 'Bold');
-					t.addShortcut('ctrl+i', t.getLang('italic_desc'), 'Italic');
-					t.addShortcut('ctrl+u', t.getLang('underline_desc'), 'Underline');
-				}
+				t.addShortcut('ctrl+b', t.getLang('bold_desc'), 'Bold');
+				t.addShortcut('ctrl+i', t.getLang('italic_desc'), 'Italic');
+				t.addShortcut('ctrl+u', t.getLang('underline_desc'), 'Underline');
 
 				// BlockFormat shortcuts keys
 				for (i=1; i<=6; i++)
@@ -2458,7 +2469,7 @@
 			if (tinymce.isIE) {
 				// Fix so resize will only update the width and height attributes not the styles of an image
 				// It will also block mceItemNoResize items
-				t.dom.bind(t.getDoc(), 'controlselect', function(e) {
+				dom.bind(t.getDoc(), 'controlselect', function(e) {
 					var re = t.resizeInfo, cb;
 
 					e = e.target;
@@ -2468,28 +2479,28 @@
 						return;
 
 					if (re)
-						t.dom.unbind(re.node, re.ev, re.cb);
+						dom.unbind(re.node, re.ev, re.cb);
 
-					if (!t.dom.hasClass(e, 'mceItemNoResize')) {
+					if (!dom.hasClass(e, 'mceItemNoResize')) {
 						ev = 'resizeend';
-						cb = t.dom.bind(e, ev, function(e) {
+						cb = dom.bind(e, ev, function(e) {
 							var v;
 
 							e = e.target;
 
-							if (v = t.dom.getStyle(e, 'width')) {
-								t.dom.setAttrib(e, 'width', v.replace(/[^0-9%]+/g, ''));
-								t.dom.setStyle(e, 'width', '');
+							if (v = dom.getStyle(e, 'width')) {
+								dom.setAttrib(e, 'width', v.replace(/[^0-9%]+/g, ''));
+								dom.setStyle(e, 'width', '');
 							}
 
-							if (v = t.dom.getStyle(e, 'height')) {
-								t.dom.setAttrib(e, 'height', v.replace(/[^0-9%]+/g, ''));
-								t.dom.setStyle(e, 'height', '');
+							if (v = dom.getStyle(e, 'height')) {
+								dom.setAttrib(e, 'height', v.replace(/[^0-9%]+/g, ''));
+								dom.setStyle(e, 'height', '');
 							}
 						});
 					} else {
 						ev = 'resizestart';
-						cb = t.dom.bind(e, 'resizestart', Event.cancel, Event);
+						cb = dom.bind(e, 'resizestart', Event.cancel, Event);
 					}
 
 					re = t.resizeInfo = {
@@ -2504,7 +2515,7 @@
 						case 8:
 							// Fix IE control + backspace browser bug
 							if (t.selection.getRng().item) {
-								t.selection.getRng().item(0).removeNode();
+								ed.dom.remove(t.selection.getRng().item(0));
 								return Event.cancel(e);
 							}
 					}
@@ -2534,7 +2545,7 @@
 					t.undoManager.add();
 				};
 
-				t.dom.bind(t.getDoc(), 'focusout', function(e) {
+				dom.bind(t.getDoc(), 'focusout', function(e) {
 					if (!t.removed && t.undoManager.typing)
 						addUndo();
 				});
@@ -2545,6 +2556,48 @@
 				});
 
 				t.onKeyDown.add(function(ed, e) {
+					var rng, parent, bookmark;
+
+					// IE has a really odd bug where the DOM might include an node that doesn't have
+					// a proper structure. If you try to access nodeValue it would throw an illegal value exception.
+					// This seems to only happen when you delete contents and it seems to be avoidable if you refresh the element
+					// after you delete contents from it. See: #3008923
+					if (isIE && e.keyCode == 46) {
+						rng = t.selection.getRng();
+
+						if (rng.parentElement) {
+							parent = rng.parentElement();
+
+							// Select next word when ctrl key is used in combo with delete
+							if (e.ctrlKey) {
+								rng.moveEnd('word', 1);
+								rng.select();
+							}
+
+							// Delete contents
+							t.selection.getSel().clear();
+
+							// Check if we are within the same parent
+							if (rng.parentElement() == parent) {
+								bookmark = t.selection.getBookmark();
+
+								try {
+									// Update the HTML and hopefully it will remove the artifacts
+									parent.innerHTML = parent.innerHTML;
+								} catch (ex) {
+									// And since it's IE it can sometimes produce an unknown runtime error
+								}
+
+								// Restore the caret position
+								t.selection.moveToBookmark(bookmark);
+							}
+
+							// Block the default delete behavior since it might be broken
+							e.preventDefault();
+							return;
+						}
+					}
+
 					// Is caracter positon keys
 					if ((e.keyCode >= 33 && e.keyCode <= 36) || (e.keyCode >= 37 && e.keyCode <= 40) || e.keyCode == 13 || e.keyCode == 45) {
 						if (t.undoManager.typing)

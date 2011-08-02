@@ -16,7 +16,7 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-define('HEADING_TITLE', 'META-G Configuration');
+define('HEADING_TITLE', 'Helpdesk Configuration');
 
 define('TABLE_HEADING_CONFIGURATION_TITLE', 'Title');
 define('TABLE_HEADING_CONFIGURATION_VALUE', 'Value');

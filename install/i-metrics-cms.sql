@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------------
-# Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+# Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 # Author: Mark Samios
 # http://www.asymmetrics.com
 # Install: Main Database File
@@ -25,11 +25,12 @@ create table abstract_types (
   PRIMARY KEY (abstract_types_id),
   KEY abstract_types_status (abstract_types_status),
   KEY idx_abstract_types_class (abstract_types_class)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into abstract_types (abstract_types_id, abstract_types_name, abstract_types_class, abstract_types_table, abstract_types_status, sort_order) values ('3', 'Text Collection', 'generic_zones', 'gtext_to_display', '1', '1');
-insert into abstract_types (abstract_types_id, abstract_types_name, abstract_types_class, abstract_types_table, abstract_types_status, sort_order) values ('4', 'Mixed Collection', 'super_zones', 'super_zones', '1', '2');
-insert into abstract_types (abstract_types_id, abstract_types_name, abstract_types_class, abstract_types_table, abstract_types_status, sort_order) values ('5', 'Image Collection', 'image_zones', 'image_zones', '1', '3');
+insert into abstract_types (abstract_types_id, abstract_types_name, abstract_types_class, abstract_types_table, abstract_types_status, sort_order) values 
+('3', 'Text Collection', 'generic_zones', 'gtext_to_display', '1', '1'),
+('4', 'Mixed Collection', 'super_zones', 'super_zones', '1', '2'),
+('5', 'Image Collection', 'image_zones', 'image_zones', '1', '3');
 
 drop table if exists abstract_zones;
 create table abstract_zones (
@@ -43,7 +44,7 @@ create table abstract_zones (
   status_id tinyint(1) default '0' not null ,
   PRIMARY KEY (abstract_zone_id, abstract_types_id),
   KEY status_id (status_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 insert into abstract_zones (abstract_zone_id, abstract_types_id, abstract_zone_name, abstract_zone_desc, date_added, last_modified, sort_id, status_id) values ('1', '3', 'My First Collection', '<p>Text pages can be grouped into collections so you can bind presentation content in a way that suits the type of your webiste. Each text collection can have a name, description and multiple text pages you define.</p><p>To edit the name and description of a text collection go to your Administration Tool -> Content Management, select a collection and then click edit on the right side.</p><p>There are various other content types the I-Metrics CMS supports and each collection is displayed with the content type next to it under the Content Management tool.</p><p>In order for a text collection to be accessed on your website it needs to have its visibility enabled. The visibility switch defines whether or not a collection displays its name and description on the web-front. Not whether associated text pages will be displayed.</p>', '2007-09-24 19:25:18', '2010-04-11 10:11:24', '100', '1');
 insert into abstract_zones (abstract_zone_id, abstract_types_id, abstract_zone_name, abstract_zone_desc, date_added, last_modified, sort_id, status_id) values ('8', '3', 'Header Links', '<p>A group of titles with links to text pages to aid navigation of the web-front. This collection may be used if you display links on the header section of the template.</p><p>There is a dedicated configuration switch for that and by default the <b>header links</b> is binded to, in Site Content -> Configuration. It is called <b>Header Text Pages Group</b></p><p>By default the visibility of the header links is hidden as the header code retrieves associated text pages via the configuration switch reference and not by directly accessing this collection.</p>', '2009-06-29 15:56:54', '2010-04-11 09:18:23', '100', '0');
@@ -67,13 +68,14 @@ create table cache_html (
   cache_html_type tinyint(1) not null ,
   PRIMARY KEY (cache_html_key),
   KEY cache_html_type (cache_html_type)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values ('46e39f67e702bb434edb47007b9f09e4', 'cookie_usage.php', '86400', NULL, '1');
-insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values ('68c7a3d743cbf2592d94f6bf75098027', 'image_pages.php', '86400', 'action', '3');
-insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values ('828e0013b8f3bc1bb22b4f57172b019d', 'index.php', '86400', 'action', '3');
-insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values ('9b49f6f4b7347b6a3ecfe31652cccc99', 'super_pages.php', '86400', 'action', '3');
-insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values ('da8bb3a63ccd1c386a28a34896f376dc', 'generic_pages.php', '86400', 'action', '3');
+insert into cache_html (cache_html_key, cache_html_script, cache_html_duration, cache_html_params, cache_html_type) values 
+('46e39f67e702bb434edb47007b9f09e4', 'cookie_usage.php', '86400', NULL, '1'),
+('68c7a3d743cbf2592d94f6bf75098027', 'image_pages.php', '86400', 'action', '3'),
+('828e0013b8f3bc1bb22b4f57172b019d', 'index.php', '86400', 'action', '3'),
+('9b49f6f4b7347b6a3ecfe31652cccc99', 'super_pages.php', '86400', 'action', '3'),
+('da8bb3a63ccd1c386a28a34896f376dc', 'generic_pages.php', '86400', 'action', '3');
 
 drop table if exists cache_html_reports;
 create table cache_html_reports (
@@ -84,7 +86,7 @@ create table cache_html_reports (
   cache_spider_hits int(11) not null ,
   cache_spider_misses int(11) not null ,
   PRIMARY KEY (cache_html_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists configuration;
 create table configuration (
@@ -100,14 +102,15 @@ create table configuration (
   use_function varchar(255) ,
   set_function varchar(255) ,
   PRIMARY KEY (configuration_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Website Name', 'STORE_NAME', 'Asymmetric Software', 'The name of the website', '1', '1', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Website Owner', 'STORE_OWNER', 'Joe Doe', 'The name of the site owner', '1', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Address', 'STORE_OWNER_EMAIL_ADDRESS', 'joe@example.com', 'The e-mail address of the site owner', '1', '3', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail From', 'EMAIL_FROM', 'joe@example.com', 'The e-mail address used in (sent) e-mails', '1', '4', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Default Search Operator', 'ADVANCED_SEARCH_DEFAULT_OPERATOR', 'and', 'Default search operators', '6', '17', now(), NULL, 'tep_cfg_select_option(array(\'and\', \'or\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Site Address and Phone', 'STORE_NAME_ADDRESS', 'Site Name<br />First Address Line<br />Country<br />Phone', 'This is the Site Name, Address and Phone used on printable documents and displayed online', '1', '18', now(), NULL, 'tep_cfg_textarea(');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Default Search Operator', 'ADVANCED_SEARCH_DEFAULT_OPERATOR', 'and', 'Default search operators', '6', '17', now(), NULL, '::radio_option::and,or');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Site Address and Phone', 'STORE_NAME_ADDRESS', 'Site Name<br />First Address Line<br />Country<br />Phone', 'This is the Site Name, Address and Phone used on printable documents and displayed online', '1', '18', now(), NULL, '::textarea');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('I-Metrics CMS Version', 'FRAMEWORK_VERSION', '1.12', 'The current version of the I-Metrics CMS installed in your system.<br /><b>Do not modify this setting!</b>', '1', '20', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('First Name', 'ENTRY_FIRST_NAME_MIN_LENGTH', '2', 'Minimum length of first name', '2', '1', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Last Name', 'ENTRY_LAST_NAME_MIN_LENGTH', '2', 'Minimum length of last name', '2', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Date of Birth', 'ENTRY_DOB_MIN_LENGTH', '10', 'Minimum length of date of birth', '2', '3', now(), NULL, NULL);
@@ -119,58 +122,51 @@ insert into configuration (configuration_title, configuration_key, configuration
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('State', 'ENTRY_STATE_MIN_LENGTH', '2', 'Minimum length of state', '2', '9', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Telephone Number', 'ENTRY_TELEPHONE_MIN_LENGTH', '3', 'Minimum length of telephone number', '2', '10', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Password', 'ENTRY_PASSWORD_MIN_LENGTH', '5', 'Minimum length of password', '2', '11', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Review Text', 'REVIEW_TEXT_MIN_LENGTH', '4', 'Minimum length of review text', '2', '14', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Search Results', 'MAX_DISPLAY_SEARCH_RESULTS', '50', 'Amount of entries to list', '3', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Page Links', 'MAX_DISPLAY_PAGE_LINKS', '5', 'Number of \'number\' links use for page-sets', '3', '3', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('New Reviews', 'MAX_DISPLAY_NEW_REVIEWS', '6', 'Maximum number of new reviews to display', '3', '9', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Small Image Width', 'SMALL_IMAGE_WIDTH', '92', 'The pixel width of small images', '4', '1', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Small Image Height', 'SMALL_IMAGE_HEIGHT', '92', 'The pixel height of small images', '4', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Heading Image Width', 'HEADING_IMAGE_WIDTH', '64', 'The pixel width of heading images', '4', '3', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Heading Image Height', 'HEADING_IMAGE_HEIGHT', '64', 'The pixel height of heading images', '4', '4', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Image Required', 'IMAGE_REQUIRED', 'true', 'Enable to display broken images. Good for development.', '4', '8', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Image Required', 'IMAGE_REQUIRED', 'true', 'Enable to display broken images. Good for development.', '4', '8', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Location of Prev/Next Navigation Bar (1-top, 2-bottom, 3-both)', 'PREV_NEXT_BAR_LOCATION', '2', 'Sets the location of the Prev/Next Navigation Bar (1-top, 2-bottom, 3-both)', '16', '10', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Store Page Parse Time', 'STORE_PAGE_PARSE_TIME', 'false', 'Store the time it takes to parse a page', '10', '1', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Store Page Parse Time', 'STORE_PAGE_PARSE_TIME', 'false', 'Store the time it takes to parse a page', '10', '1', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Log Destination', 'STORE_PAGE_PARSE_TIME_LOG', '/var/log/www/tep/page_parse_time.log', 'Directory and filename of the page parse time log', '10', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Log Date Format', 'STORE_PARSE_DATE_TIME_FORMAT', '%d/%m/%Y %H:%M:%S', 'The date format', '10', '3', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Display The Page Parse Time', 'DISPLAY_PAGE_PARSE_TIME', 'false', 'Displays the page parse time.', '10', '4', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Store Database Queries', 'STORE_DB_TRANSACTIONS', 'false', 'Store the database queries in the page parse time log (PHP4 only)', '10', '5', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Transport Method', 'EMAIL_TRANSPORT', 'smtp', 'Defines if this server uses a local connection to sendmail or uses an SMTP connection via TCP/IP. Servers running on Windows and MacOS should change this setting to SMTP.', '12', '1', now(), NULL, 'tep_cfg_select_option(array(\'sendmail\', \'smtp\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Linefeeds', 'EMAIL_LINEFEED', 'CRLF', 'Defines the character sequence used to separate mail headers.', '12', '2', now(), NULL, 'tep_cfg_select_option(array(\'LF\', \'CRLF\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Use MIME HTML When Sending Emails', 'EMAIL_USE_HTML', 'true', 'Send e-mails in HTML format', '12', '3', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Verify E-Mail Addresses Through DNS', 'ENTRY_EMAIL_ADDRESS_CHECK', 'false', 'Verify e-mail address through a DNS server', '12', '4', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Send E-Mails', 'SEND_EMAILS', 'true', 'Send out e-mails', '12', '5', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable GZip Compression', 'GZIP_COMPRESSION', 'false', 'Enable HTTP GZip compression.', '14', '1', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'), ');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Display The Page Parse Time', 'DISPLAY_PAGE_PARSE_TIME', 'false', 'Displays the page parse time.', '10', '4', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Explain Database Queries', 'EXPLAIN_QUERIES', 'false', 'Enable Detailed Database Queries Logging - Data Stored in the database', '10', '6', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Store Database Queries', 'STORE_DB_TRANSACTIONS', 'false', 'Store the database queries in the page parse time log (PHP4 only)', '10', '5', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Transport Method', 'EMAIL_TRANSPORT', 'smtp', 'Defines if this server uses a local connection to sendmail or uses an SMTP connection via TCP/IP. Servers running on Windows and MacOS should change this setting to SMTP.', '12', '1', now(), NULL, '::radio_option::sendmail,smtp');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Linefeeds', 'EMAIL_LINEFEED', 'CRLF', 'Defines the character sequence used to separate mail headers.', '12', '2', now(), NULL, '::radio_option::LF,CRLF');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Use MIME HTML When Sending Emails', 'EMAIL_USE_HTML', 'true', 'Send e-mails in HTML format', '12', '3', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Verify E-Mail Addresses Through DNS', 'ENTRY_EMAIL_ADDRESS_CHECK', 'false', 'Verify e-mail address through a DNS server', '12', '4', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Send E-Mails', 'SEND_EMAILS', 'true', 'Send out e-mails', '12', '5', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable GZip Compression', 'GZIP_COMPRESSION', 'false', 'Enable HTTP GZip compression.', '14', '1', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Compression Level', 'GZIP_LEVEL', '3', 'Use this compression level 0-9 (0 = minimum, 9 = maximum).', '14', '2', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Force Cookie Use', 'SESSION_FORCE_COOKIE_USE', 'True', 'Force the use of sessions when cookies are only enabled.', '15', '2', now(), NULL, 'tep_cfg_select_option(array(\'True\', \'False\'), ');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Left Column Width', 'BOX_WIDTH_LEFT', '160', 'The value of the left column width in pixels', '16', '1', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Right Column Width', 'BOX_WIDTH_RIGHT', '138', 'The value of the right column width in pixels', '16', '2', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Total Width', 'TOTAL_WIDTH', '880', 'Total width of the store', '16', '3', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Spacing between cells', 'MAX_DISPLAY_NEW_SPACER', '2', 'Percentage of space to allocate between rows and columns', '16', '20', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Left Column Margin', 'LEFT_COLUMN_MARGIN', '8', 'Margin between the left column and main section in pixels', '16', '5', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Right Column Margin', 'RIGHT_COLUMN_MARGIN', '2', 'Margin between the main section and right column in pixels', '16', '6', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Force Cookie Use', 'SESSION_FORCE_COOKIE_USE', 'True', 'Force the use of sessions when cookies are only enabled.', '15', '2', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Collections Listings Split', 'ABSTRACT_PAGE_SPLIT', '100', 'Default Page Split for Collections pages on the Administrator.', '23', '20', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Footer Text Pages Group', 'DEFAULT_FOOTER_TEXT_ZONE_ID', '11', 'The text collection of pages that show on the footer', '23', '31', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_text_zones(');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Footer Text Pages Group', 'DEFAULT_FOOTER_TEXT_ZONE_ID', '11', 'The text collection of pages that show on the footer', '23', '31', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Large Image Width', 'LARGE_IMAGE_WIDTH', '360', 'Large Image width, typically can be used with a text page.', '16', '31', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Large Image Height', 'LARGE_IMAGE_HEIGHT', '360', 'Large Image height, can be used with a text page.', '16', '32', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Master Switch', 'META_DEFAULT_ENABLE', 'true', 'This switch controls gemeration of Meta-Tags. When false META-G is disabled and Meta-Tags are not generated.', '25', '1', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Master Switch', 'META_DEFAULT_ENABLE', 'true', 'This switch controls gemeration of Meta-Tags. When false META-G is disabled and Meta-Tags are not generated.', '25', '1', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Maximum Keywords', 'META_MAX_KEYWORDS', '25', 'Maximum number of keywords to be generated for the keywords Meta-Tags.', '25', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Maximum Description Length', 'META_MAX_DESCRIPTION', '200', 'Maximum number of characters to be used when the description Meta-Tag is generated.', '25', '3', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Use Keywords Lexico', 'META_USE_LEXICO', 'true', 'Use Meta-G Dictionary for keywords generation of Meta-Tags. Dictionary has priorty for common words over the generator.', '25', '4', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Use Keywords AI Generator', 'META_USE_GENERATOR', 'true', 'Use Meta-G built-in generator for keywords generation of Meta-Tags.', '25', '5', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G AI Builder', 'META_BUILDER', 'true', 'When true, titles, keywords, descriptions for handled parameters and scripts, are generated automatically on the catalog end. When false the system relies exclusively on user-input via the G-Controller.', '25', '6', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Use Keywords Lexico', 'META_USE_LEXICO', 'true', 'Use Meta-G Dictionary for keywords generation of Meta-Tags. Dictionary has priorty for common words over the generator.', '25', '4', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Use Keywords AI Generator', 'META_USE_GENERATOR', 'true', 'Use Meta-G built-in generator for keywords generation of Meta-Tags.', '25', '5', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G AI Builder', 'META_BUILDER', 'true', 'When true, titles, keywords, descriptions for handled parameters and scripts, are generated automatically on the catalog end. When false the system relies exclusively on user-input via the G-Controller.', '25', '6', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Keywords Separator', 'META_DEFAULT_KEYWORDS_SEPARATOR', '', 'Default Separator used to create sequences of keywords for given strings. Invalid characters/sequences can cause problems with Meta-Tags. Use the default <b>space</b> character for best results.', '25', '10', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Words Separator', 'META_DEFAULT_WORDS_SEPARATOR', '', 'Default Separator used to join words and replace invalid characters with processed strings. Invalid characters/sequences can cause problems with Meta-Tags. Use the default <b>HTML space character</b> for best results.', '25', '11', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Minimum Words Length', 'META_DEFAULT_WORD_LENGTH', '3', 'Minimum length of each word to be filtered by META-G when words are generated. Words with less characters that the defined value are ignored', '25', '13', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Listings Split', 'META_PAGE_SPLIT', '200', 'Default Page Split for META-G Lists on Admin.', '25', '20', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Spiders HTML Cache', 'SPIDERS_HTML_CACHE_ENABLE', 'true', 'Enable the spiders HTML Cache', '22', '1', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Allow All Scripts for Spiders', 'SPIDERS_HTML_CACHE_GLOBAL', 'true', '<b>True:</b> Spiders may cache all the pages they can access, <b>False:</b> Spiders can cache only the scripts shown in the database. If your store is setup correctly setting this switch to true will offer better perfomance when spiders crawl your site.', '22', '2', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Scripts HTML Cache', 'SCRIPTS_HTML_CACHE_ENABLE', 'true', 'Enable the scripts HTML Cache for regular visitors on the web-front', '22', '3', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Spiders HTML Cache', 'SPIDERS_HTML_CACHE_ENABLE', 'true', 'Enable the spiders HTML Cache', '22', '1', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Allow All Scripts for Spiders', 'SPIDERS_HTML_CACHE_GLOBAL', 'true', '<b>True:</b> Spiders may cache all the pages they can access, <b>False:</b> Spiders can cache only the scripts shown in the database. If your store is setup correctly setting this switch to true will offer better perfomance when spiders crawl your site.', '22', '2', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Scripts HTML Cache', 'SCRIPTS_HTML_CACHE_ENABLE', 'true', 'Enable the scripts HTML Cache for regular visitors on the web-front', '22', '3', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Number of scripts to show per page', 'MAX_DISPLAY_HTML_CACHE_SCRIPTS', '100', 'Number of script entries to display per page', '22', '4', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Spiders Cache Timeout', 'SPIDERS_HTML_CACHE_TIMEOUT', '1296000', 'The spiders HTML cache timeout period in seconds for the catalog pages.', '22', '5', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Default Scripts Cache Timeout', 'DEFAULT_HTML_CACHE_TIMEOUT', '86400', 'Default HTML cache timeout for scripts. This default value is used when inserting script entries. Has no effect on the web-front', '22', '6', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Record Spiders Cache Hit/Miss Report', 'SPIDERS_HTML_CACHE_HITS', 'true', 'Record cache hits/visits by spiders. Results appear in the Cache HTML Report page.', '22', '7', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Record Regular Cache Hit/Miss Report', 'SCRIPTS_HTML_CACHE_HITS', 'true', 'Record cache hits/visits by regular visitors. Results appear in the Cache HTML Report page.', '22', '8', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Parametric HTML Cache', 'SCRIPTS_HTML_CACHE_PARAMS', 'true', 'Enable the HTML parametric cache. This applies to scripts that are set with the parametric option. When True values stored are cross-referenced against GET before flushing the cache.', '22', '9', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Record Spiders Cache Hit/Miss Report', 'SPIDERS_HTML_CACHE_HITS', 'true', 'Record cache hits/visits by spiders. Results appear in the Cache HTML Report page.', '22', '7', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Record Regular Cache Hit/Miss Report', 'SCRIPTS_HTML_CACHE_HITS', 'true', 'Record cache hits/visits by regular visitors. Results appear in the Cache HTML Report page.', '22', '8', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Parametric HTML Cache', 'SCRIPTS_HTML_CACHE_PARAMS', 'true', 'Enable the HTML parametric cache. This applies to scripts that are set with the parametric option. When True values stored are cross-referenced against GET before flushing the cache.', '22', '9', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Google Verify Header', 'META_GOOGLE_VERIFY', '', 'Google Verification header. Leave this field blank if you have no verification header. Use your google account to create one.', '25', '19', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Base Filename', 'META_BASE_FILENAME', 'google_basemap.xml', 'Default Filename for the Google Base in XML RSS 2.0 format. This is generated from the feeds page.', '25', '21', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Left Column Boxes Separation', 'LAYOUT_LEFT_COLUMN_BOX_SEPARATOR', '6', 'The number of pixels to separate the boxes for the left column. Set to 0 to connect the boxes', '16', '33', now(), NULL, NULL);
@@ -181,96 +177,189 @@ insert into configuration (configuration_title, configuration_key, configuration
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('POP3/IMAP/NNTP server', 'DEFAULT_HELPDESK_MAILSERVER', 'mail.example.com:110', 'POP3/IMAP/NNTP server to connect to, with optional port.<p>Example: mail.server.com:110<p><b>Note:</b>Some servers must have the port after the protocol!', '27', '4', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Protocol specification', 'DEFAULT_HELPDESK_PROTOCOL_SPECIFICATION', '/pop3/novalidate-cert', 'Mail Server Protocol specification (optional)<p>One of: /POP3 /IMAP /NNTP<p>Examples<p>/IMAP<br>/POP3:110', '27', '5', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Mailbox', 'DEFAULT_HELPDESK_MAILBOX', '', 'Name of the mailbox to open', '27', '6', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Mark emails as seen', 'DEFAULT_HELPDESK_MARKSEEN', 'true', 'Whether or not to mark retrieved messages as seen', '27', '7', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Mark emails as seen', 'DEFAULT_HELPDESK_MARKSEEN', 'true', 'Whether or not to mark retrieved messages as seen', '27', '7', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Message body size limit', 'DEFAULT_HELPDESK_BODY_SIZE_LIMIT', '0', 'If the message body is longer than this number of bytes, it will be trimmed. Set to 0 for no limit.', '27', '8', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Open POP3 connection Read-Only', 'DEFAULT_HELPDESK_READ_ONLY', 'false', 'If true a read-only connection is made to the pop3 server. However some servers do not allow read-only connections in which case this must be true.<p>In either case, if the Delete Emails option is true a read/write connection is made.', '27', '9', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Delete emails from server', 'DEFAULT_HELPDESK_DELETE_EMAILS', 'true', 'Delete emails from server upon download', '27', '10', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Display Header in sync email output (useful for debugging)', 'DEFAULT_HELPDESK_DISPLAY_HEADER', 'true', 'If <b>true</b> a header is displayed in the output so you know a) the sync command ran and b) if emails are flagged to be deleted. Only useful for debugging, for production set to <b>false</b> for use with logging.', '27', '11', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Open POP3 connection Read-Only', 'DEFAULT_HELPDESK_READ_ONLY', 'false', 'If true a read-only connection is made to the pop3 server. However some servers do not allow read-only connections in which case this must be true.<p>In either case, if the Delete Emails option is true a read/write connection is made.', '27', '9', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Delete emails from server', 'DEFAULT_HELPDESK_DELETE_EMAILS', 'true', 'Delete emails from server upon download', '27', '10', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Ticket prefix', 'DEFAULT_HELPDESK_TICKET_PREFIX', 'Prefix', 'Prefix sent when sending a ticket (changing it AFTER sending emails may cause emails not to be associated to their existing ticket', '27', '12', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Webfront Session Life', 'MAX_CATALOG_SESSION_TIME', '2880', 'The Maximum Web Front End session time in seconds', '15', '11', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Admin Session Life', 'MAX_ADMIN_SESSION_TIME', '43200', 'The Maximum Admin session time in seconds', '15', '12', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Help Desk Page Listing', 'MAX_DISPLAY_ADMIN_HELP_DESK', '100', 'Maximum number of help desk entries to display per page', '33', '1', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Reviews Listing', 'MAX_DISPLAY_ADMIN_REVIEWS', '100', 'Maximum number of reviews entries to display per page', '33', '2', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Master Switch', 'SEO_DEFAULT_ENABLE', 'false', 'This switch controls the SEO-G urls. When false the SEO-G is disabled and SEO-G URLs are not generated. However incoming hits of SEO-G URLs will still be converted to osC original ones to keep your store functional.', '24', '1', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Extension', 'SEO_DEFAULT_EXTENSION', '.asp', 'Default Extension to be appended with the SEO-G urls. Note your <b>.htaccess</b> file should be modified to match this setting.', '24', '2', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Master Switch', 'SEO_DEFAULT_ENABLE', 'false', 'This switch controls the SEO-G urls. When false the SEO-G is disabled and SEO-G URLs are not generated. However incoming hits of SEO-G URLs will still be converted to osC original ones to keep your store functional.', '24', '1', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Extension', 'SEO_DEFAULT_EXTENSION', ',/,htm,html,asp,jsp,aspx', 'A coma separated Extension list to be used by the SEO-G URLs<br />Note only the first extension is used for URL generation. The rest is used for decoding. Your <b>.htaccess</b> file should include the extensions listed here.', '24', '2', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Error Header', 'SEO_DEFAULT_ERROR_HEADER', '301', 'Default Header to be set by SEO-G when a page is not found. Used for inactive urls that match the SEO-G extension.', '24', '3', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Redirect', 'SEO_DEFAULT_ERROR_REDIRECT', '', 'Default Redirect Page to be loaded when the header is set to a temp or permanent redirect (Like 301).', '24', '4', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Strict Validation', 'SEO_STRICT_VALIDATION', 'false', 'When true all parameters passed must contain 2 arguments and invalid parameters will not propagate.', '24', '5', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Auto Names Builder', 'SEO_AUTO_BUILDER', 'true', 'When true, seo names for handled parameters, are generated automatically on the catalog end. When false the system relies exclusively on user-input via the G-Controller to generate names.', '24', '6', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Continuous Check', 'SEO_CONTINUOUS_CHECK', 'false', 'When <b>false</b>, SEO-G checks a passed osC URL against the stored ones, leading to a faster response. When <b>true</b> SEO-G will process every osC URL request and response will be slower but SEO-G name updates will be instant.', '24', '7', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Process Secure Pages', 'SEO_PROCESS_SSL', 'false', 'When <b>false</b>, SEO-G does not process secure pages. When <b>true</b> SEO-G will generate links for secure pages.', '24', '8', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Redirection Table', 'SEO_REDIRECT_TABLE', 'true', 'When <b>true</b> SEO-G uses the redirection table and/or auto-redirect methods. If a match is found, a redirect is issued according to the redirection type. <b>false</b> Redirections are disabled.', '24', '9', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Safe Mode', 'SEO_DEFAULT_SAFE_MODE', 'true', 'Controls if SEO-G urls are generated on non-handled parameters. When false SEO-G generates friendly urls regardless of parameters passed with the links. When true generates links for the handled parameters only.', '24', '10', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Default Redirect Page', 'SEO_DEFAULT_ERROR_REDIRECT', '', 'Default Redirect Page to be loaded when the header is set to a temp or permanent redirect (Like 301).', '24', '4', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Force osC Redirect', 'SEO_FORCE_OSC_REDIRECT', 'false', 'When enabled forces a redirect for all stored osCommerce URIs. Redirect type follows the error header', '24', '5', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Strict Validation', 'SEO_STRICT_VALIDATION', 'false', 'When true all parameters passed must contain 2 arguments and invalid parameters will not propagate.', '24', '6', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Auto Names Builder', 'SEO_AUTO_BUILDER', 'true', 'When true, seo names for handled parameters, are generated automatically on the catalog end. When false the system relies exclusively on user-input via the G-Controller to generate names.', '24', '7', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Continuous Check', 'SEO_CONTINUOUS_CHECK', 'false', 'When <b>false</b>, SEO-G checks a passed osC URL against the stored ones, leading to a faster response. When <b>true</b> SEO-G will process every osC URL request and response will be slower but SEO-G name updates will be instant.', '24', '8', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Process Secure Pages', 'SEO_PROCESS_SSL', 'false', 'When <b>false</b>, SEO-G does not process secure pages. When <b>true</b> SEO-G will generate links for secure pages.', '24', '9', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Redirection Table', 'SEO_REDIRECT_TABLE', 'true', 'When <b>true</b> SEO-G uses the redirection table and/or auto-redirect methods. If a match is found, a redirect is issued according to the redirection type. <b>false</b> Redirections are disabled.', '24', '10', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Safe Mode', 'SEO_DEFAULT_SAFE_MODE', 'true', 'Controls if SEO-G urls are generated on non-handled parameters. When false SEO-G generates friendly urls regardless of parameters passed with the links. When true generates links for the handled parameters only.', '24', '11', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Parts Separator', 'SEO_DEFAULT_PARTS_SEPARATOR', '-', 'Default Separator used to join SEO-G url sections. Invalid characters/sequences can cause problems with URLs. Use <b>-</b> or <b>_</b> for best results.', '24', '15', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Words Separator', 'SEO_DEFAULT_WORDS_SEPARATOR', '-', 'Default Separator used to join words and replace invalid characters with processed strings. Invalid characters/sequences can cause problems with URLs. Use <b>-</b> or <b>_</b> for best results.', '24', '16', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Inner Separator', 'SEO_DEFAULT_INNER_SEPARATOR', '-', 'Default Separator used to join paths. Invalid characters/sequences can cause problems with URLs. Use <b>-</b> or <b>_</b> for best results.', '24', '17', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Minimum Words Length', 'SEO_DEFAULT_WORD_LENGTH', '1', 'Minimum length of each word to be filtered by SEO-G when names are generated. Words with less characters that the defined value are ignored', '24', '18', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Listings Split', 'SEO_PAGE_SPLIT', '200', 'Default Page Split for SEO-G Lists in Admin.', '24', '20', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Sitemap Filename', 'SEO_SITEMAP_FILENAME', 'google_sitemap.xml', 'Default Filename for the Google Sitemap in XML format. This is generated from the reports page. Do not include the .gz extension (appended automatically).', '24', '28', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G XML Compress', 'SEO_DEFAULT_COMPRESS', 'true', 'Default compress behavior of the XML maps generated by SEO-G. When true XML map files are compressed.', '24', '29', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Use META-G Exclusion', 'SEO_METAG_EXCLUSION', 'true', 'Use the META-G Exclusion list when generating friendly URLs. When false, SEO-G uses its internal default mechanism to generate the link names. (Set to true only if META-G is installed)', '24', '31', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Use META-G Lexico', 'SEO_METAG_INCLUSION', 'false', 'Use the META-G Lexico when generating friendly URLs to adapt and prioritize words for the URL structure. When false, the META-G lexico is not processed. (Set to true only if META-G is installed)', '24', '32', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G XML Compress', 'SEO_DEFAULT_COMPRESS', 'true', 'Default compress behavior of the XML maps generated by SEO-G. When true XML map files are compressed.', '24', '29', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Use META-G Exclusion', 'SEO_METAG_EXCLUSION', 'true', 'Use the META-G Exclusion list when generating friendly URLs. When false, SEO-G uses its internal default mechanism to generate the link names. (Set to true only if META-G is installed)', '24', '31', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Use META-G Lexico', 'SEO_METAG_INCLUSION', 'false', 'Use the META-G Lexico when generating friendly URLs to adapt and prioritize words for the URL structure. When false, the META-G lexico is not processed. (Set to true only if META-G is installed)', '24', '32', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G META-G Lexico Phrase Limit', 'SEO_METAG_INCLUSION_LIMIT', '1', 'The number of phrases to extract from the META-G Lexico and to replace each component of the generated friendly URL.', '24', '33', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Proximity Redirect and Cleanup', 'SEO_PROXIMITY_CLEANUP', 'true', 'When <b>true</b>, attempts to synchronize the reports table and typed-in links. Entries that match the name listed under the G-Controller are removed from the reports table and typed links are scanned for the nearest match before a redirect.', '24', '35', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Proximity Redirect and Cleanup', 'SEO_PROXIMITY_CLEANUP', 'true', 'When <b>true</b>, attempts to synchronize the reports table and typed-in links. Entries that match the name listed under the G-Controller are removed from the reports table and typed links are scanned for the nearest match before a redirect.', '24', '35', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Proximity Threshold', 'SEO_PROXIMITY_THRESHOLD', '3', 'The number of characters to allow when approximating a URL for redirection. Higher values result in better proximity but may void redirection in which case the default redirect page is used.', '24', '36', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Periodic Refresh', 'SEO_PERIODIC_REFRESH', '259200', 'Period to refresh urls in seconds. Updates the recorded urls periodically triggering the continuous check mode.', '24', '40', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Cache Switch', 'SEO_CACHE_ENABLE', 'true', 'Enable the SEO-G Cache. When Enabled the SEO-G stores and utilizes the SEO URL keys via a separate table leading to an increased performance.', '24', '44', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Cache Switch', 'SEO_CACHE_ENABLE', 'true', 'Enable the SEO-G Cache. When Enabled the SEO-G stores and utilizes the SEO URL keys via a separate table leading to an increased performance.', '24', '44', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Cache Refresh', 'SEO_CACHE_REFRESH', '604800', 'Period to maintain the SEO-G cache contents in seconds.', '24', '45', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Path Cascade Level', 'SEO_PATH_CASCADE', '1', 'Depth level SEO-G will preserve with paths. For example with categories a value of 2 will preserve the 2 bottom levels from the categories hierarchy. Adjust it based on the path structure.', '24', '50', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Whos Online Timeout', 'MAX_WHOS_ONLINE_TIME', '2880', 'Max time in seconds to maintain the whos online information', '15', '13', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('PHP Session Callback Handling', 'SESSION_PHP_HANDLING', 'true', 'When <b>true</b> the system relies on PHP to call the session handlers. When <b>false</b> the system calls the handlers and serializes the session.', '15', '14', now(), NULL, 'tep_cfg_select_option(array(\'true\',\'false\'),');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Path Cascade Level', 'META_PATH_CASCADE', '2', 'Depth level META-G will use with paths. For example with categories a value of 2 will retrieve data from the 2 bottom levels from the categories hierarchy. Adjust it based on the path structure of your store.', '25', '50', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Path Reverse', 'META_PATH_REVERSE', 'true', 'When <b>true</b> reverses the metat tags for the path components. The deepest level of the path is used for the primary tags ie: the current level and META-G works the path hierarchy towards the top level.', '25', '51', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Path Reverse', 'SEO_PATH_REVERSE', 'true', 'When <b>true</b> reverses the path components of the generated URL. The deepest level of the path becomes the current and SEO-G works the path hierarchy towards the top path level.', '24', '51', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('META-G Path Reverse', 'META_PATH_REVERSE', 'true', 'When <b>true</b> reverses the metat tags for the path components. The deepest level of the path is used for the primary tags ie: the current level and META-G works the path hierarchy towards the top level.', '25', '51', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Path Reverse', 'SEO_PATH_REVERSE', 'true', 'When <b>true</b> reverses the path components of the generated URL. The deepest level of the path becomes the current and SEO-G works the path hierarchy towards the top path level.', '24', '51', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Thumbnailer Postfix', 'FLY_THUMB_POSTFIX', '-fly-thumb-', 'The string that is appended after the thumbnail image name main image width', '4', '16', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Thumbnailer Folder', 'FLY_THUMB_FOLDER', 'images/thumbs/', 'The folder to store the images. It is an offset from the web-root of the domain.', '4', '17', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Reviews Auto-Cleanup', 'GARBAGE_REVIEWS_TIMEOUT', '604800', 'Delete non-approved reviews once the specified period expires (in seconds)', '15', '25', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Update Timeout', 'SEO_UPDATE_TIMOUT', '2010-02-24 14:04:34', 'Read-Only Timout for Updates - <b>Do not Modify</b>', '24', '52', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Default Front Page', 'DEFAULT_FRONT_PAGE_ID', '10', 'Default text entry for the home page', '23', '10', now(), 'tep_get_gtext_title', 'tep_cfg_pull_down_gtext_entries(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Archives Collection', 'GTEXT_ARCHIVES_ZONE_ID', '10', 'Default collection to be used for the archive pages', '23', '37', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_text_zones(');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Thumbnailer Folder', 'FLY_THUMB_FOLDER', 'images/thumbs/', 'The folder to store the images. It is an offset from the web-root of the I-Metrics CMS application (not of the domain).', '4', '17', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('SEO-G Update Timeout', 'SEO_UPDATE_TIMEOUT', '2010-02-24 14:04:34', 'Read-Only Timout for Updates - <b>Do not Modify</b>', '24', '52', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Default Front Page', 'DEFAULT_FRONT_PAGE_ID', '10', 'Default text entry for the home page', '23', '10', now(), '::get_gtext_title', '::pull_down_gtext_entries');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Archives Collection', 'GTEXT_ARCHIVES_ZONE_ID', '10', 'Default collection to be used for the archive pages', '23', '37', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Text Pages Listings Split', 'GTEXT_PAGE_SPLIT', '50', 'Default Page Split for the Text Pages in Admin.', '3', '20', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Header Text Pages Group', 'DEFAULT_HEADER_TEXT_ZONE_ID', '8', 'The text collection of pages that show on the header', '23', '30', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_text_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Contact us text', 'GTEXT_CONTACT_ID', '32', 'Default text entry for the contact us page', '23', '36', now(), 'tep_get_gtext_title', 'tep_cfg_pull_down_gtext_entries(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('HelpDesk Templates Collection', 'GTEXT_HELPDESK_ZONE_ID', '17', 'Default text collection to be used for the Helpdesk Templates', '23', '41', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_text_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Templates Collection', 'GTEXT_EMAIL_ZONE_ID', '16', 'Default collection to be used for the E-Mail Templates the site sends out', '23', '42', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_text_zones(');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Header Text Pages Group', 'DEFAULT_HEADER_TEXT_ZONE_ID', '8', 'The text collection of pages that show on the header', '23', '30', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Contact us text', 'GTEXT_CONTACT_ID', '32', 'Default text entry for the contact us page', '23', '36', now(), '::get_gtext_title', '::pull_down_gtext_entries');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('HelpDesk Templates Collection', 'GTEXT_HELPDESK_ZONE_ID', '17', 'Default text collection to be used for the Helpdesk Templates', '23', '41', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('E-Mail Templates Collection', 'GTEXT_EMAIL_ZONE_ID', '16', 'Default collection to be used for the E-Mail Templates the site sends out', '23', '42', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Attachments Folder', 'HELPDESK_ATTACHMENTS_FOLDER', 'attachments/', 'Folder used to store attachments from incoming emails.', '27', '13', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Protect the Administration folder', 'DEFAULT_WARNING_PASSWORD_PROTECT_REMIND', 'true', 'Default warning value to <b style=\"color: #FF0000\">password protect</b> the administration folder.<br /><b style=\"color: #FF0000\">Administration directories must be protected from your host\'s cPanel.</b>', '5', '25', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Menu Collection', 'SUPER_MENU_ZONE_ID', '18', 'Default collection to be used for the main menu', '23', '43', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_super_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Right-Side Collection', 'SUPER_RIGHT_ZONE_ID', '20', 'Default mixed collection to be used for the right side of the template', '23', '44', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_super_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Left-Side Collection', 'SUPER_LEFT_ZONE_ID', '23', 'Default mixed collection to be used for the left side of the template', '23', '45', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_super_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Sitemap Collection', 'SUPER_SITEMAP_ZONE_ID', '21', 'Default mixed collection to be used for the sitemap', '23', '46', now(), 'tep_get_abstract_zone_name', 'tep_cfg_pull_down_super_zones(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Contact us Success Request', 'GTEXT_CONTACT_SUCCESS_ID', '31', 'Default text entry for successful inquiry placement', '23', '36', now(), 'tep_get_gtext_title', 'tep_cfg_pull_down_gtext_entries(');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Cookies Required', 'GTEXT_COOKIES_ID', '33', 'Default text entry for the cookies required page', '23', '36', now(), 'tep_get_gtext_title', 'tep_cfg_pull_down_gtext_entries(');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Protect the Administration folder', 'DEFAULT_WARNING_PASSWORD_PROTECT_REMIND', 'true', 'Default warning value to <b style=\"color: #FF0000\">password protect</b> the administration folder.<br /><b style=\"color: #FF0000\">Administration directories must be protected from your host\'s cPanel.</b>', '5', '25', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Menu Collection', 'SUPER_MENU_ZONE_ID', '18', 'Default collection to be used for the main menu', '23', '43', now(), '::get_abstract_zone_name', '::pull_down_super_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Right-Side Collection', 'SUPER_RIGHT_ZONE_ID', '20', 'Default mixed collection to be used for the right side of the template', '23', '44', now(), '::get_abstract_zone_name', '::pull_down_super_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Left-Side Collection', 'SUPER_LEFT_ZONE_ID', '23', 'Default mixed collection to be used for the left side of the template', '23', '45', now(), '::get_abstract_zone_name', '::pull_down_super_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Sitemap Collection', 'SUPER_SITEMAP_ZONE_ID', '21', 'Default mixed collection to be used for the sitemap', '23', '46', now(), '::get_abstract_zone_name', '::pull_down_super_zones');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Contact us Success Request', 'GTEXT_CONTACT_SUCCESS_ID', '31', 'Default text entry for successful inquiry placement', '23', '36', now(), '::get_gtext_title', '::pull_down_gtext_entries');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Cookies Required', 'GTEXT_COOKIES_ID', '33', 'Default text entry for the cookies required page', '23', '36', now(), '::get_gtext_title', '::pull_down_gtext_entries');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Image Collections Listings Split', 'IMAGE_PAGE_SPLIT', '50', 'Default Page Split for Image Collections.', '3', '20', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Text Pages Listing Layout', 'GTEXT_LISTING_LAYOUT', '1', 'Two separate modes supported. 0-Condensed, 1-Expanded Layout.', '16', '20', now(), NULL, NULL);
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Warn if the Image Directory is not writable', 'DEFAULT_WARNING_CATALOG_IMAGES_WRITE', 'true', 'Display a warning message if the image directory is not writable', '5', '5', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Warn if the Install Directory Exists', 'DEFAULT_WARNING_INSTALL_EXISTS', 'true', 'Display a warning message if the install directory exists', '5', '10', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
-insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Warn if the Thumbanails Directory is not writable', 'DEFAULT_WARNING_CATALOG_THUMBS_WRITE', 'false', 'Display a warning message if the thumbnail images directory is not writable', '5', '20', now(), NULL, 'tep_cfg_select_option(array(\'true\', \'false\'),');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Warn if the Install Directory Exists', 'DEFAULT_WARNING_INSTALL_EXISTS', 'true', 'Display a warning message if the install directory exists', '5', '10', now(), NULL, '::radio_option::true,false');
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Search Iterations', 'DEFAULT_SEARCH_ITERATIONS', '3', 'The maximum number of iterations to perform scanning the database processing the criteria', '6', '7', now(), NULL, NULL);
 insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Search Sensitivity', 'DEFAULT_SEARCH_SENSITIVITY', '2', 'Default Threshold for approximating search criteria when no results are found', '6', '1', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Enable Word-Processor', 'WORD_PROCESSOR_SWITCH', 'true', 'Enable the Word-Processor interface when editing content in the Adminstration end.', '33', '1', now(), NULL, '::radio_option::true,false');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Base Domain', 'DEFAULT_BASE_DOMAIN', 'http://123.com', 'Specify a Base Domain to avoid conflicts with the word processor base URL.', '33', '5', now(), NULL, NULL);
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Template System Group', 'TEMPLATE_SYSTEM_GROUP', '3', 'The default <b>Template Group</b> to be assigned for the <b>System</b> on the admin end.', '33', '15', now(), '::get_template_group_title', '::pull_down_template_groups');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Template Content Group', 'TEMPLATE_CONTENT_GROUP', '4', 'The default <b>Template Group</b> for <b>Content</b> related scripts on the admin end. Text Collections and Text Pages', '33', '16', now(), '::get_template_group_title', '::pull_down_template_groups');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Template Helpdesk Group', 'TEMPLATE_HELPDESK_GROUP', '1', 'The default <b>Template Group</b> for <b>Helpdesk</b> related scripts on the admin end. Helpdesk E-Mail Messages', '33', '17', now(), '::get_template_group_title', '::pull_down_template_groups');
+insert into configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) values ('Front Page Collection', 'GTEXT_FRONT_ZONE_ID', '1', 'Default text collection of pages for the the front/home page.', '23', '49', now(), '::get_abstract_zone_name', '::pull_down_text_zones');
 
 drop table if exists configuration_group;
 create table configuration_group (
   configuration_group_id int(11) not null auto_increment,
-  configuration_group_title varchar(64) not null ,
-  configuration_group_description varchar(255) not null ,
-  sort_order int(5) ,
-  visible int(1) default '1' ,
+  configuration_group_title varchar(64) not null,
+  configuration_group_description varchar(255) not null,
+  sort_order int(5),
+  visible int(1) default '1',
   PRIMARY KEY (configuration_group_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('1', 'My Site', 'General information about my web site', '1', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('2', 'Minimum Values', 'The minimum values for functions / data', '2', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('3', 'Maximum Values', 'The maximum values for functions / data', '3', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('4', 'Images', 'Image parameters', '4', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('5', 'Errors', 'Errors and Warnings', '13', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('6', 'Search', 'Search Configuration', '6', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('10', 'Logging', 'Logging configuration options', '10', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('12', 'E-Mail Options', 'General setting for E-Mail transport and HTML E-Mails', '12', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('14', 'GZip Compression', 'GZip compression options', '14', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('15', 'Sessions', 'Session options', '15', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('16', 'Store Layout', 'Development Layout Controls', '16', '1');
-insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values ('33', 'Admin Values', 'Configuration Values for the administrator', '31', '1');
+insert into configuration_group (configuration_group_id, configuration_group_title, configuration_group_description, sort_order, visible) values 
+('1', 'My Site', 'General configuration of my website', '1', '1'),
+('2', 'Minimum Values', 'The minimum values for functions / data', '2', '1'),
+('3', 'Maximum Values', 'The maximum values for functions / data', '3', '1'),
+('4', 'Images', 'Image parameters', '4', '1'),
+('5', 'Errors', 'Errors and Warnings', '13', '1'),
+('6', 'Search', 'Search Configuration', '6', '1'),
+('10', 'Logging', 'Logging configuration options', '10', '1'),
+('12', 'E-Mail Options', 'General setting for E-Mail transport and HTML E-Mails', '12', '1'),
+('14', 'Web Compression', 'Web compression options', '14', '1'),
+('15', 'Sessions', 'Session options', '15', '1'),
+('16', 'Store Layout', 'Development Layout Controls', '16', '1'),
+('33', 'Admin Values', 'Configuration Values for the administrator', '31', '1');
+
+drop table if exists customers;
+create table customers (
+  customers_id int(11) not null auto_increment,
+  customers_email varchar(96) not null,
+  customers_name varchar(96) not null,
+  PRIMARY KEY (customers_id),
+  KEY idx_customers_email (customers_email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+drop table if exists explain_queries;
+create table explain_queries (
+  explain_id int(11) NOT NULL auto_increment,
+  explain_md5query varchar(32) NOT NULL default '',
+  explain_query text,
+  explain_time float default NULL,
+  explain_script varchar(255),
+  explain_request_string varchar(255),
+  explain_query_id varchar(255),
+  explain_select_type varchar(255),
+  explain_table varchar(255),
+  explain_type varchar(255),
+  explain_possible_keys varchar(255),
+  explain_key varchar(255),
+  explain_key_len varchar(255),
+  explain_ref varchar(255),
+  explain_rows varchar(255),
+  explain_extra varchar(255),
+  explain_comment varchar(255),
+  PRIMARY KEY  (explain_id),
+  KEY idx_explain_md5query (explain_md5query),
+  KEY idx_explain_script (explain_script)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
+DROP TABLE IF EXISTS form_fields;
+CREATE TABLE form_fields (
+  form_fields_id int(11) NOT NULL auto_increment,
+  form_fields_name varchar(128) NOT NULL,
+  form_fields_description varchar(255) NOT NULL,
+
+  layout_id tinyint(2) NOT NULL default '1',
+  limit_id tinyint(1) NOT NULL default '1',
+
+  sort_id tinyint(3) NOT NULL default '0',
+  status_id tinyint(1) NOT NULL default '1',
+
+  PRIMARY KEY  (form_fields_id),
+  KEY idx_form_fields_order (sort_id),
+  KEY idx_form_fields_status (status_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
+DROP TABLE IF EXISTS form_options;
+CREATE TABLE form_options (
+  form_options_id int(11) NOT NULL auto_increment,
+  form_fields_id int(11) NOT NULL,
+  form_types_id int(11) NOT NULL,
+  form_options_name varchar(255) NOT NULL,
+
+  image_status tinyint(1) NOT NULL default '0',
+  layout_id tinyint(2) NOT NULL default '1',
+  limit_id tinyint(1) NOT NULL default '1',
+
+  sort_id tinyint(3) NOT NULL default '0',
+  status_id tinyint(1) NOT NULL default '1',
+
+  PRIMARY KEY (form_options_id),
+  KEY form_fields_id (form_fields_id),
+  KEY idx_form_options_order (sort_id),
+  KEY idx_form_options_status (status_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+DROP TABLE IF EXISTS form_values;
+CREATE TABLE form_values (
+  form_values_id int(11) NOT NULL auto_increment,
+  form_options_id int(11) NOT NULL,
+  form_fields_id int(11) NOT NULL,
+  form_values_name varchar(64) NOT NULL,
+  form_values_image varchar(128) default NULL,
+
+  sort_id tinyint(3) NOT NULL default '0',
+  status_id tinyint(1) NOT NULL default '1',
+
+  PRIMARY KEY  (form_values_id),
+  KEY form_fields_id (form_fields_id),
+  KEY form_options_id (form_options_id),
+  KEY idx_form_values_order (sort_id),
+  KEY idx_form_values_status (status_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists gtext;
 create table gtext (
@@ -282,7 +371,7 @@ create table gtext (
   sub tinyint(1) default '0' not null ,
   PRIMARY KEY (gtext_id),
   KEY idx_status (status)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 insert into gtext (gtext_id, gtext_title, gtext_description, date_added, status, sub) values ('1', 'FAQ', '<p>This is a premade page for your frequently asked questions (FAQ). This page also demonstrate a different way of binding pages to collections. With most of the templates there is a reference of the FAQ in the footer section. </p>
 <p>The footer displays titles of text collections or mixed collections as it is a mixed collection itself. So if you check the Content Collection assignment column thereare 2 collections the FAQ is assigned into. The header links and the footer links.</p>', '2010-04-11', '1', '0');
@@ -337,47 +426,62 @@ create table gtext_to_display (
   sequence_order int(3) ,
   PRIMARY KEY (abstract_zone_id, gtext_id),
   KEY idx_sequence_order (sequence_order)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('1', 'My Flash News', '34', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('1', 'Enchant your Website', '35', '2');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('1', 'Moving Forward', '37', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('8', 'FAQ', '1', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('10', 'An Old News Page', '4', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('10', 'Wayback page', '36', '2');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('11', 'FAQ', '1', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('11', 'GNU/GPL License', '5', '2');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('16', 'ET - Request Received', '26', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('17', 'First Contact', '24', '1');
-insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values ('17', 'HT - Late Response', '25', '1');
+insert into gtext_to_display (abstract_zone_id, gtext_alt_title, gtext_id, sequence_order) values 
+('1', 'My Flash News', '34', '1'),
+('1', 'Enchant your Website', '35', '2'),
+('1', 'Moving Forward', '37', '1'),
+('8', 'FAQ', '1', '1'),
+('10', 'An Old News Page', '4', '1'),
+('10', 'Wayback page', '36', '2'),
+('11', 'FAQ', '1', '1'),
+('11', 'GNU/GPL License', '5', '2'),
+('16', 'ET - Request Received', '26', '1'),
+('17', 'First Contact', '24', '1'),
+('17', 'HT - Late Response', '25', '1');
 
 drop table if exists helpdesk_attachments;
 create table helpdesk_attachments (
+  helpdesk_entries_id int(11) not null,
+  attachment varchar(255) not null,
+  KEY idx_helpdesk_entries_ticket (helpdesk_entries_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+drop table if exists helpdesk_book;
+create table helpdesk_book (
   auto_id int(11) not null auto_increment,
-  helpdesk_entries_id int(11) not null ,
-  ticket varchar(7) not null ,
-  attachment varchar(255) not null ,
+  book_name varchar(64) not null ,
+  book_email varchar(255) not null ,
+  book_phone varchar(255) not null ,
+  book_cell varchar(255) not null ,
+  book_notes text not null ,
   PRIMARY KEY (auto_id),
-  KEY idx_helpdesk_entries_id (helpdesk_entries_id),
-  KEY idx_ticket (ticket)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+  KEY idx_book_email (book_email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists helpdesk_departments;
 create table helpdesk_departments (
   department_id int(11) not null auto_increment,
-  title varchar(32) not null ,
-  email_address varchar(96) not null ,
-  name varchar(32) not null ,
-  password varchar(32) not null ,
+  title varchar(32) not null,
+  name varchar(32) not null,
+  password varchar(32) not null,
+  email_address varchar(96) not null,
+  server_connect varchar(255) not null,
+  server_protocol varchar(255) not null,
+  server_mailbox varchar(255) not null,
+  body_size int(8) not null,
+  ticket_prefix varchar(32) not null,
   front tinyint(1) default '1' not null ,
   receive tinyint(4) default '1' not null ,
+  readonly tinyint(1) not null default 0,
   PRIMARY KEY (department_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists helpdesk_entries;
 create table helpdesk_entries (
   helpdesk_entries_id int(11) not null auto_increment,
-  ticket varchar(7) not null ,
+  ticket_id int(11) not null ,
   parent_id int(11) default '0' not null ,
   message_id varchar(100) not null ,
   ip_address varchar(15) not null ,
@@ -389,45 +493,51 @@ create table helpdesk_entries (
   sender varchar(50) not null ,
   email_address varchar(96) not null ,
   subject varchar(255) not null ,
-  body text not null ,
+  body text not null,
+  text_body text not null,
   entry_read char(1) default '0' ,
   PRIMARY KEY (helpdesk_entries_id),
-  KEY idx_helpdesk_entries_ticket (ticket)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+  KEY idx_ticket_id (ticket_id),
+  KEY idx_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists helpdesk_priorities;
 create table helpdesk_priorities (
   priority_id int(11) not null auto_increment,
   title varchar(32) not null ,
   PRIMARY KEY (priority_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into helpdesk_priorities (priority_id, title) values ('1', 'Medium');
-insert into helpdesk_priorities (priority_id, title) values ('2', 'High');
-insert into helpdesk_priorities (priority_id, title) values ('3', 'Low');
+insert into helpdesk_priorities (priority_id, title) values 
+('1', 'Medium'),
+('2', 'High'),
+('3', 'Low');
 
 drop table if exists helpdesk_statuses;
 create table helpdesk_statuses (
   status_id int(11) not null auto_increment,
   title varchar(32) not null ,
   PRIMARY KEY (status_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into helpdesk_statuses (status_id, title) values ('1', 'Pending');
-insert into helpdesk_statuses (status_id, title) values ('2', 'Open');
-insert into helpdesk_statuses (status_id, title) values ('3', 'Closed');
+insert into helpdesk_statuses (status_id, title) values 
+('1', 'Pending'),
+('2', 'Open'),
+('3', 'Closed');
 
 drop table if exists helpdesk_tickets;
 create table helpdesk_tickets (
-  ticket varchar(7) not null ,
-  department_id int(11) default '0' not null ,
-  priority_id int(11) ,
-  status_id int(11) ,
-  datestamp_last_entry datetime ,
+  ticket_id int(11) not null auto_increment,
+  ticket varchar(7) not null,
+  department_id int(11) default '0' not null,
+  priority_id int(11),
+  status_id int(11),
+  datestamp_last_entry datetime,
   comment text ,
-  datestamp_comment datetime ,
+  datestamp_comment datetime,
+  PRIMARY KEY (ticket_id),
   KEY idx_helpdesk_tickets_ticket (ticket)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists image_zones;
 create table image_zones (
@@ -439,16 +549,33 @@ create table image_zones (
   sequence_order int(3) ,
   PRIMARY KEY (abstract_zone_id, image_key),
   KEY idx_sequence_order (sequence_order)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('19', '1d470643d7be8cd44590aad60c0e965e', 'sample-port.jpg', 'Port Description', 'Port Title', '3');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('19', '32678dcc8c6cd60821c55761bb89db5e', 'sample-champagne.jpg', 'Champaign Description', 'Champaign Title', '1');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('19', '5ff7e4ec4926d0abf4917ee5e5efcd59', 'sample-sunset-7.jpg', 'Sunset-7 Description', 'Sunset-7 Title', '2');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('19', 'fc3041a4affd79da6aafa632f0f42312', 'sample-ocean-8.jpg', 'Ocean-8 Description', 'Ocean-8 Title', '4');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('22', '1799bf0c6377c09c19bf0c043497baa7', 'sample-point-loma.jpg', 'Point Loma Description', 'Point Loma Title', '3');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('22', '18b719c80b33a8da7002392bff80597f', 'sample-caesars-palace-2.jpg', 'Caesars Palace-2 Description', 'Caesars Palace-2 Title', '2');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('22', '28cdc42f70d17829f3045086da944469', 'sample-san-diego-lights-2.jpg', 'San Diego Lights-2 Description', 'San Diego Lights-2 Title', '4');
-insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values ('22', 'db5fac81fdca27e34550c9127c912496', 'sample-alp-mountains.jpg', 'Alpes Mountains Description', 'Alpes Mountains Title', '1');
+insert into image_zones (abstract_zone_id, image_key, image_file, image_title, image_alt_title, sequence_order) values 
+('19', '1d470643d7be8cd44590aad60c0e965e', 'sample-port.jpg', 'Port Description', 'Port Title', '3'),
+('19', '32678dcc8c6cd60821c55761bb89db5e', 'sample-champagne.jpg', 'Champaign Description', 'Champaign Title', '1'),
+('19', '5ff7e4ec4926d0abf4917ee5e5efcd59', 'sample-sunset-7.jpg', 'Sunset-7 Description', 'Sunset-7 Title', '2'),
+('19', 'fc3041a4affd79da6aafa632f0f42312', 'sample-ocean-8.jpg', 'Ocean-8 Description', 'Ocean-8 Title', '4'),
+('22', '1799bf0c6377c09c19bf0c043497baa7', 'sample-point-loma.jpg', 'Point Loma Description', 'Point Loma Title', '3'),
+('22', '18b719c80b33a8da7002392bff80597f', 'sample-caesars-palace-2.jpg', 'Caesars Palace-2 Description', 'Caesars Palace-2 Title', '2'),
+('22', '28cdc42f70d17829f3045086da944469', 'sample-san-diego-lights-2.jpg', 'San Diego Lights-2 Description', 'San Diego Lights-2 Title', '4'),
+('22', 'db5fac81fdca27e34550c9127c912496', 'sample-alp-mountains.jpg', 'Alpes Mountains Description', 'Alpes Mountains Title', '1');
+
+drop table if exists languages;
+create table languages (
+  language_id int(11) not null auto_increment,
+  language_name varchar(64) not null ,
+  language_path varchar(64) not null ,
+  language_code varchar(2) not null ,
+  sort_id int(3) default 1,
+  status_id tinyint(1) default 0,
+  PRIMARY KEY (language_id),
+  KEY idx_sort_id (sort_id),
+  KEY idx_status_id (status_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+insert into languages (language_id, language_name, language_code, language_path, sort_id, status_id) values 
+('1', 'English', '', 'english', '1', '1');
 
 drop table if exists meta_abstract;
 create table meta_abstract (
@@ -457,7 +584,7 @@ create table meta_abstract (
   meta_keywords text not null ,
   meta_text text not null ,
   PRIMARY KEY (abstract_zone_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists meta_exclude;
 create table meta_exclude (
@@ -465,10 +592,11 @@ create table meta_exclude (
   meta_exclude_text varchar(96) not null ,
   meta_exclude_status tinyint(1) default '1' not null ,
   PRIMARY KEY (meta_exclude_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into meta_exclude (meta_exclude_key, meta_exclude_text, meta_exclude_status) values ('7e7aac930123145f5f0af775ca3e1c58', 'maybe', '1');
-insert into meta_exclude (meta_exclude_key, meta_exclude_text, meta_exclude_status) values ('be5d5d37542d75f93a87094459f76678', 'and', '1');
+insert into meta_exclude (meta_exclude_key, meta_exclude_text, meta_exclude_status) values 
+('7e7aac930123145f5f0af775ca3e1c58', 'maybe', '1'),
+('be5d5d37542d75f93a87094459f76678', 'and', '1');
 
 drop table if exists meta_gtext;
 create table meta_gtext (
@@ -477,7 +605,7 @@ create table meta_gtext (
   meta_keywords text not null ,
   meta_text text not null ,
   PRIMARY KEY (gtext_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists meta_lexico;
 create table meta_lexico (
@@ -486,7 +614,7 @@ create table meta_lexico (
   sort_id int(11) not null ,
   meta_lexico_status tinyint(1) default '1' not null ,
   PRIMARY KEY (meta_lexico_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists meta_scripts;
 create table meta_scripts (
@@ -496,14 +624,13 @@ create table meta_scripts (
   meta_keywords text not null ,
   meta_text text not null ,
   PRIMARY KEY (meta_scripts_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('46e39f67e702bb434edb47007b9f09e4', 'cookie_usage.php', 'cookie usage', 'cookie,usage', 'cookie usage');
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('68c7a3d743cbf2592d94f6bf75098027', 'image_pages.php', 'image pages', 'image,pages', 'image pages');
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('828e0013b8f3bc1bb22b4f57172b019d', 'index.php', 'index', 'index', 'index');
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('9b49f6f4b7347b6a3ecfe31652cccc99', 'super_pages.php', 'super pages', 'super,pages', 'super pages');
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('da8bb3a63ccd1c386a28a34896f376dc', 'generic_pages.php', 'generic pages', 'generic,pages', 'generic pages');
-insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values ('fc8d4bb3bf7f56ca700507fee0558c16', 'contact_us.php', 'contact us', 'contact,us', 'contact us');
+insert into meta_scripts (meta_scripts_key, meta_scripts_file, meta_title, meta_keywords, meta_text) values 
+('5d49f2bebe713fb790b744f265eb472b', 'collections.php', 'Content Collections', 'Content,Collections', 'Content Collections'),
+('828e0013b8f3bc1bb22b4f57172b019d', 'index.php', 'index', 'index', 'index'),
+('da8bb3a63ccd1c386a28a34896f376dc', 'generic_pages.php', 'General Content', 'General,Content', 'General Content'),
+('fc8d4bb3bf7f56ca700507fee0558c16', 'contact_us.php', 'Contact us', 'contact,us', 'contact us');
 
 drop table if exists meta_types;
 create table meta_types (
@@ -514,11 +641,12 @@ create table meta_types (
   sort_order int(3) default '1' not null ,
   meta_types_status tinyint(1) default '1' not null ,
   PRIMARY KEY (meta_types_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into meta_types (meta_types_id, meta_types_name, meta_types_class, meta_types_linkage, sort_order, meta_types_status) values ('4', 'Scripts', 'meta_scripts', '-1', '49', '1');
-insert into meta_types (meta_types_id, meta_types_name, meta_types_class, meta_types_linkage, sort_order, meta_types_status) values ('5', 'Collections', 'meta_abstract', '7', '22', '1');
-insert into meta_types (meta_types_id, meta_types_name, meta_types_class, meta_types_linkage, sort_order, meta_types_status) values ('6', 'Text Pages', 'meta_gtext', '7', '19', '1');
+insert into meta_types (meta_types_id, meta_types_name, meta_types_class, meta_types_linkage, sort_order, meta_types_status) values 
+('4', 'Scripts', 'meta_scripts', '-1', '49', '1'),
+('5', 'Collections', 'meta_abstract', '7', '22', '1'),
+('6', 'Text Pages', 'meta_gtext', '7', '19', '1');
 
 drop table if exists plugins;
 create table plugins (
@@ -533,10 +661,11 @@ create table plugins (
   PRIMARY KEY (plugins_key),
   KEY idx_front_end (front_end),
   KEY idx_back_end (back_end)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-insert into plugins (plugins_key, plugins_name, plugins_version, plugins_author, plugins_data, date_added, front_end, back_end) values ('css_menu', 'CSS Menu', '1.00', 'Mark Samios', NULL, '2010-05-07 10:10:00', '1', '0');
-insert into plugins (plugins_key, plugins_name, plugins_version, plugins_author, plugins_data, date_added, front_end, back_end) values ('popup_image', 'Fancybox Popup Image', '1.00', 'Mark Samios', NULL, '2010-05-07 10:10:00', '1', '1');
---insert into plugins (plugins_key, plugins_name, plugins_version, plugins_author, plugins_data, date_added, front_end, back_end) values ('right_column', 'Right Column', '1.00', 'Mark Samios', NULL, '2010-05-07 10:10:10', '1', '0');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+insert into plugins (plugins_key, plugins_name, plugins_version, plugins_author, plugins_data, date_added, front_end, back_end) values 
+('css_menu', 'CSS Menu', '1.00', 'Mark Samios', NULL, now(), '1', '0'),
+('popup_image', 'Fancybox Popup Image', '1.00', 'Mark Samios', NULL, now(), '1', '1');
+-- ('right_column', 'Right Column', '1.00', 'Mark Samios', NULL, now(), '1', '0');
 
 drop table if exists seo_cache;
 create table seo_cache (
@@ -548,7 +677,7 @@ create table seo_cache (
   date_added datetime not null ,
   KEY idx_osc_url_key (osc_url_key),
   KEY auto_id (auto_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists seo_exclude;
 create table seo_exclude (
@@ -556,25 +685,27 @@ create table seo_exclude (
   seo_exclude_script varchar(64) not null ,
   seo_exclude_params varchar(255) ,
   PRIMARY KEY (seo_exclude_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into seo_exclude (seo_exclude_key, seo_exclude_script, seo_exclude_params) values ('13dae7d4d9c5a71489a5d3523e16b1b5', 'advanced_search_result.php', NULL);
-insert into seo_exclude (seo_exclude_key, seo_exclude_script, seo_exclude_params) values ('fc8d4bb3bf7f56ca700507fee0558c16', 'contact_us.php', NULL);
+insert into seo_exclude (seo_exclude_key, seo_exclude_script, seo_exclude_params) values 
+('13dae7d4d9c5a71489a5d3523e16b1b5', 'advanced_search_result.php', NULL),
+('fc8d4bb3bf7f56ca700507fee0558c16', 'contact_us.php', NULL);
 
 drop table if exists seo_frequency;
 create table seo_frequency (
   seo_frequency_id int(11) not null auto_increment,
   seo_frequency_name varchar(32) not null ,
   PRIMARY KEY (seo_frequency_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('1', 'always');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('2', 'hourly');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('3', 'daily');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('4', 'weekly');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('5', 'monthly');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('6', 'yearly');
-insert into seo_frequency (seo_frequency_id, seo_frequency_name) values ('7', 'never');
+insert into seo_frequency (seo_frequency_id, seo_frequency_name) values 
+('1', 'always'),
+('2', 'hourly'),
+('3', 'daily'),
+('4', 'weekly'),
+('5', 'monthly'),
+('6', 'yearly'),
+('7', 'never');
 
 drop table if exists seo_redirect;
 create table seo_redirect (
@@ -585,14 +716,14 @@ create table seo_redirect (
   seo_url_hits int(11) default '0' not null ,
   last_modified date not null ,
   PRIMARY KEY (seo_url_key)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists seo_to_abstract;
 create table seo_to_abstract (
   abstract_zone_id int(11) default '0' not null ,
   seo_name varchar(255) not null ,
   PRIMARY KEY (abstract_zone_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 
 drop table if exists seo_to_gtext;
@@ -600,14 +731,14 @@ create table seo_to_gtext (
   gtext_id int(11) default '0' not null ,
   seo_name varchar(255) not null ,
   PRIMARY KEY (gtext_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists seo_to_scripts;
 create table seo_to_scripts (
   script varchar(255) not null ,
   seo_name varchar(255) not null ,
   PRIMARY KEY (script)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists seo_types;
 create table seo_types (
@@ -621,7 +752,7 @@ create table seo_types (
   sort_order int(3) default '1' not null ,
   seo_types_status tinyint(1) default '1' not null ,
   PRIMARY KEY (seo_types_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 insert into seo_types (seo_types_id, seo_types_name, seo_types_handler, seo_types_subfix, seo_types_class, seo_types_prefix, seo_types_linkage, sort_order, seo_types_status) values ('9', 'Text Pages', '', '', 'seo_gtext', '', '0', '19', '1');
 insert into seo_types (seo_types_id, seo_types_name, seo_types_handler, seo_types_subfix, seo_types_class, seo_types_prefix, seo_types_linkage, sort_order, seo_types_status) values ('10', 'Collections', '', '', 'seo_abstract', '', '0', '20', '1');
@@ -644,26 +775,26 @@ create table seo_url (
   KEY idx_osc_url_key (osc_url_key),
   KEY idx_date_added (date_added),
   KEY idx_last_modified (last_modified)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists sessions;
 create table sessions (
-  sesskey varchar(64) not null,
+  sesskey varchar(64) character set utf8 collate utf8_bin not null,
   expiry int(11) unsigned not null,
   value text not null,
   ip_long varchar(32) not null,
   PRIMARY KEY (sesskey),
   KEY idx_expiry (expiry),
   KEY idx_ip_long (ip_long)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists sessions_admin;
 create table sessions_admin (
-  sesskey varchar(64) not null ,
+  sesskey varchar(64) character set utf8 collate utf8_bin not null,
   expiry int(11) unsigned not null ,
   value text not null ,
   PRIMARY KEY (sesskey)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 drop table if exists super_zones;
 create table super_zones (
@@ -673,32 +804,83 @@ create table super_zones (
   sequence_order int(3) ,
   PRIMARY KEY (abstract_zone_id, subzone_id),
   KEY idx_sequence_order (sequence_order)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('18', '1', 'My First Group', '1');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('18', '19', 'My 1st Gallery', '2');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('18', '22', 'My Second Gallery', '3');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('20', '1', 'My First Group', '10');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('20', '10', 'Archived', '50');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('20', '19', 'My 1st Gallery', '5');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('21', '1', 'My First Group', '6');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('21', '10', 'Archived', '5');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('21', '19', 'My First Gallery', '2');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('21', '22', 'My Second Gallery', '4');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('23', '1', 'My First Collection', '1');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('23', '10', 'Archived', '4');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('23', '19', 'My First Gallery', '2');
-insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values ('23', '22', 'My Second Gallery', '3');
+insert into super_zones (abstract_zone_id, subzone_id, sub_alt_title, sequence_order) values 
+('18', '1', 'My First Group', '1'),
+('18', '19', 'My 1st Gallery', '2'),
+('18', '22', 'My Second Gallery', '3'),
+('20', '1', 'My First Group', '10'),
+('20', '10', 'Archived', '50'),
+('20', '19', 'My 1st Gallery', '5'),
+('21', '1', 'My First Group', '6'),
+('21', '10', 'Archived', '5'),
+('21', '19', 'My First Gallery', '2'),
+('21', '22', 'My Second Gallery', '4'),
+('23', '1', 'My First Collection', '1'),
+('23', '10', 'Archived', '4'),
+('23', '19', 'My First Gallery', '2'),
+('23', '22', 'My Second Gallery', '3');
+
+drop table if exists templates;
+create table templates (
+  template_id int(11) NOT NULL auto_increment,
+  group_id int(11) not null default 0,
+  template_title VARCHAR(64) NOT NULL,
+  template_subject VARCHAR(255) NOT NULL,
+  template_content TEXT NULL,
+  PRIMARY KEY (template_id),
+  KEY idx_group_id (group_id),
+  KEY idx_template_title (template_title)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+insert into templates (group_id, template_title, template_subject, template_content) values (1, 'Late Response', 'Late Response', '<p>We apologize for the late response. We are processing your request.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (1, 'First Contact', 'First Contact', '<p>Thank you for your email, We welcome new visitors.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'seo_gtext', 'Customize Text Pages for SEO-G:', '<div>\r\n    <h2>Customize Text Pages for SEO-G:</h2>\r\n    <p>\r\n<b>Name:</b> is the name of the type to be inserted. It\\''s used for information purposes.<br />\r\n<b>Handler:</b> list of secondary scripts that can handle the same type. For example with products the product_info represents the primary handler where the SEO-G will apply the main prefix. Secondary Handler will be the product_reviews.php. Separate multiple handlers by coma eg: <em><b>product_reviews.php, products_reviews_write.php</b></em>. Do not include the primary handler.<br /><b>Subfix:</b> Each subfix is associated with a secondary handler. The order sub-fixes are entered correspond directly to the secondary handler. Subfixes must be separated with comas. Subfixes replace the secondary handlers when the SEO-G URLs are generated. eg: products_review.php is the secondary handler with "review" the subfix. This will make a product appear like products_name_review.html. Notice the subfix is appended at the end of the url.<br />\r\n<b>Class:</b> is the class .php file that generates the SEO-G names in osC Admin. Enter only the name of the file without the .php extension.<br /><b>Prefix:</b> This name represents the primary handler and it\\''s appended with the URLs for each field.<br />\r\n<b>Sort Order:</b> is the order for SEO-G to process the parameters when it generates the URLs.<br /><b>Linkage:</b> When multiple parameters are encountered by SEO-G those with different linkage are overriden with the one with the lowest linkage value. Parameters that have the same linkage value are maintained. Typically Products should have the lowest linkage values. Default is 1.\r\n    </p>\r\n    <h2>Update selected SEO-G Types.</h2>\r\n    <p>In addition to the parameters explained above there is a <b>Status</b> for each class. When disabled the catalog SEO-G code does not process the converted names and instead uses the default osc parameters to generate the URL. Use the checkboxes to the left and mark the entries to update.</p>\r\n  </div>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'generic_text_list', 'Text Pages Management', '<div>\r\n<h2>Managing Text Pages</h2>\r\n<p>The text page listing offers a variety of options to manage text pages. You can search, filter, preview, edit, delete and assign statuses of  text pages from here. To create a new text page click the <strong>new</strong> button</p>\r\n<p><img style="border: 0pt none;" title="Button to create a New Text Page" src="images/generic-text-list-new.jpg" alt="Button to create a New Text Page" /></p>\r\n<p>It''s important to remember that not all text pages are associated with the site''s content. Some pages have a different purpose to cover text elements relevant to the website''s layout and are called <strong>internal/sub</strong> pages. To distinguish among different types of text pages there is a filter drop-down list. As the site''s content grows the filtering option becomes very effective. Select the type pages to view from it. The list will be updated showing only the pages of your choice. The following filter options are available:</p>\r\n<ul>\r\n<li><span style="color: #0000ff;">All Pages</span> - Lists all pages</li>\r\n<li><span style="color: #0000ff;">Internal/Sub-Pages</span> - Lists only the text pages associated with the site''s layout</li>\r\n<li><span style="color: #0000ff;">Complete Pages</span> - Lists all pages associated with the site''s content</li>\r\n<li><span style="color: #0000ff;">Published Pages</span> - Lists pages associated with the site''s content that are enabled</li>\r\n<li><span style="color: #0000ff;">Unpublished Pages</span> - Lists pages associated with the site''s content that are disabled</li>\r\n</ul>\r\n<p>To search for specific text pages that contain a keyword use the search input box. Enter the keywords and then hit enter. The search facility comes with a dynamic search drop-down where matched entries are shown as you type in the keywords.</p>\r\n<p><img title="Searching the text pages" src="images/generic-text-list-search.jpg" alt="Searching the text pages" /></p>\r\n<p>A number of legends with distinct colors is shown before the list of text pages to assist with differentiating the text page types and familiarize the administrator with each type.</p>\r\n<p>The list of text pages includes various columns with the page identifier (<strong>ID</strong>) the text page name which is effectively the header of a text page.(<strong>Title</strong>), the collections each text page is assigned to (<strong>Content Collections</strong>), whether a page will show on the web-front (<strong>Status</strong>), whether the page is associated for content or for layout (<strong>Sub-Page</strong>) and finally the action column which for each page includes the <strong>edit, preview, delete and select sub-options</strong>. </p>\r\n<p>The column list also include a drag and drop feature to rearrange the columns to your choice. Simply drag the column you want and position it before or after another column. Changes to the columns positions are in effect until the session times out.</p>\r\n<p>The text pages associated with the site''s content can be assigned to collections from here. There is a <strong>Content Collections</strong> column which list the collections a text pages is assigned to. If a page is not assigned then the column lists <span style="color: #ff0000;"><strong>Not Assigned</strong></span>. Simply click the link of the collection to remove or assign new ones. </p>\r\n<p>Each page has a status switch indicating whether the page is active or inactive. Only active pages are shown on the web-front. To toggle the page status use the active/inactive status lamps.</p>\r\n<p>Each page has a sub-page switch indicating whether the page is associated with the site''s content or layout. Text pages for layout are effectively text areas shown on parts of a web page. For example the cookie usage page is used to show some description when cookies are disabled on the visitor''s browser. It is not a whole page neither associated with the site''s content.</p>\r\n<p><img title="Listing options and controls for the text pages" src="images/generic-text-list-options.jpg" alt="Listing options and controls for the text pages" width="642" height="417" /></p>\r\n<h2>Text Page Actions</h2>\r\n<p>Each page has a list of actions formed as icons under the <strong>action</strong> column.</p>\r\n<ul>\r\n<li><span style="color: #0000ff;">Delete</span> - Deletes a text page following confirmation</li>\r\n<li><span style="color: #0000ff;">Edit</span> - Switches into the editor mode to edit the text page</li>\r\n<li><span style="color: #0000ff;">Preview</span> - Previews the text page without using the main stylesheet.</li>\r\n<li><span style="color: #0000ff;">Info</span> - Selects the page. Page selection also takes place when you click on the page row</li>\r\n</ul>\r\n</div>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'generic_text_edit', 'Creating/Editing Pages', '<div>\r\n<h2>Creating a new page, Editing existing pages</h2>\r\n<p>The I-Metrics CMS includes a javascript word processor to ease content editing. There various fields need to filled in when creating new text pages and there are also options to simplify content creation.</p>\r\n<p>At the top of the text edit page there is a form to upload HTML content directly from a file. The content of the selected file will be included with the main page content. Using the Template Editor ready made templates can be included with the site''s content.</p>\r\n<p><img title="Upload a ready made HTML template into the description" src="images/generic-text-edit-upload.jpg" alt="Upload a ready made HTML template into the description" width="639" height="161" /></p>\r\n<p>A text page has two main fields. A <strong>title input box</strong> and a <strong>description text area</strong>. The title appears as the header of a page and the description as the content. At any time you can enable or disable the Word-Processor interface located on the top-right of the page content text area.</p>\r\n<p><img title="Editing the title and description of a text page" src="images/generic-text-edit-main.jpg" alt="Editing the title and description of a text page" width="636" height="203" /></p>\r\n<p>Following the text description area there are several options to <strong>upload images</strong> for the site and to <strong>insert images</strong> to the main content of this page. When inserting images files already uploaded are visible as a list of thumbnails. Once an image is selected additional options become available to specify the dimensions for the image, image title and image text, whether an image is part of a group of images and whether the image should be processed by the thumbnailer and whether the image should be a link for the integrated lightbox.</p>\r\n<p>When you <strong>upload images</strong> a dialog displays the image associated folders along with a file selection form. First make sure you''re in the right folder where an image should be uploaded and then you use the upload files form. The top level or root of images is typically used for content associated images. Therefore when you upload images you can directly use the file form and the images will be uploaded into the <strong>images/</strong> folder.</p>\r\n<p>The ready templates drop-down list contains a list of pre-made templates that can be inserted under the cursor anywhere in the description text area. To insert a pre-made template, first select the template from the drop-down list and then click the yellow icon. To preview the template before inserting it click the question icon.</p>\r\n<p>There is also the option to assign an existing text page to a collection. This is done via the Page Content Groups Assignment. When a page is assigned to one or more collections, the collections are shown under the Page Content Groups Assignment heading. Click a collection to remove or to add the page to additional groups from here.</p>\r\n<p><img title="Images and templates controls and assigning collections to text pages" src="images/generic-text-edit-collections.jpg" alt="Images and templates controls and assigning collections to text pages" width="677" height="177" /></p>\r\n<h2>Text Page Fields</h2>\r\n<p>Each text page has also a <strong>status field</strong> to enable or disable a page from the site''s view and to specify a <strong>publishing date</strong> via a built-in calendar. There are also selections to make a page behave as a layout or content page. This is controlled from the <strong>sub-page radio options</strong>. By default a page will be assigned to the site''s content and so the sub-page option will show as disabled.</p>\r\n<p><img title="Text Page Fields Status, Content, Layout and Date" src="images/generic-text-edit-fields.jpg" alt="Text Page Fields Status, Content, Layout and Date" width="600" height="152" /></p>\r\n<h2>SEO Fields</h2>\r\n<p>Each page has a number of hidden fields that show up to the search engines only. If left empty these fields are automatically filled in by the system and relate to the page''s content. However the administrator has the option to edit them from here.</p>\r\n<ul>\r\n<li><span style="color: #0000ff;">SEO-G Name</span> - The name of the page to be appended with the URL.</li>\r\n<li><span style="color: #0000ff;">Immediate Link Generation</span> - Generates the URL immediately when the page is updated.</li>\r\n<li><span style="color: #0000ff;">Meta-Title</span> -  Shows with the Browser''s Caption and used by search engines to differentiate web pages.</li>\r\n<li><span style="color: #0000ff;">Meta-Keywords</span> -  Keywords the visitors may search with search engines in order to find this particular page</li>\r\n<li><span style="color: #0000ff;">Meta-Description</span> -  A summary of the page content is used when search engines display to visitors the results of a search criteria.</li>\r\n</ul>\r\n</div>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_1', 'My Site', '<h2>My Site</h2>\r\n<p>The following options are available for the <strong>My Site</strong> Configuration.</p>\r\n<p><strong>Website Name</strong><br />Name of your website<strong></strong></p>\r\n<p><strong>Website Owner</strong><br />Can be your name or the name of your store. This will show up in the email in the "from" <br />when the customer receives their purchase email. <strong></strong></p>\r\n<p><strong>E-Mail Address</strong><br />The site owner email address used for System generated E-Mails.<strong></strong></p>\r\n<p><strong>E-Mail From</strong><br />The default email address when sending E-Mails. <strong></strong></p>\r\n<p><strong>Site Address and Phone</strong><br />Physical Address and Phone number if apply.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_2', 'Minimum Values', '<h2>Minimum Values</h2>\r\n<p>These are the minimum values of any field filled out by the visitor forms on the web-front. The following options are available subject to the form filled in.</p>\r\n<p><strong>First Name</strong><br />Minimum length of the customer''s first name\r\n</p>\r\n<p><strong>Last Name</strong><br />Minimum length of the customer''s last name\r\n</p>\r\n<p><strong>Date of Birth</strong><br />Number of characters for the Date of Birth.\r\n</p>\r\n<p><strong>E-Mail Address</strong><br />The minimum number of an email address.\r\n</p>\r\n<p><strong>Street Address</strong><br />Minimum number of characters for the Street Address.\r\n</p>\r\n<p><strong>Company</strong><br />Minimum number of characters for the Company field.\r\n</p>\r\n<h3>Post Code</h3>\r\n<p>\r\nMinimum number of characters for the Post Code\r\n</p>\r\n<h3>City</h3>\r\n<p>\r\nMinimum number of characters for the City\r\n</p>\r\n<h3>State</h3>\r\n<p>\r\nMinimum number of characters for the State if the country has no states\r\n</p>\r\n<h3>Telephone Number</h3>\r\n<p>\r\nMinimum number of characters for the Phone supplied by the visitor.\r\n</p>\r\n<h3>Password</h3>\r\n<p>\r\nMinimum number of characters for the password field.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_3', 'Maximum Values', '<h2>Maximum Values</h2>\r\n<p>These are the maximum values used by the website and back end. The following options are available subject to the form filled in.</p>\r\n<h3>Search Results</h3>\r\n<p>\r\nThe general number of entries to display before breaking listings in multiple pages. Used with the advanced search.\r\n</p>\r\n<h3>Page Links</h3>\r\n<p>\r\nNumber of links to display for multiple pages\r\n</p>\r\n<h3>Text Pages Listings Split</h3>\r\n<p>The number of entries to display before breaking text page entries in multiple pages when browsing text collections.<strong></strong></p>\r\n<h3>Image Collections Listings Split</h3>\r\n<p>The number of entries to display before breaking image collections into multiple pages</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_5', 'Errors', '<h2>Errors</h2>\r\n<p>Conditional Error Messages are visible exclusively on the administrator end. The following options are available.</p>\r\n<p><strong>Warn if the Image Directory is not writable</strong><br />Issues a warning message if the system cannot write to the images directory eg: http://www.example.com/images/<br /><br /><strong>Warn if the Install Directory Exists</strong><br />Issues an error message if the installation directory of the I-Metrics CMS exists. You must remove the install directory from live sites.<strong></strong></p>\r\n<p><strong>Warn if the Thumbanails Directory is not writable</strong><br />The built-in thumbnails generator will store smaller images in the thumbs folder by default to speed up load times. If the folder is not writable a warning is issued.<br /><br /><strong>Protect the Administration folder</strong><br />The administration folder must be protected on live sites. By default an error is issued until the site owner switches this option off.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_4', 'Images', '<h2>Images</h2>\r\n<p>Used for the front end and thumbnailer primarily the image options can alter the layout of the website. Do not include dimension units with the options. Dimensions are in pixels. The following options are available.</p>\r\n<p><strong>Small Image Width</strong><br />The maximum width value of the thumbnail in pixels.<br /><br /><strong>Small Image Height</strong><br />The maximum height value of the thumbnail in pixels.<br /><br /><strong>Heading Image Width</strong><br />Used with headers in main content the maximum heading width of the thumbnail.<br /><br /><strong>Heading Image Height</strong><br />Used with headers in main content the maximum heading height of the thumbnail.</p>\r\n<p><strong>Image Required</strong><br />When true it will force the image placeholder even if an image is not present. When false it will not create the image tag for missing images.</p>\r\n<p><strong>Thumbnailer Postfix</strong><br />Signature used for the thumbnailer when generating the thumb images. The signature is appended with the image filename along with its dimensions.</p>\r\n<p><strong>Thumbnailer Folder<br /></strong>The folder to to store the thumbnails. The path is relevant to the root of the website where the I-Metrics CMS is installed. Use a trailing slash for the path but do not include a leading one.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_6', 'Search', '<h2>Search</h2>\r\n<p>The search options are used mainly with the front-end search facility. The following options are available.</p>\r\n<p><strong>Search Sensitivity</strong><br />The minimum number of characters to use when filtering a search criteria. When a search is processed and no results are found the system will filter keywords to locate alternatives within the website content. Once the minimum number of characters is reached the search will stop regardless of results.<br />Â <br /><strong>Search Iterations</strong><br />The maximum number of searches to perform when the initial search process fails. I-Metrics CMS will use the search sensitivity to locate alternatives up to the number of iterations specified.<br />Â <br /><strong>Default Search Operator</strong><br />The operator to use among keywords for the search.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_10', 'Logging', '<h2>Logging</h2>\r\n<p>There are various logging options used for site development. Information can be displayed directly or recorded in a file on the server. The following options are available.</p>\r\n<p><strong>Store Page Parse Time</strong><br />When enabled the system will store the time it takes to parse a page in a file.</p>\r\n<p><strong>Log Destination</strong><br />A fully qualified filename to write the logging information. You must include the full physical path on the server.<strong></strong></p>\r\n<p><strong>Log Date Format</strong><br />How to format the date/time information along with each entry.</p>\r\n<p><strong>Display The Page Parse Time</strong><br />Displays the page parse time at the end of a page on the web-front.</p>\r\n<p><strong>Store Database Queries</strong><br />When enabled it will store the database queries performed during page load.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_12', 'E-Mail Options', '<h2>E-Mail Options</h2>\r\n<p>The primary mail settings are used when sending E-Mails from both the web-front and back-end of the website. The following options are available.</p>\r\n<p><strong>E-Mail Transport Method</strong><br />Defines if this server uses a local connection to sendmail or uses an \r\nSMTP connection via TCP/IP. Servers running on Windows and MacOS should \r\nchange this setting to SMTP.</p>\r\n<p><strong>E-Mail Linefeeds</strong><br />Defines the character sequence used to separate mail headers. Use CRLF on Windows servers, LF on Unix servers.<br /><br /><strong>Use MIME HTML When Sending Emails</strong><br />When enabled e-mails will be sent in HTML format.</p>\r\n<p><strong>Verify E-Mail Addresses Through DNS</strong><br />When E-Mail addresses are entered the system will attempt to verify the MX server for the domain specified in the e-mail.</p>\r\n<p><strong>Send E-Mails</strong><br />Enable the E-Mail facility on the site.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'configuration_15', 'Sessions', '<h2>Sessions</h2>\r\n<p>Sessions are used to identify and distinguish browser requests using cookies or identifiers with the URLs. Session notifications display on the back-end only. Some settings are applicable for the front end only. The following options are available.</p>\r\n<p><strong>Force Cookie Use</strong><br />Used on the web-front only, enforces cookies for identification between client and server. Set this option to true only if you have a dedicated IP for the site. In other words if the SSL and NON-SSL requests are going through the same IP. It can also be set to true if no SSL is installed. Set it to false to when the IPs differ for the secure and regular part of the site.</p>\r\n<p><strong>Web-front Session Life</strong><br />How long sessions for visitors should last in seconds without the visitor clicking a link in your site. If a session expires a new session is created automatically. Default is approximately half an hour.</p>\r\n<p><strong>Admin Session Life</strong><br />How long administration sessions should last. Default is around 12 hours. If a session expires a new session is automatically created.</p>\r\n<p><strong>Whos Online Timeout</strong><br />The timeout to delete visitor information from the whos online table. If the visitor does not click a link in your site for the specified period the information is removed from the database.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'templates_list', 'Templates List', '<h2>Templates List</h2>\r\n<p>A general purpose template system is integrated with the I-Metrics CMS. There various groups of templates including the system which mainly houses the help related contents, the content group which relates with ready content to be used for the collections and general text pages, helpdesk for the email support desk and also e-mails for promotional e-mails.</p>\r\n<p>The help/system templates were build using this template manager.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'templates_edit', 'Editing Templates', '<h2>Editing Templates</h2>\r\n<p>The Templates manager is bundled with a word-processor interface, an upload system that allows the site-owner to instantly upload templates and an image controller to ease template layouts.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'plugins_list', 'Plugins Manager and Independent Plugins', '<h2>Plugins Manager and Independent Plugins</h2>\r\n<p>The Plugins manager enhances the functionality of your site. By adding plugins a site can be geared up towards specific content. Plugins can be installed, configured, uninstalled or completely removed without having an impact to the site''s basic functionality.</p>\r\n<p>There are different types of plugins. First of all plugins can operate exclusively on the web-front or on the back-end of a site. They can also operate on both web and administration ends. Each plugin has special functionality and can affect the web-front layout, add or enhance core features or introduce new functionality to the back-end. For example if your site uses image galleries extensively a plugin dedicated to image browsing could group images together or add a template for the pages listing images, surround images with titles and descriptions etc.</p>\r\n<p>Plugins can also be compressed and many come in a compressed pkzip format. In this case before installing a plugin you need to decompress it. The I-Metrics CMS has built-in support to compress and decompress plugins. Compressed plugins are inactive and show at the end of the plugins list in the plugins manager page. Plugins can also be automatically compressed when a plugin is uninstalled or removed. </p>\r\n<p>Each plugin is listed with its version and the minimum version it can run on the I-Metrics CMS. The status of a plugin is shown with the plugins manager. When the status is set to N/A it indicates that a plugin is not installed but it is uncompressed. When the status is set to enabled the plugin is active. A disabled status implies the plugin is installed but disabled. There could be many reasons to keep a plugin installed and disabled. Plugins remove database information when they are uninstalled. You may also have a single administration end from where you manage multiple sites. A plugin needs to stay installed in order to operate on multiple sites with different configuration settings.</p>\r\n<p>The last column of the plugins list by default shows a number of icons to quickly select and manage a plugin. These options are subject to the plugin status. Note: the remove option is not in the list of icons and can only be invoked after selecting a plugin from the right navigation side.</p>\r\n<ul>\r\n<li>Uninstall - Uninstall a plugin but leaves the files on the server</li>\r\n<li>Configure - Configures the plugin if there configuration options</li>\r\n<li>Edit - Edits the common configuration of a plugin (status and sort order)</li>\r\n<li>Copy - Copies again the files only from the plugin folder overriding the plugin files on the web front and back end.</li>\r\n<li>Revert - Copies installed files into the plugins folder. This is the opposite of the Copy function</li>\r\n<li>Install - Installs the plugin.</li>\r\n<li>Info - Selects the plugin.</li>\r\n</ul>\r\n<h2>Technical information</h2>\r\n<p>There are 3 types of plugin classes. At least 2 required by all plugins</p>\r\n<p>1. The install class that is called for installation, removal, configuring and deleting plugins. The install class must have the install_ prefix in front the plugin name. eg: The demo_message plugin should have the install_demo_message class.<br />The base class of the install class is called plug_manager located here:<br />admin/includes/classes/plug_manager.php<br />Certain member variables should be used with install classes</p>\r\n<ul>\r\n<li>front=1: The plugin operates on the webfront</li>\r\n<li>back=1: The plugin operates on the admin</li>\r\n<li>status=1: The plugin should be activated right after installation</li>\r\n<li>title: A short title for the plugin</li>\r\n<li>author: The name of the person who wrote the plugin</li>\r\n<li>version: The version of the plugin</li>\r\n<li>framework: The package version this plugin was tested last</li>\r\n<li>files_array: The files to copy to the web-front if any</li>\r\n<li>admin_files_array: The files to copy to the admin-end if any</li>\r\n<li>key: Identifier automatically generated by the plugins manager.</li>\r\n</ul>\r\n<p>If the plugin has configuration options you need:</p>\r\n<ul>\r\n<li>set_options member function to setup the form</li>\r\n<li>process_options member function to process the configuration</li>\r\n</ul>\r\n<p>The base class of an install class is plug_manager. The plug_manager has several helper functions including:</p>\r\n<ul>\r\n<li>Copying/deleting files and paths</li>\r\n<li>Loading or storing configuration settings</li>\r\n<li>Deleting entries from the configuration table - plugins section</li>\r\n</ul>\r\n<p>If you have files for the webfront in order to be used you need a file to be named the same as the plugin folder<br />eg: demo_message folder needs demo_message.php in the files_array<br />If you have files for the admin in order to be used you need a file to be named the same as the plugin folder along with the admin_ prefix<br />eg: demo_message folder needs admin_demo_message.php in the admin_files_array<br />Once your file is invoked you can call or process other files your plugin may require.</p>\r\n<p><br />2. The plugins_admin.php is the second type of class and operates on the admin<br />The plugins_admin.php class is located here: admin/includes/classes/plugins_admin.php<br />Its purpose is to invoke the main admin plugins code during run-time.<br />Loading of plugins takes places via the $g_plugin-&gt;invoke(method) call<br />Where method is the method a plugin relies upon to do something.<br />The admin_history_system.php can have a method called add_current_page so it can be called as $g_plugin-&gt;invoke(''add_current_page'', $arg1, $arg2) Optional arguments can be passed with the $g_plugin-&gt;invoke following the method name.</p>\r\n<p>If the plugin operates on the admin then in its folder it should include a file called admin_history_system.php that extends into plugins_base plugins_base is the base class for the admin plugins (runtime code) and includes functions to load and save configuration options during run-time</p>\r\n<p>3. The third type of class is similar to the second but operates on the webfront<br />Two class files one of invocation the other for run-time are dedicated for plugins which operate on the web-front.<br />The class files are:</p>\r\n<ul>\r\n<li>includes/classes/plugins_front.php - Invokes the plugin for processing</li>\r\n<li>includes/classes/plugins_base.php - The run-time base class the plugin extends to</li>\r\n</ul>\r\n<p>If the plugin is inside the voting_system folder and operates on the webfront then in its folder it should include a file called voting_system.php  that extends into plugins_base and should be set in the files_array of the install class to be copied to the web-front. Also note the sub-folder names in this directory are effectively classes. Do not create identical plugin classes with the standard classes directory.</p>\r\n<p>For a basic functionality see how the demo_message plugin operates</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'languages_list', 'Languages and Definitions', '<h2>Languages and Definitions</h2>\r\n<p>A fully dynamic multi-lingual system is Integrated with the I-Metrics CMS offering complete language management to the site owner. This page allows you to create, edit and delete languages.</p>\r\n<h3>Creating a new language</h3>\r\n<p>To create a new language click the new button and fill in the language details including the language name,  language code and language path. The default language has an empty/blank code.</p>\r\n<h3>Changing an existing language</h3>\r\n<p>To create a new language click the new button and fill in the \r\nlanguage details including the language name,  language code and \r\nlanguage path. The default language has an empty/blank code.</p>\r\n<h3>Deleting languages</h3>\r\n<p>To delete an existing language click the delete button and the confirm the delete operation. Note: The default language cannot be deleted. If you want to delete the default language you must swap the language codes with the language you want to be the default. Use the edit button to rename the language codes.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'languages_sync_list', 'Database Language Control Tables and Assignments', '<h2>Database Language Control Tables and Assignments</h2>\r\n<p>The multi-lingual handling of the I-Metrics CMS is totally dynamic. Language tables can be assigned or removed at any time without additional coding. However you do need to understand the association of database tables with the various content entities in order to setup the correct database tables for multi-lingual control. </p>\r\n<p>Also note hard-coded strings located under the language folders of the front end need to be setup manually for each language. When a new language is created the equivalent language folder is created on the front-end. By default the string files of the default language are replicated to form the string files of the newly created language. Although these hard-coded string are beyond the scope of the database language assignments and more details can be found online for the I-Metrics CMS.</p>\r\n<p>All primary database tables of the CMS are listed in this page. Any table that needs to have language dependency must be selected first by ticking the checkboxes on the left followed by pressing the rebuild button. A confirmation dialog will appear before the language tables are generated.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'languages_sync_verify', 'Language Verification', '<h2>Language Verification</h2>\r\n<p>Language tables can be checked against errors of missing entries and synchronization problems. A list of entries of a selected for verification table shows here. For each language present the column of the primary keys for the language table is listed. Typically the language tables should be good in terms of integrity but if there is a problem with the database server or following a manual table modification a language table may end up corrupted. </p>\r\n<p>Problems can be rectified by locating the incorrect entries and then either clicking on the incorrect entry the recycle icon or by selecting multiple entries and then clicking the rebuild button. The later should be in cases of multiple errors. Although the CMS is quite robust synchronizing language tables, for sites with multiple languages you should verify the tables once in a while, following multiple delete or insert operation of entries.</p>\r\n<p>When an entry is overridden the system uses the currently selected language to override the entry. So having languages english, spanish, french and having the current language set to english, entries from the englsh table will override the ones of spanish and french. You should therefore check the content of the entry in question first before deciding which language to use for the override operation.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'helpdesk_departments_list', 'Managing Helpdesk Departments', '<h2>Creating a new department</h2>\r\n<ol>\r\n<li>At the bottom of the departments list click the <strong>Insert</strong> button</li>\r\n<li>Fill In the Department details on the right</li>\r\n<li>Click Insert to create the new department.</li>\r\n</ol>\r\n<p>There are several entries you need to fill-up in order to create a new helpdesk departmnent.<br />\r\n	You must have the email account already created from your host''s cPanel before adding it to the helpdesk</p>\r\n<ul>\r\n<li>Department: is the department name, <strong>(eg: sales)</strong></li>\r\n<li>E-Mail Address: the e-mail address for the mailbox. <strong>(eg: joe@example.com)</strong></li>\r\n<li>Password: the password for the email to download messages.</li>\r\n<li>Name: The mailbox name will be used by the helpdesk to download e-mails. It is also used for the mail server connect so if you are unsure, use the full emai(eg: joe@example.com)</li>\r\n</ul>\r\n<h2>Edit existing departments</h2>\r\n<ol>\r\n<li>Select the edit icon to directly edit a department or select the department first using the information icon, then click the edit button to the right</li>\r\n<li>Change the Department details on the right</li>\r\n<li>Click Update to save the changes for this helpdesk department, click cancel to abort changes</li>\r\n</ol>\r\n<p>Here only the relevant edit options are listed, for the general option details of a department see the creaating a new department section above.</p>\r\n<ul>\r\n<li>Set as default: Tick to have this department as the default one to receive/sent e-mail messages or when no department is selected/specified.</li>\r\n<li>Show on Front: Whether the department will show on the web-front (eg: with the contact us page)</li>\r\n<li>Mailbox Receives: Whether this mailbox is included on global email sync. Otherwise it will only retrieve e-mails upon request</li>\r\n<li>Read Only: When checked, the department mailbox will not delete e-mails from the server during download, by default messages are downloaded stored in the database and the mailbox is cleaned up.</li>\r\n</ul>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'helpdesk_list', 'E-Mail Helpdesk', '<h2>E-Mail Helpdesk</h2>\r\n<p>Integrated with the I-Metrics CMS there is an communication and e-mail resource system establishing a point of contact between the site owner and the site visitors. The helpdesk can receive or send messages, includes an address book, can setup priorities for emails, assign email messages to different departments and connect to different mail servers to retrieve messages.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'helpdesk_book_list', 'Helpdesk Address Book', '<h2>The Helpdesk Address Book</h2>\r\n<p>Bundled with the helpdesk an Address Book offers quick access to your favorite e-mails and contacts. The address book can also be invoked when sending e-mail messages. The list of Address Book entries shows the name, email and few details of each contact. The following options are available</p>\r\n<h2>Create a new contact</h2>\r\n<ol>\r\n<li>Click the insert button</li>\r\n<li>Fill-in the contact details. The contact name and e-mail fields should not be left empty</li>\r\n<li>Click insert to create the new contact</li>\r\n</ol>\r\n<p>Please note: Multiple phone number can be inserted when you edit a contact. To separate each contact''s phone hit the enter key. For example:</p>\r\n<p>+1-123 456 789<br />+1-123 789 456</p>\r\n<h2>Editing existing contacts</h2>\r\n<p>To edit an existing contact click either the edit icon under the action column of the appropriate row in the list of contacts or select the contact first and click the edit button.</p>\r\n<ol>\r\n<li>Fill-in the information for the address book contact. </li>\r\n<li>Hit the update button to confirm the changes.</li>\r\n</ol>\r\n<h2>Deleting a contact from the address book</h2>\r\n<ol>\r\n<li>Either click the cross icon of the contact you want to remove or select the contact and hit the delete button.</li>\r\n<li>On the confirmation dialog click confirm to delete the contact.</li>\r\n</ol>\r\n<p>Deleting a contact only affects the address book. The address book has no direct linking with other modules on your site</p>\r\n<h2>Importing contacts into the address book</h2>\r\n<p>Contacts can be imported into the address book from the customers table. The customer table can be updated by other modules or plugins which are active on your site. Customers or other contacts are not immediately imported into the address book. Follow these steps to import new contacts:</p>\r\n<ol>\r\n<li>Hit the import button</li>\r\n<li>Use the checkboxes to select which customers to import</li>\r\n<li>Hit the confirm button</li>\r\n</ol>\r\n<p>If you want all customers to be imported into your address book click the import all customers. A confirmation dialog will appear. Confirm this and any customers not in your address book will be imported.</p>\r\n<p>The system uses the contact e-mail address as the main identifier when importing contacts.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'stats_explain_queries_list', 'Database Tracking and Optimization', '<h2>Explain Queries</h2>\r\n<p>This is an old osCommerce contribution ported to the I-Metrics, allowing a developer to record various aspects of database queries. The module attaches to the low level database drivers and can be optionally enabled. It''s main purpose is to assist developers with database optimization as queries executed can show with the associated table, primary, index keys and timings.</p>\r\n<h2>Utilizing the Explain Queries module</h2>\r\n<p>First of all the functionality of this module should only be used for development not in production as it inserts records to the database each time a query is executed. To enable the module goto your admin-&gt;configuration-&gt;logging and select the Explain Database Queries option. Then set it to true. This will activate the module.</p>\r\n<p>For any queries with the <b>select</b> command, the module will insert a detailed record. These records can then be accessed from here. Simply select the script that you want to see the queries from and click the submit button.</p>\r\n<h2>Explain Queries Listing</h2>\r\n<p>Once a script is submitted the Explain Queries listing will include the following information:</p>\r\n<ul>\r\n<li>\r\nMinimum/Average/Maximum timings</li>\r\n<li>Affected Rows per query and total affected rows</li>\r\n<li>Executed query string</li>\r\n<li>Server request string</li>\r\n<li>Join Type, the different join types are explained in detail in the MySQL manual</li>\r\n<li>The keys used by MySQL for the query</li>\r\n<li>The length of the keys used</li>\r\n<li>The type of reference used columns or constants</li>\r\n<li>Extra information on how the query was resolved</li>\r\n</ul>\r\n<p>All columns are important to check against the intended query. When you \r\nsee highlighted entries in the listing it indicates the queries can be \r\nfurther cached in PHP. The I-Metrics has a first-level cache where it \r\nkeeps track of repeated queries not calling the MySQL functions if \r\npossible. The first level cache is active during script execution. If \r\nyou run the same script multiple times to monitor queries all entries \r\nwill be highlighted. Therefore if you are optimizing at the query code \r\nlevel execute the script once and then check the Explain Queries page.</p>\r\n<h2>Truncate Explain Queries Table</h2>\r\n<p>If you need to start another scan the truncate queries option will clear the recorded queries.</p>\r\n<h2>Export Explain Queries</h2>\r\n<p>Another option is to export a selected table in CSV. Details for the listing are exported and so you can store query data for comparison later on.</p>');
+insert into templates (group_id, template_title, template_subject, template_content) values (3, 'abstract_types_manage', 'Collection Types', '<h2>Content Types</h2>\r\n<p>Content types are used by the collection system of the I-Metrics CMS. The following options are used to insert new content types and manage existing ones.</p>\r\n<p><strong>Creating new content types.</strong><br />First of all before using this page to create a new content type you will need the PHP class of the collection itself. Once you have placed the class in the admin/includes/classes folder you can specify the following properties for the content type:</p>\r\n<ul>\r\n<li><strong>Name</strong> is the name of the content type</li>\r\n<li><strong>Script</strong> the name of the class you created excluding the .php trailer.</li>\r\n<li><strong>Table</strong> is the database table the class refers to accessing the new content type</li>\r\n<li><strong>Sort order</strong> is the order to view the content types under the content management system</li>\r\n</ul>\r\n<p>The <strong>insert</strong> button will create a new content type once the previously mentioned fields are properly setup.</p>\r\n<p><strong>Managing existing content types</strong><br />Existing content types can be altered, disabled or deleted. The following options are available to manage the content types.</p>\r\n<p>The selection checkbox allows to select multiple content entries</p>\r\n<ul>\r\n<li><strong>Content Name</strong> can be changed using the edit box</li>\r\n<li><strong>Script</strong> to be used by the content type</li>\r\n<li><strong>Table</strong> is the database table the class refers to accessing the existing content type</li>\r\n<li>\r\n<strong>Sort order</strong> is the order to view the content types under the content management system</li>\r\n</ul>\r\n<p>The <strong>update</strong> button will update the checked content types. The <strong>delete</strong> button will delete the checked content types. For delete operations a confirmation screen is available.</p>');
+
+DROP TABLE IF EXISTS templates_groups;
+CREATE TABLE templates_groups (
+  group_id int(11) NOT NULL auto_increment,
+  group_title VARCHAR(64) NOT NULL,
+  PRIMARY KEY (group_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+insert into templates_groups (group_id, group_title) values 
+('1', 'Helpdesk'),
+('3', 'System'),
+('4', 'Content');
 
 drop table if exists whos_online;
 create table whos_online (
   auto_id int(11) not null auto_increment,
   full_name varchar(255) not null ,
   session_id varchar(64) not null ,
-  ip_address varchar(15) not null ,
+  ip_address varchar(40) not null ,
   time_entry varchar(14) not null ,
   time_last_click varchar(14) not null ,
   last_page_url varchar(255) not null ,
   cookie_sent tinyint(1) default '0' not null ,
   PRIMARY KEY (auto_id)
-) TYPE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

@@ -110,13 +110,14 @@ var image_control = {
       return;
     }
 
-    image_control.imageBoxDialog = $('#modalBox').clone().show().appendTo(document.body).dialog({
+    //image_control.imageBoxDialog = $('#modalBox').clone().show().appendTo(document.body).dialog({
+    image_control.imageBoxDialog = $('#modalBox').show().dialog({
       resizable:  options.resizable || true,
       modal:      options.modal || true,
       shadow:     options.shadow || false,
       width:      options.width || 640,
       // Do not specify height use style instead
-      //height:     options.height || 480,
+      height:     options.height || 480,
       minWidth:   options.minWidth || 200,
       minHeight:  options.minHeight || 200,
       buttons:    cbuttons,
@@ -137,6 +138,7 @@ var image_control = {
         });
 
         $dialog.html(msg);
+        this.style.overflow = 'scroll';
 
         for( var entry in options ) {
           $dialog.data(entry+".dialog", options[entry]);
@@ -220,11 +222,14 @@ var image_control = {
           title: 'Image Folders and Selection',
           resizable:  true
         };
+        var styles = {};
+
         var styles = {
           height: '480px',
           margin: 'auto',
           overflow: 'auto'
         };
+
         image_control.showDialog(msg, options, callbacks, styles);
       }
     });
@@ -289,7 +294,13 @@ var image_control = {
               $entry = '<a' + $rel + ' href="' + $org_image.val() + '" title="' + $desc.val() + '" class="' + $popup.val() + '" target="_blank" class="imetrics_popup">' + $entry + '</a>';
             }
             $this.dialog('close');
-            image_control.editObject.editors[0].execCommand('mceInsertContent', false, $entry);
+            if( typeof(image_control.editObject) == 'string' ) {
+              var $doc = $('body');
+              var $area = $doc.find(':input[name='+image_control.editObject+']');
+              $area.val($area.val()+$entry);
+            } else {
+              image_control.editObject.editors[0].execCommand('mceInsertContent', false, $entry);
+            }
           },
 
           'Preview': function() {
@@ -368,6 +379,15 @@ var image_control = {
     if( !image_control.baseURL ) {
       alert('AJAX Base URL not specified - aborting');
       return;
+    }
+
+    var wrapper = '';
+    var $modal = $('#modalBox');
+    if( !$modal.length ) {
+      $('body').append(
+        wrapper = $('<div id="modalBox" title="Image Selection" style="display:none; overflow: hidden;">Loading...Please Wait</div>')
+      );
+      var inner = $('<div id="ajaxLoader" title="Image Manager" style="display:none;"><img src="includes/javascript/jquery/themes/smoothness/images/ajax_load.gif"><p id="ajaxMsg" class="main">Updating, please wait...</p><hr /></div>').appendTo(wrapper);
     }
 
     image_control.imageBoxOpenFlag = false;

@@ -9,7 +9,7 @@
 
 //----------------------------------------------------------------------------
 // Modifications by Asymmetrics
-// Copyright (c) 2007-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2007-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // Front: Split results into multiple pages
@@ -17,24 +17,21 @@
 // I-Metrics CMS
 //----------------------------------------------------------------------------
 // Modifications:
-// - 07/05/2007: PHP5 Register Globals and Long Arrays Off support added
-// - 07/08/2007: PHP5 Long Arrays Off support added
-// - 09/24/2009: Rewritten constructor to support SQL conbinations for 
-//               ordering, grouping, sorting. Removed POST dependencies.
-// - 09/25/2009: Changed display_links function not to generate a link with
-//               page parameter for the min and max page to eliminate 
-//               duplicated URLs from the splitter.
+// - Restructured for the I-Metrics CMS
+// - Modified constructor to properly count the total on "distinct" and "group by"
+// as it is used by the SEO-G framwework. Stock osc does not use the class with
+// distinct but other contributions do. To avoid confusion this separate class
+// is used with SEO-G.
+// - Removed globals
 //----------------------------------------------------------------------------
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
 
   class splitPageResults {
-    var $sql_query, $number_of_rows, $current_page_number, $number_of_pages, $number_of_rows_per_page, $page_name;
-
-/* class constructor */
+    // compatibility constructor
     function splitPageResults($query, $max_rows, $count_key = '*', $page_holder = 'page') {
-      global $g_db;
+      extract(tep_load('database'));
 
       $this->sql_query = $query;
       $this->page_name = $page_holder;
@@ -62,14 +59,15 @@
       $pos_order_by = strpos($this->sql_query, ' order by', $pos_from);
       if (($pos_order_by < $pos_to) && ($pos_order_by !== false)) $pos_to = $pos_order_by;
 
-      if (strpos($this->sql_query, 'distinct') || strpos($this->sql_query, 'group by')) {
-        $count_string = 'distinct ' . $g_db->input($count_key);
+      //if (strpos($this->sql_query, 'distinct') || strpos($this->sql_query, 'group by')) {
+      if( strpos($this->sql_query, 'distinct') ) {
+        $count_string = 'distinct ' . $db->input($count_key);
       } else {
-        $count_string = $g_db->input($count_key);
+        $count_string = $db->input($count_key);
       }
 
-      $count_query = $g_db->query("select count(" . $count_string . ") as total " . substr($this->sql_query, $pos_from, ($pos_to - $pos_from)), true);
-      $count = $g_db->fetch_array($count_query);
+      $count_query = $db->fly("select count(" . $count_string . ") as total " . substr($this->sql_query, $pos_from, ($pos_to - $pos_from)) );
+      $count = $db->fetch_array($count_query);
       $this->number_of_rows = $count['total'];
 
       $this->number_of_pages = ceil($this->number_of_rows / $this->number_of_rows_per_page);
@@ -77,17 +75,17 @@
       if ($this->current_page_number > $this->number_of_pages) {
         $this->current_page_number = $this->number_of_pages;
       }
-
-      $offset = ($this->number_of_rows_per_page * ($this->current_page_number - 1));
-
-      $this->sql_query .= " limit " . max($offset, 0) . ", " . $this->number_of_rows_per_page;
+      if( $this->number_of_pages > 1 ) {
+        $offset = ($this->number_of_rows_per_page * ($this->current_page_number - 1));
+        $this->sql_query .= " limit " . max($offset, 0) . ", " . $this->number_of_rows_per_page;
+      }
     }
 
 /* class functions */
 
 // display split-page-number-links
     function display_links($max_page_links, $parameters = '', $style_class= 'pageResults' ) {
-      global $PHP_SELF, $request_type;
+      extract(tep_load('defs'));
 
       $display_links_string = '';
 
@@ -95,9 +93,9 @@
 
 // previous button - not displayed on first page
       if( $this->current_page_number == 2 ) { 
-        if ($this->current_page_number > 1) $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters, $request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_PREVIOUS_PAGE . ' ">' . PREVNEXT_BUTTON_PREV . '</a>';
+        if ($this->current_page_number > 1) $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters, $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_PREVIOUS_PAGE . ' ">' . PREVNEXT_BUTTON_PREV . '</a>';
       } else {
-        if ($this->current_page_number > 1) $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . ($this->current_page_number - 1), $request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_PREVIOUS_PAGE . ' ">' . PREVNEXT_BUTTON_PREV . '</a>';
+        if ($this->current_page_number > 1) $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . ($this->current_page_number - 1), $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_PREVIOUS_PAGE . ' ">' . PREVNEXT_BUTTON_PREV . '</a>';
       }
 
 // check if number_of_pages > $max_page_links
@@ -108,7 +106,7 @@
       if ($this->number_of_pages % $max_page_links) $max_window_num++;
 
 // previous window of pages
-      if ($cur_window_num > 1) $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . (($cur_window_num - 1) * $max_page_links), $request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PREV_SET_OF_NO_PAGE, $max_page_links) . ' ">...</a>';
+      if ($cur_window_num > 1) $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . (($cur_window_num - 1) * $max_page_links), $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PREV_SET_OF_NO_PAGE, $max_page_links) . ' ">...</a>';
 
 // page nn button
       for ($jump_to_page = 1 + (($cur_window_num - 1) * $max_page_links); ($jump_to_page <= ($cur_window_num * $max_page_links)) && ($jump_to_page <= $this->number_of_pages); $jump_to_page++) {
@@ -119,17 +117,17 @@
             $display_links_string .= '<b>' . $jump_to_page . '</b>';
           }
         } elseif( $jump_to_page == 1 ) {
-          $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters, $request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PAGE_NO, $jump_to_page) . ' ">' . $jump_to_page . '</a>';
+          $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters, $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PAGE_NO, $jump_to_page) . ' ">' . $jump_to_page . '</a>';
         } else {
-          $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . $jump_to_page, $request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PAGE_NO, $jump_to_page) . ' ">' . $jump_to_page . '</a>';
+          $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . $jump_to_page, $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_PAGE_NO, $jump_to_page) . ' ">' . $jump_to_page . '</a>';
         }
       }
 
 // next window of pages
-      if ($cur_window_num < $max_window_num) $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . (($cur_window_num) * $max_page_links + 1), $request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_NEXT_SET_OF_NO_PAGE, $max_page_links) . ' ">...</a>';
+      if ($cur_window_num < $max_window_num) $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . (($cur_window_num) * $max_page_links + 1), $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . sprintf(PREVNEXT_TITLE_NEXT_SET_OF_NO_PAGE, $max_page_links) . ' ">...</a>';
 
 // next button
-      if (($this->current_page_number < $this->number_of_pages) && ($this->number_of_pages != 1)) $display_links_string .= '<a href="' . tep_href_link(basename($PHP_SELF), $parameters . $this->page_name . '=' . ($this->current_page_number + 1), $request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_NEXT_PAGE . ' ">' . PREVNEXT_BUTTON_NEXT . '</a>';
+      if (($this->current_page_number < $this->number_of_pages) && ($this->number_of_pages != 1)) $display_links_string .= '<a href="' . tep_href_link($cDefs->script, $parameters . $this->page_name . '=' . ($this->current_page_number + 1), $cDefs->request_type) . '" class="' . $style_class . '" title=" ' . PREVNEXT_TITLE_NEXT_PAGE . ' ">' . PREVNEXT_BUTTON_NEXT . '</a>';
 
       return $display_links_string;
     }

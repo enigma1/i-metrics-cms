@@ -38,46 +38,49 @@
 
       if (tep_not_null($this->file) && tep_not_null($this->destination)) {
         $this->set_output_messages('session');
-
-        if ( ($this->parse() == true) && ($this->save() == true) ) {
+        if( $this->parse() == true && $this->save() == true ) {
           $this->c_result = true;
         }
       }
     }
 
     function parse() {
-      global $messageStack;
-      if (isset($_FILES[$this->file])) {
-        $file = array('name' => $_FILES[$this->file]['name'],
-                      'type' => $_FILES[$this->file]['type'],
-                      'size' => $_FILES[$this->file]['size'],
-                      'tmp_name' => $_FILES[$this->file]['tmp_name']);
-      } elseif (isset($GLOBALS['_FILES'][$this->file])) {
+      extract(tep_load('message_stack'));
 
-        $file = array('name' => $_FILES[$this->file]['name'],
-                      'type' => $_FILES[$this->file]['type'],
-                      'size' => $_FILES[$this->file]['size'],
-                      'tmp_name' => $_FILES[$this->file]['tmp_name']);
+      if (isset($_FILES[$this->file])) {
+        $file = array(
+          'name' => $_FILES[$this->file]['name'],
+          'type' => $_FILES[$this->file]['type'],
+          'size' => $_FILES[$this->file]['size'],
+          'tmp_name' => $_FILES[$this->file]['tmp_name']
+        );
+      } elseif (isset($GLOBALS['_FILES'][$this->file])) {
+        $file = array(
+          'name' => $_FILES[$this->file]['name'],
+          'type' => $_FILES[$this->file]['type'],
+          'size' => $_FILES[$this->file]['size'],
+          'tmp_name' => $_FILES[$this->file]['tmp_name']
+        );
       } else {
-        $file = array('name' => (isset($GLOBALS[$this->file . '_name']) ? $GLOBALS[$this->file . '_name'] : ''),
-                      'type' => (isset($GLOBALS[$this->file . '_type']) ? $GLOBALS[$this->file . '_type'] : ''),
-                      'size' => (isset($GLOBALS[$this->file . '_size']) ? $GLOBALS[$this->file . '_size'] : ''),
-                      'tmp_name' => (isset($GLOBALS[$this->file]) ? $GLOBALS[$this->file] : ''));
+        $file = array(
+          'name' => (isset($GLOBALS[$this->file . '_name']) ? $GLOBALS[$this->file . '_name'] : ''),
+          'type' => (isset($GLOBALS[$this->file . '_type']) ? $GLOBALS[$this->file . '_type'] : ''),
+          'size' => (isset($GLOBALS[$this->file . '_size']) ? $GLOBALS[$this->file . '_size'] : ''),
+          'tmp_name' => (isset($GLOBALS[$this->file]) ? $GLOBALS[$this->file] : '')
+        );
       }
 
       if ( tep_not_null($file['tmp_name']) && ($file['tmp_name'] != 'none') && is_uploaded_file($file['tmp_name']) ) {
         if (sizeof($this->extensions) > 0) {
           if (!in_array(strtolower(substr($file['name'], strrpos($file['name'], '.')+1)), $this->extensions)) {
             if ($this->message_location == 'direct') {
-              $messageStack->add(ERROR_FILETYPE_NOT_ALLOWED, 'error');
+              $msg->add(ERROR_FILETYPE_NOT_ALLOWED, 'error');
             } else {
-              $messageStack->add_session(ERROR_FILETYPE_NOT_ALLOWED, 'error');
+              $msg->add_session(ERROR_FILETYPE_NOT_ALLOWED, 'error');
             }
-
             return false;
           }
         }
-
         $this->set_filename($file['name']);
         if( isset($_FILES[$this->file]['name']) ) {
           $_FILES[$this->file]['name'] = $file['name'];
@@ -85,20 +88,23 @@
         $this->set_tmp_filename($file['tmp_name']);
         $this->set_file($file);
 
-        return $this->check_destination();
+        if( empty($this->destination) ) {
+          return true;
+        } else {
+          return $this->check_destination();
+        }
       } else {
         if ($this->message_location == 'direct') {
-          $messageStack->add(WARNING_NO_FILE_UPLOADED, 'warning');
+          $msg->add(WARNING_NO_FILE_UPLOADED, 'warning');
         } else {
-          $messageStack->add_session(WARNING_NO_FILE_UPLOADED, 'warning');
+          $msg->add_session(WARNING_NO_FILE_UPLOADED, 'warning');
         }
-
         return false;
       }
     }
 
     function save() {
-      global $messageStack;
+      extract(tep_load('message_stack'));
 
       if (substr($this->destination, -1) != '/') $this->destination .= '/';
 
@@ -106,21 +112,21 @@
         return false;
       }
 
-      if (move_uploaded_file($this->file['tmp_name'], $this->destination . $this->filename)) {
+      if( move_uploaded_file($this->file['tmp_name'], $this->destination . $this->filename) ) {
         chmod($this->destination . $this->filename, $this->permissions);
 
         if ($this->message_location == 'direct') {
-          $messageStack->add(SUCCESS_FILE_SAVED_SUCCESSFULLY, 'success');
+          $msg->add(SUCCESS_FILE_SAVED_SUCCESSFULLY, 'success');
         } else {
-          $messageStack->add_session(SUCCESS_FILE_SAVED_SUCCESSFULLY, 'success');
+          $msg->add_session(SUCCESS_FILE_SAVED_SUCCESSFULLY, 'success');
         }
 
         return true;
       } else {
         if ($this->message_location == 'direct') {
-          $messageStack->add(ERROR_FILE_NOT_SAVED, 'error');
+          $msg->add(ERROR_FILE_NOT_SAVED, 'error');
         } else {
-          $messageStack->add_session(ERROR_FILE_NOT_SAVED, 'error');
+          $msg->add_session(ERROR_FILE_NOT_SAVED, 'error');
         }
 
         return false;
@@ -161,20 +167,20 @@
     }
 
     function check_destination() {
-      global $messageStack;
+      extract(tep_load('message_stack'));
 
       if (!is_writeable($this->destination)) {
         if (is_dir($this->destination)) {
           if ($this->message_location == 'direct') {
-            $messageStack->add(sprintf(ERROR_DESTINATION_NOT_WRITEABLE, $this->destination), 'error');
+            $msg->add(sprintf(ERROR_DESTINATION_NOT_WRITEABLE, $this->destination), 'error');
           } else {
-            $messageStack->add_session(sprintf(ERROR_DESTINATION_NOT_WRITEABLE, $this->destination), 'error');
+            $msg->add_session(sprintf(ERROR_DESTINATION_NOT_WRITEABLE, $this->destination), 'error');
           }
         } else {
           if ($this->message_location == 'direct') {
-            $messageStack->add(sprintf(ERROR_DESTINATION_DOES_NOT_EXIST, $this->destination), 'error');
+            $msg->add(sprintf(ERROR_DESTINATION_DOES_NOT_EXIST, $this->destination), 'error');
           } else {
-            $messageStack->add_session(sprintf(ERROR_DESTINATION_DOES_NOT_EXIST, $this->destination), 'error');
+            $msg->add_session(sprintf(ERROR_DESTINATION_DOES_NOT_EXIST, $this->destination), 'error');
           }
         }
 
@@ -196,11 +202,8 @@
       }
     }
 
-    function create_safe_string($string, $separator='-') {
-      $string = preg_replace('/\s\s+/', ' ', trim($string));
-      $string = preg_replace("/[^0-9a-z\/\-.]+/i", $separator, strtolower($string));
-      $string = trim($string, $separator);
-      $string = str_replace($separator . $separator . $separator, $separator, $string);
+    function create_safe_string($string) {
+      $string = tep_create_safe_string(strtolower($string), '-', "/[^0-9a-z\/\-.]+/i");
       return $string;
     }
 

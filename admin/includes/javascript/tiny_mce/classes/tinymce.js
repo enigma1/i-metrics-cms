@@ -10,7 +10,7 @@
 
 (function(win) {
 	var whiteSpaceRe = /^\s*|\s*$/g,
-		undefined;
+		undefined, isRegExpBroken = 'B'.replace(/A(.)|B/, '$1') === '$1';
 
 	/**
 	 * Core namespace with core functionality for the TinyMCE API all sub classes will be added to this namespace/object.
@@ -27,7 +27,7 @@
 	 * if (tinymce.isIE)
 	 *   console.log("IE");
 	 */
-	win.tinymce = win.tinyMCE = {
+	var tinymce = {
 		/**
 		 * Major version of TinyMCE build.
 		 *
@@ -47,7 +47,7 @@
 		/**
 		 * Release date of TinyMCE build.
 		 *
-		 * @property minorVersion
+		 * @property releaseDate
 		 * @type String
 		 */
 		releaseDate : '@@tinymce_release_date@@',
@@ -121,6 +121,15 @@
 			 */
 			t.isAir = /adobeair/i.test(ua);
 
+			/**
+			 * Constant that tells if the current browser is an iPhone or iPad.
+			 *
+			 * @property isIDevice
+			 * @type Boolean
+			 * @final
+			 */
+			t.isIDevice = /(iPad|iPhone)/.test(ua);
+
 			// TinyMCE .NET webcontrol might be setting the values for TinyMCE
 			if (win.tinyMCEPreInit) {
 				t.suffix = tinyMCEPreInit.suffix;
@@ -145,7 +154,7 @@
 			}
 
 			function getBase(n) {
-				if (n.src && /tiny_mce(|_gzip|_jquery|_prototype)(_dev|_src)?.js/.test(n.src)) {
+				if (n.src && /tiny_mce(|_gzip|_jquery|_prototype|_full)(_dev|_src)?.js/.test(n.src)) {
 					if (/_(src|dev)\.js/g.test(n.src))
 						t.suffix = '_src';
 
@@ -471,7 +480,7 @@
 		createNS : function(n, o) {
 			var i, v;
 
-			o = o || window;
+			o = o || win;
 
 			n = n.split('.');
 			for (i=0; i<n.length; i++) {
@@ -642,6 +651,29 @@
 				return u + v;
 
 			return u.replace('#', v + '#');
+		},
+
+		// Fix function for IE 9 where regexps isn't working correctly
+		// Todo: remove me once MS fixes the bug
+		_replace : function(find, replace, str) {
+			// On IE9 we have to fake $x replacement
+			if (isRegExpBroken) {
+				return str.replace(find, function() {
+					var val = replace, args = arguments, i;
+
+					for (i = 0; i < args.length - 2; i++) {
+						if (args[i] === undefined) {
+							val = val.replace(new RegExp('\\$' + i, 'g'), '');
+						} else {
+							val = val.replace(new RegExp('\\$' + i, 'g'), args[i]);
+						}
+					}
+
+					return val;
+				});
+			}
+
+			return str.replace(find, replace);
 		}
 
 		/**#@-*/
@@ -649,4 +681,7 @@
 
 	// Initialize the API
 	tinymce._init();
+
+	// Expose tinymce namespace to the global namespace (window)
+	win.tinymce = win.tinyMCE = tinymce;
 })(window);

@@ -1,7 +1,7 @@
 <?php
 /*
 //----------------------------------------------------------------------------
-// Copyright (c) 2006-2010 Asymmetric Software - Innovation & Excellence
+// Copyright (c) 2006-2011 Asymmetric Software - Innovation & Excellence
 // Author: Mark Samios
 // http://www.asymmetrics.com
 // META-G Meta-Tags class
@@ -30,8 +30,6 @@
     var $path, $query, $params_array, $error_level, $handler_flag, $script;
 
     function metaG() {
-      global $PHP_SELF;
-      $this->script = basename($PHP_SELF);
       $this->path = $this->query = '';
       $this->params_array = array();
       $this->query_array = array();
@@ -39,9 +37,7 @@
     }
 
     function create_safe_string($string, $separator=META_DEFAULT_WORDS_SEPARATOR, $word_length=META_DEFAULT_WORD_LENGTH) {
-      if( empty($separator) ) {
-        $separator = ' ';
-      }
+      if( empty($separator) ) $separator = ' ';
 
       $string = trim(strip_tags($string));
       $string = trim(preg_replace('#[^\p{L}\p{N}]+#u', ' ', $string));
@@ -67,9 +63,8 @@
     }
 
     function create_keywords_array($string, $separator=META_DEFAULT_KEYWORDS_SEPARATOR) {
-      if( !tep_not_null($separator) ) {
-        $separator = ' ';
-      }
+      if( empty($separator) ) $separator = ' ';
+
       $string = str_replace(META_DEFAULT_WORDS_SEPARATOR, $separator, $string);
       $string = $this->create_safe_string($string, $separator);
       $keywords_array = explode(META_DEFAULT_KEYWORDS_SEPARATOR, $string, META_MAX_KEYWORDS);
@@ -77,9 +72,8 @@
     }
 
     function create_keywords_string($string, $separator=META_DEFAULT_KEYWORDS_SEPARATOR) {
-      if( empty($separator) ) {
-        $separator = ' ';
-      }
+      if( empty($separator) ) $separator = ' ';
+
       $string = trim(strip_tags($string));
       $keywords_array = $this->create_keywords_array($string, $separator);
       $string = implode(',',$keywords_array);
@@ -87,12 +81,10 @@
     }
 
     function create_keywords_lexico($string, $separator=META_DEFAULT_KEYWORDS_SEPARATOR) {
-      global $g_db;
-      if( empty($separator) ) {
-        $separator = ' ';
-      }
+      extract(tep_load('defs', 'database'));
 
-      //$string = tep_sanitize_string($string, ' ');
+      if( empty($separator) ) $separator = ' ';
+
       $string = $this->create_safe_string($string);
       $phrases_array = explode($separator, $string);
       $keywords_array = array();
@@ -101,13 +93,14 @@
         if( $index > META_MAX_KEYWORDS) break;
         if( is_numeric($value) ) continue;
         if( strlen($value) <= META_DEFAULT_WORD_LENGTH) continue;
-        $check_query = $g_db->query("select meta_exclude_key from " . TABLE_META_EXCLUDE . " where meta_exclude_text like '%" . $g_db->input($value) . "%' and meta_exclude_status='1'");
-        if( $g_db->num_rows($check_query) ) continue;
+        $check_query = $db->query("select meta_exclude_key from " . TABLE_META_EXCLUDE . " where meta_exclude_text like '%" . $db->input($value) . "%' and meta_exclude_status='1'");
+        if( $db->num_rows($check_query) ) continue;
 
         $process = false;
         if( META_USE_LEXICO == 'true' ) {
-          $check_query = $g_db->query("select meta_lexico_key as id, meta_lexico_text as text from " . TABLE_META_LEXICO . " where meta_lexico_text like '%" . $g_db->input($g_db->prepare_input($value)) . "%' and meta_lexico_status='1' order by sort_id");
-          if( $check_array = $g_db->fetch_array($check_query) ) {
+          $check_query = $db->query("select meta_lexico_key as id, meta_lexico_text as text from " . TABLE_META_LEXICO . " where meta_lexico_text like '%" . $db->filter($value) . "%' and meta_lexico_status='1' order by sort_id");
+          if( $db->num_rows($check_query) ) {
+            $check_array = $db->fetch_array($check_query);
             $tmp_string = $this->create_safe_string($check_array['text']);
             $md5_key = md5($tmp_string);
             $keywords_array[$check_array['id']] = $tmp_string;
@@ -127,30 +120,32 @@
     }
 
     function get_script_tags(&$results_array) {
-      global $g_db;
+      extract(tep_load('defs', 'database'));
 
       $result = false;
-      $check_query = $g_db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_scripts' and meta_types_status='1'");
-      if( $check_array = $g_db->fetch_array($check_query) ) {
+      $check_query = $db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_scripts' and meta_types_status='1'");
+      if( $db->num_rows($check_query) ) {
+        $check_array = $db->fetch_array($check_query);
         $index_key = $check_array['sort_order'] . '_' . $check_array['meta_types_linkage'];
       } else {
         return $result;
       }
 
-      $md5_key = md5($this->script);
+      $md5_key = md5($cDefs->script);
 
       if( !is_array($results_array) ) {
         $results_array = array();
       }
 
-      $scripts_query = $g_db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_SCRIPTS . " where meta_scripts_key = '" . $g_db->input($g_db->prepare_input($md5_key)) . "'");
-      if( $scripts_array = $g_db->fetch_array($scripts_query) ) {
+      $scripts_query = $db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_SCRIPTS . " where meta_scripts_key = '" . $db->filter($md5_key) . "'");
+      if( $db->num_rows($scripts_query) ) {
+        $scripts_array = $db->fetch_array($scripts_query);
         $results_array[$index_key] = array(
-                                 'type' => 'meta_scripts',
-                                 'title' => $scripts_array['meta_title'],
-                                 'keywords' => $scripts_array['meta_keywords'],
-                                 'text' => $scripts_array['meta_text']
-                                );
+          'type' => 'meta_scripts',
+          'title' => $scripts_array['meta_title'],
+          'keywords' => $scripts_array['meta_keywords'],
+          'text' => $scripts_array['meta_text']
+        );
         $result = true;
       } else {
         //$this->auto_builder($inner[0], $inner[1]);
@@ -159,15 +154,18 @@
     }
 
     function get_meta_tags($params_array) {
+      extract(tep_load('defs'));
+
       $tmp_array = array();
-      if( tep_not_null(META_GOOGLE_VERIFY) && $this->script == FILENAME_DEFAULT ) {
-        $tmp_array['google_verify'] = '<meta name="verify-v1" content="' . META_GOOGLE_VERIFY . '" />';
+
+      if( !tep_empty(META_GOOGLE_VERIFY) && $cDefs->script == FILENAME_DEFAULT ) {
+        $tmp_array['google_verify'] = '<meta name="google-site-verification" content="' . META_GOOGLE_VERIFY . '" />';
       }
 
       $tags_array = $this->get_tags_info($params_array);
 
       if( !is_array($tags_array) || !count($tags_array) ) {
-        $string = substr($this->script, 0, -4);
+        $string = tep_get_script_name();
         $title = $this->create_safe_string($string, META_DEFAULT_WORDS_SEPARATOR, 0);
         $tmp_array['title'] = '<title>' . STORE_NAME . ' ' . $title . '</title>';
         $tmp_array['author'] = '<meta name="author" content="' . STORE_NAME . '" />';
@@ -206,7 +204,7 @@
 
     // Get tags for parameters/scripts
     function get_tags_info($params_array) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $results_array = array();
       $flags_array = array('other' => false);
@@ -227,23 +225,23 @@
               die('hack attempt');
             }
 
-            $check_query = $g_db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_abstract' and meta_types_status='1'");
-            if( $check_array = $g_db->fetch_array($check_query) ) {
+            $check_query = $db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_abstract' and meta_types_status='1'");
+            if( $check_array = $db->fetch_array($check_query) ) {
               $index_key = $check_array['sort_order'] . '_' . $check_array['meta_types_linkage'];
             } else {
               break;
             }
 
             $this->auto_builder($key, $value);
-            $tags_query = $g_db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_ABSTRACT . " where abstract_zone_id = '" . (int)$value . "'");
-            if( $g_db->num_rows($tags_query) ) {
-              $tags = $g_db->fetch_array($tags_query);
+            $tags_query = $db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_ABSTRACT . " where abstract_zone_id = '" . (int)$value . "'");
+            if( $db->num_rows($tags_query) ) {
+              $tags = $db->fetch_array($tags_query);
               $results_array[$index_key] = array(
-                                       'type' => 'meta_abstract',
-                                       'title' => $tags['meta_title'],
-                                       'keywords' => $tags['meta_keywords'],
-                                       'text' => $tags['meta_text']
-                                      );
+                'type' => 'meta_abstract',
+                'title' => $tags['meta_title'],
+                'keywords' => $tags['meta_keywords'],
+                'text' => $tags['meta_text']
+              );
             }
             $flags_array[$key] = $value;
             break;
@@ -253,23 +251,24 @@
               die('hack attempt');
             }
 
-            $check_query = $g_db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_gtext' and meta_types_status='1'");
-            if( $check_array = $g_db->fetch_array($check_query) ) {
+            $check_query = $db->query("select sort_order, meta_types_linkage from " . TABLE_META_TYPES . " where meta_types_class='meta_gtext' and meta_types_status='1'");
+            if( $db->num_rows($check_query) ) {
+              $check_array = $db->fetch_array($check_query);
               $index_key = $check_array['sort_order'] . '_' . $check_array['meta_types_linkage'];
             } else {
               break;
             }
 
             $this->auto_builder($key, $value);
-            $tags_query = $g_db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$value . "'");
-            if( $g_db->num_rows($tags_query) ) {
-              $tags = $g_db->fetch_array($tags_query);
+            $tags_query = $db->query("select meta_title, meta_keywords, meta_text from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$value . "'");
+            if( $db->num_rows($tags_query) ) {
+              $tags = $db->fetch_array($tags_query);
               $results_array[$index_key] = array(
-                                       'type' => 'meta_gtext',
-                                       'title' => $tags['meta_title'],
-                                       'keywords' => $tags['meta_keywords'],
-                                       'text' => $tags['meta_text']
-                                      );
+                'type' => 'meta_gtext',
+                'title' => $tags['meta_title'],
+                'keywords' => $tags['meta_keywords'],
+                'text' => $tags['meta_text']
+              );
             }
             $flags_array[$key] = $value;
             break;
@@ -281,12 +280,11 @@
             $index_key = '99' . '_' . '-1';
 
             $results_array[$index_key] = array(
-                                       'type' => 'page',
-                                       'title' => 'Page-' . $value,
-                                       'keywords' => '',
-                                       'text' => ''
-                                      );
-
+              'type' => 'page',
+              'title' => 'Page-' . $value,
+              'keywords' => '',
+              'text' => ''
+             );
             $flags_array[$key] = $value;
             break;
           default:
@@ -314,7 +312,7 @@
     function resolve_linkage(&$results_array) {
       $keys_array = $link_array = array();
       foreach($results_array as $key => $value) {
-        list($sort, $link) = split("_", $key, 2);
+        list($sort, $link) = preg_split('/_/', $key, 2);
         $keys_array[$sort] = $value;
         $link_array[$sort] = $link;
       }
@@ -345,20 +343,21 @@
 
 
     function auto_builder($entity, $id, $extra = 'none') {
-      global $g_db;
+      extract(tep_load('database'));
 
       if( META_BUILDER == 'false' )
         return;
 
       switch($entity) {
         case 'abz_id':
-          $check_query = $g_db->query("select abstract_zone_id from " . TABLE_META_ABSTRACT . " where abstract_zone_id = '" . (int)$id . "'");
-          if( $g_db->num_rows($check_query) ) 
+          $check_query = $db->query("select abstract_zone_id from " . TABLE_META_ABSTRACT . " where abstract_zone_id = '" . (int)$id . "'");
+          if( $db->num_rows($check_query) ) 
             return;
 
-          $abstract_query = $g_db->query("select azt.abstract_types_class, azt.abstract_types_table, abstract_zone_name, abstract_zone_desc from " . TABLE_ABSTRACT_ZONES . " az left join " . TABLE_ABSTRACT_TYPES . " azt on (az.abstract_types_id=azt.abstract_types_id) where azt.abstract_types_status='1' and az.abstract_zone_id = '" . (int)$id . "'");
-          if( !$g_db->num_rows($abstract_query) ) return;
-          $abstract_array = $g_db->fetch_array($abstract_query);
+          $abstract_query = $db->query("select azt.abstract_types_class, azt.abstract_types_table, abstract_zone_name, abstract_zone_desc from " . TABLE_ABSTRACT_ZONES . " az left join " . TABLE_ABSTRACT_TYPES . " azt on (az.abstract_types_id=azt.abstract_types_id) where azt.abstract_types_status='1' and az.abstract_zone_id = '" . (int)$id . "'");
+          if( !$db->num_rows($abstract_query) ) return;
+
+          $abstract_array = $db->fetch_array($abstract_query);
           $meta_name = $this->create_safe_string($abstract_array['abstract_zone_name'], META_DEFAULT_WORDS_SEPARATOR, 0 );
           $meta_text = tep_truncate_string($abstract_array['abstract_zone_desc'], META_MAX_DESCRIPTION);
           $keywords_array = array();
@@ -370,7 +369,6 @@
               break;
             default:
               break;
-
           }
 
           if( count($keywords_array) ) {
@@ -384,31 +382,31 @@
           }
 
           $sql_data_array = array(
-                                  'abstract_zone_id' => (int)$id,
-                                  'meta_title' => $g_db->prepare_input($meta_name),
-                                  'meta_keywords' => $g_db->prepare_input($meta_keywords),
-                                  'meta_text' => $g_db->prepare_input($meta_text)
-                                 );
-          $g_db->perform(TABLE_META_ABSTRACT, $sql_data_array, 'insert');
+            'abstract_zone_id' => (int)$id,
+            'meta_title' => $db->prepare_input($meta_name),
+            'meta_keywords' => $db->prepare_input($meta_keywords),
+            'meta_text' => $db->prepare_input($meta_text)
+          );
+          $db->perform(TABLE_META_ABSTRACT, $sql_data_array, 'insert');
           break;
         case 'gtext_id':
-          $check_query = $g_db->query("select gtext_id from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$id . "'");
-          if( $g_db->num_rows($check_query) ) return;
+          $check_query = $db->query("select gtext_id from " . TABLE_META_GTEXT . " where gtext_id = '" . (int)$id . "'");
+          if( $db->num_rows($check_query) ) return;
 
-          $tags_query = $g_db->query("select gtext_title, gtext_description from " . TABLE_GTEXT . " where gtext_id = '" . (int)$id . "'");
+          $tags_query = $db->query("select gtext_title, gtext_description from " . TABLE_GTEXT . " where gtext_id = '" . (int)$id . "'");
 
-          if( $g_db->num_rows($tags_query) ) {
-            $tags_array = $g_db->fetch_array($tags_query);
+          if( $db->num_rows($tags_query) ) {
+            $tags_array = $db->fetch_array($tags_query);
             $meta_name = $this->create_safe_string($tags_array['gtext_title'], META_DEFAULT_WORDS_SEPARATOR, 0 );
             $meta_keywords = $this->create_keywords_lexico($tags_array['gtext_description']);
             $meta_text = tep_truncate_string($tags_array['gtext_description'], META_MAX_DESCRIPTION);
             $sql_data_array = array(
-                                    'gtext_id' => (int)$id,
-                                    'meta_title' => $g_db->prepare_input($meta_name),
-                                    'meta_keywords' => $g_db->prepare_input($meta_keywords),
-                                    'meta_text' => $g_db->prepare_input($meta_text)
-                                    );
-            $g_db->perform(TABLE_META_GTEXT, $sql_data_array, 'insert');
+              'gtext_id' => (int)$id,
+              'meta_title' => $db->prepare_input($meta_name),
+              'meta_keywords' => $db->prepare_input($meta_keywords),
+              'meta_text' => $db->prepare_input($meta_text)
+            );
+            $db->perform(TABLE_META_GTEXT, $sql_data_array, 'insert');
           }
           break;
         default:
@@ -417,9 +415,8 @@
     }
 
     function get_group_text($zone_id, $table) {
-      global $g_db;
+      extract(tep_load('defs', 'database'));
 
-      $products_array = array();
       $text_array = array();
 
       $tables_array = explode(',', $table);
@@ -427,11 +424,13 @@
         return $text_array;
       }
 
-      $text_query = $g_db->query("select gtd.gtext_id, gt.gtext_title from " . TABLE_GTEXT . " gt left join " . $g_db->prepare_input($g_db->input($tables_array[0])) . " gtd on (gtd.gtext_id=gt.gtext_id) where gtd.abstract_zone_id = '" . (int)$zone_id . "' and gt.status='1' order by gtd.sequence_order");
-      while($text = $g_db->fetch_array($text_query) ) { 
-        $text_array['txt_' . $text['gtext_id']] = $this->create_safe_string($text['gtext_title']);
-        if( count($text_array) > META_MAX_KEYWORDS ) {
-          break;
+      $text_query = $db->query("select gtd.gtext_id, gt.gtext_title from " . TABLE_GTEXT . " gt left join " . $db->filter($tables_array[0]) . " gtd on (gtd.gtext_id=gt.gtext_id) where gtd.abstract_zone_id = '" . (int)$zone_id . "' and gt.status='1' order by gtd.sequence_order");
+      if( $db->num_rows($text_query) ) {
+        while($text = $db->fetch_array($text_query) ) { 
+          $text_array['txt_' . $text['gtext_id']] = $this->create_safe_string($text['gtext_title']);
+          if( count($text_array) > META_MAX_KEYWORDS ) {
+            break;
+          }
         }
       }
       return $text_array;

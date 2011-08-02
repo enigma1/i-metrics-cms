@@ -18,6 +18,8 @@
 */
 
 define('HEADING_TITLE', 'SEO-G Zones');
+define('HEADING_HELP_TITLE', 'Help with Text Pages');
+
 define('HEADING_SUB_TITLE', 'Multi SEO/Zones Options');
 define('TABLE_HEADING_SEO_TYPE', 'Type');
 define('TABLE_HEADING_SEO_ZONES', 'Zones');
@@ -61,6 +63,14 @@ define('TABLE_HEADING_SELECT', 'Select');
 define('TABLE_HEADING_MODE', 'Mode');
 define('TABLE_HEADING_NAME', 'Name');
 
+define('TEXT_INFO_ASSIGN_TEXT', 'Assign Text Entries');
+define('TEXT_INFO_ASSIGN_TEXT_HELP', 'Click the <b>Assign Text Entries box</b> to insert other <b>text page</b> entries into this SEO-G zone. Once you assign text page entries you can change their names using the form below. Alternatively individual friendly names can be edited directly when you edit a text page from the Content Management section');
+define('TEXT_INFO_ASSIGN_COLLECTIONS', 'Assign Collections');
+define('TEXT_INFO_ASSIGN_COLLECTIONS_HELP', 'Click the <b>Assign Collections box</b> to insert other <b>collections</b> into this SEO-G zone of collections. Once you assign the collections you can change their names using the form below. Alternatively individual friendly names can be edited directly when you edit a collection from the Content Management section');
+define('TEXT_INFO_ASSIGN_SCRIPTS', 'Assign Scripts');
+define('TEXT_INFO_ASSIGN_SCRIPTS_HELP', 'Click the <b>Assign Scripts box</b> to insert entire <b>scripts</b> into scripts SEO-G zone and modify their names to match your site\'s content. By default SEO-G will create links for scripts loaded based on its configuration settins. Once you assign the scripts you can specify different friendly names for the URLs creation using the form below. If a script operates exclusively via GET parameters there is no reason to add it here as its name alone will never be exposed from the web-front.');
+
+
 define('TEXT_SELECT_MULTIABSTRACT', 'Select the abstract zones to insert from the following list. Use the header shortcut links for quick and easy selection.');
 define('TEXT_SELECT_MULTIZONES', 'Select the entries from the categories form below to insert into this zone. <br />Note: Duplicate entries are filtered.');
 define('TEXT_SELECT_MULTIGTEXT', 'Select the text entries to insert from the following list. Use the header shortcut links for quick and easy selection.');
@@ -85,6 +95,7 @@ define('TEXT_ALL_VALUES', 'All Values');
 define('TEXT_DISPLAY_NUMBER_OF_SEO_ZONES', 'Displaying <b>%d</b> to <b>%d</b> (of <b>%d</b> seo zones)');
 
 define('TEXT_SELECT_MULTIENTRIES', 'Select the entries to insert from the following list. Entries can then be controlled from the main sub-zone and be related only with this seo zone.');
+define('ERROR_INVALID_NAME', 'Invalid name for collection ID: %s');
 define('WARNING_NOTHING_SELECTED', 'No entries selected. Use the checkboxes to select entries first');
 define('SUCCESS_SELECTED_ADDED', 'Selected Entries Added');
 ?>

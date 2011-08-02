@@ -15,6 +15,11 @@
 //----------------------------------------------------------------------------
 */
 define('HEADING_TITLE', 'Text Pages');
+define('HEADING_TITLE_UPLOAD', 'Load a file into Page Editor');
+define('HEADING_TEXT_FIELDS', 'Text Page Fields');
+define('HEADING_TEXT_EDIT', 'Page Editing');
+define('HEADING_SEO_FIELDS', 'SEO Fields');
+define('HEADING_HELP_TITLE', 'Help with Text Pages');
 
 define('TEXT_TITLE_SEARCH', 'Search:');
 
@@ -50,6 +55,9 @@ define('TEXT_GENERIC_DESCRIPTION', 'Description:');
 define('TEXT_GENERIC_ZONES', 'Page Content Groups Assignment:');
 define('TEXT_DATE_ADDED', 'Date Added:');
 
+define('TEXT_INFO_ENABLE_WP', 'Enable Word-Processor Interface');
+define('TEXT_INFO_DISABLE_WP', 'Disable Word-Processor Interface');
+
 define('TEXT_COPY_AS_DUPLICATE', 'Duplicate entry');
 define('TEXT_GENERIC_AVAILABLE', 'Enabled');
 define('TEXT_GENERIC_NOT_AVAILABLE', 'Disabled');
@@ -58,6 +66,7 @@ define('IMAGE_NEW_GENERIC_TEXT', 'Create a new generic text entry');
 //-MS- SEO-G Added
 define('TEXT_SEO_SECTION', 'SEO Section');
 define('TEXT_SEO_NAME', 'SEO-G Name:');
+define('TEXT_SEO_NAME_FORCE', 'Tick for immediate Link Generation');
 define('TEXT_METAG', 'META-G Tags');
 define('TEXT_META_TITLE', 'META Title:');
 define('TEXT_META_KEYWORDS', 'META Keywords: (separate with comas, do not leave spaces)');
@@ -75,10 +84,18 @@ define('TEXT_INFO_FRONT_DISABLED', 'Disabled Pages');
 define('TEXT_INFO_FRONT_SELECTED', 'Selected Page');
 
 define('TEXT_INFO_BOTH_USE', 'Web-Front Whole Pages');
+define('TEXT_INFO_TEMPLATES', 'Ready Templates:');
+define('TEXT_INFO_INSERT_TEMPLATE', 'Insert Template');
+define('TEXT_INFO_VIEW_TEMPLATE', 'View Template');
+define('TEXT_INFO_TEMPLATE_FILE', 'HTML File:');
 
 define('ERROR_PAGE_TITLE_EMPTY', 'Text Page Title cannot be empty');
 define('ERROR_PAGE_DESCRIPTION_EMPTY', 'Text Page Description cannot be empty');
+define('ERROR_TEMPLATE_FILE_READ', 'Could not read file');
+define('WARNING_SEO_FRIENDLY_FAILED', 'Friendly Link Generation Failed - Make sure the friendly name is unique');
+define('WARNING_WP_CHANGED', 'Word-Processor configuration changed');
 define('WARNING_TEXT_PAGE_REMOVED', 'Text Page Removed');
 define('SUCCESS_TEXT_PAGE_CREATED', 'Text Page Created');
 define('SUCCESS_TEXT_PAGE_UPDATED', 'Text Page Updated');
+define('SUCCESS_TEXT_PAGE_TEMPLATE', 'Template Appended to the end of current content');
 ?>

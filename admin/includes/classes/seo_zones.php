@@ -21,37 +21,44 @@
 */
   class seo_zones {
    var $m_zID, $m_zpage, $m_saction, $m_action, $m_zInfo, $m_sID, $m_spage;
-// class constructor
+    // class constructor
     function seo_zones() {
-      $this->m_zID = isset($_GET['zID'])?$_GET['zID']:'';
-      $this->m_zpage = isset($_GET['zpage'])?$_GET['zpage']:'';
-      $this->m_saction = isset($_GET['saction'])?$_GET['saction']:'';
-      $this->m_action = isset($_GET['action'])?$_GET['action']:'';
-      $this->m_sID = isset($_GET['sID'])?$_GET['sID']:'';
-      $this->m_spage = isset($_GET['spage'])?$_GET['spage']:'';
+      extract(tep_load('defs', 'database'));
+
+      $this->m_action = $cDefs->action;
+      $this->m_zID = isset($_GET['zID'])?(int)$_GET['zID']:'';
+      $this->m_zpage = isset($_GET['zpage'])?(int)$_GET['zpage']:'';
+      $this->m_saction = isset($_GET['saction'])?$db->prepare_input($_GET['saction']):'';
+      $this->m_sID = isset($_GET['sID'])?(int)$_GET['sID']:'';
+      $this->m_spage = isset($_GET['spage'])?(int)$_GET['spage']:'';
+
+      $ext_array = explode(',', SEO_DEFAULT_EXTENSION);
+      if( !is_array($ext_array) || empty($ext_array) ) {
+        $ext_array = array('');
+      }
+      $this->default_extension = $ext_array[0];
     }
 
     function is_top_level() {
-      if( !isset($_GET['action']) ) {
+      extract(tep_load('defs'));
+
+      if( empty($cDefs->action) ) {
         return true;
       }
       return false;
     }
 
     function validate_array_selection($entity, $action='list') {
-      global $messageStack;
+      extract(tep_load('defs', 'message_stack'));
       if( !isset($_POST[$entity]) || !is_array($_POST[$entity]) || !count($_POST[$entity]) ) {
-        $messageStack->add_session(WARNING_NOTHING_SELECTED, 'warning');
-        tep_redirect(tep_href_link(FILENAME_SEO_ZONES, tep_get_all_get_params(array('action')) . 'action=' . $action));
+        $msg->add_session(WARNING_NOTHING_SELECTED, 'warning');
+        tep_redirect(tep_href_link($cDefs->script, tep_get_all_get_params('action') . 'action=' . $action));
       }
     }
 
     function create_safe_string($string, $separator=SEO_DEFAULT_WORDS_SEPARATOR) {
-      $string = preg_replace('/\s\s+/', ' ', trim($string));
-	  $string = preg_replace("/[^0-9a-z\-_]+/i", $separator, strtolower($string));
-      $string = trim($string, $separator);
-      $string = str_replace($separator . $separator . $separator, $separator, $string);
-      $string = str_replace($separator . $separator, $separator, $string);
+      $string = tep_create_safe_string(strtolower($string), $separator, "/[^0-9a-z\-_]+/i");
+
       if(SEO_DEFAULT_WORD_LENGTH > 1) {
         $words_array = explode($separator, $string);
         if( is_array($words_array) ) {
@@ -68,7 +75,7 @@
     }
 
     function adapt_lexico($string, $separator=SEO_DEFAULT_WORDS_SEPARATOR) {
-      global $g_db;
+      extract(tep_load('database'));
 
       $words_array = explode($separator, $string);
       if( !defined(META_USE_LEXICO) || !is_array($words_array) ) {
@@ -81,11 +88,11 @@
           $words_array = array_unique($words_array);
           $tmp_array = array();
           foreach($words_array as $key => $value) {
-            $check_query = $g_db->query("select meta_lexico_text, sort_id from " . TABLE_META_LEXICO . " where meta_lexico_text like '%" . $g_db->filter($value) . "%' and meta_lexico_status='1' order by sort_id limit " . SEO_METAG_INCLUSION_LIMIT);
-            if( !$g_db->num_rows($check_query) )
-              continue;
+            $check_query = $db->query("select meta_lexico_text, sort_id from " . TABLE_META_LEXICO . " where meta_lexico_text like '%" . $db->filter($value) . "%' and meta_lexico_status='1' order by sort_id limit " . SEO_METAG_INCLUSION_LIMIT);
+            if( !$db->num_rows($check_query) ) continue;
+
             unset($words_array[$key]);
-            while( $check_array = $g_db->fetch_array($check_query) ) {
+            while( $check_array = $db->fetch_array($check_query) ) {
               $tmp_array[$check_array['sort_id']] = $this->create_safe_string($check_array['meta_lexico_text'], $separator);
             }
           }
@@ -101,9 +108,9 @@
             $tmp_array[] = md5($value);
           }
 
-          $check_query = $g_db->query("select meta_exclude_text from " . TABLE_META_EXCLUDE . " where meta_exclude_key in ('" . implode("', '", $tmp_array ) . "')");
+          $check_query = $db->query("select meta_exclude_text from " . TABLE_META_EXCLUDE . " where meta_exclude_key in ('" . implode("', '", $tmp_array ) . "')");
           $words_array = array_flip($words_array);
-          while( $check_array = $g_db->fetch_array($check_query) ) {
+          while( $check_array = $db->fetch_array($check_query) ) {
             unset($words_array[$check_array['meta_exclude_text']]);
           }
           if(count($words_array)) {
@@ -153,19 +160,23 @@
     }
 
     function display_default() {
-      global $g_db;
+      extract(tep_load('defs','database'));
 
       $html_string = '';
       $html_string .= 
-      '          <div class="listArea"><table border="0" width="100%" cellspacing="1" cellpadding="3">' . "\n" . 
+      '          <div class="listArea"><table class="tabledata">' . "\n" . 
       '            <tr class="dataTableHeadingRow">' . "\n" . 
-      '              <td class="dataTableHeadingContent">' . TABLE_HEADING_SEO_ZONES . '</td>' . "\n" . 
-      '              <td class="dataTableHeadingContent" align="center">' . TABLE_HEADING_ACTION . '</td>' . "\n" . 
+      '              <th>' . TABLE_HEADING_SEO_ZONES . '</th>' . "\n" . 
+      '              <th class="calign">' . TABLE_HEADING_ACTION . '</th>' . "\n" . 
       '            </tr>' . "\n";
+
+      $rows = 0;
       $zones_query_raw = "select at.seo_types_id, at.seo_types_name, at.seo_types_class, at.seo_types_prefix, at.seo_types_handler, at.seo_types_subfix from " . TABLE_SEO_TYPES . " at where seo_types_status='1' order by at.sort_order";
       $zones_split = new splitPageResults($zones_query_raw, SEO_PAGE_SPLIT, '', 'zpage');
-      $zones_query = $g_db->query($zones_split->sql_query);
-      while( $zones = $g_db->fetch_array($zones_query) ) {
+      $zones_query = $db->query($zones_split->sql_query);
+      while( $zones = $db->fetch_array($zones_query) ) {
+        $rows++;
+        $row_class = ($rows%2)?'dataTableRow':'dataTableRowAlt';
 
         if( (!tep_not_null($this->m_zID) || (tep_not_null($this->m_zID) && ($this->m_zID == $zones['seo_types_id']))) && !isset($this->m_zInfo) && (substr($this->m_action, 0, 3) != 'new')) {
           $this->m_zInfo = new objectInfo($zones);
@@ -173,37 +184,35 @@
         }
         if (isset($this->m_zInfo) && is_object($this->m_zInfo) && ($zones['seo_types_id'] == $this->m_zInfo->seo_types_id)) {
           $html_string .= 
-          '          <tr id="defaultSelected" class="dataTableRowSelected" onclick="document.location.href=\'' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=list') . '\'">' . "\n";
+          '          <tr class="dataTableRowSelected row_link" href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=list') . '">' . "\n";
         } else {
           $html_string .= 
-          '          <tr class="dataTableRow" onclick="document.location.href=\'' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id']) . '\'">' . "\n";
+          '          <tr class="' . $row_class . ' row_link" href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id']) . '">' . "\n";
         }
         $html_string .= 
-        '              <td class="dataTableContent"><a href="' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id'] . '&action=list') . '">' . tep_image(DIR_WS_ICONS . 'icon_folder.png', ICON_FOLDER) . '</a>&nbsp;' . $zones['seo_types_name'] . '</td>' . "\n" .
-        '              <td class="dataTableContent" align="center">';
-        $html_string .= '<a href="' . tep_href_link(FILENAME_SEO_ZONES, tep_get_all_get_params(array('zpage', 'zID', 'action')) . 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id'] . '&action=validate') . '">' . tep_image(DIR_WS_ICONS . 'icon_validate.png', TEXT_VALIDATE . ' ' . $zones['seo_types_name']) . '</a>&nbsp;';
+        '              <td><a href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id'] . '&action=list') . '">' . tep_image(DIR_WS_ICONS . 'icon_folder.png', ICON_FOLDER) . '</a>&nbsp;' . $zones['seo_types_name'] . '</td>' . "\n" .
+        '              <td class="calign">';
+        $html_string .= '<a href="' . tep_href_link($cDefs->script, tep_get_all_get_params('zpage', 'zID', 'action') . 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id'] . '&action=validate') . '">' . tep_image(DIR_WS_ICONS . 'icon_validate.png', TEXT_VALIDATE . ' ' . $zones['seo_types_name']) . '</a>&nbsp;';
         if( isset($this->m_zInfo) && is_object($this->m_zInfo) && ($zones['seo_types_id'] == $this->m_zInfo->seo_types_id) && tep_not_null($this->m_zID) ) {
           $html_string .= tep_image(DIR_WS_ICONS . 'icon_arrow_right.png'); 
         } else { 
-          $html_string .= '<a href="' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>'; 
+          $html_string .= '<a href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&zID=' . $zones['seo_types_id']) . '">' . tep_image(DIR_WS_ICONS . 'icon_info.png', IMAGE_ICON_INFO) . '</a>'; 
         } 
-        $html_string .= '&nbsp;</td>' . "\n" . 
+        $html_string .= '</td>' . "\n" . 
         '            </tr>' . "\n";
       }
       $html_string .= 
-      '              <tr>' . "\n" . 
-      '                <td colspan="3"><table border="0" width="100%" cellspacing="0" cellpadding="2">' . "\n" . 
-      '                  <tr>' . "\n" . 
-      '                    <td class="smallText">' . $zones_split->display_count(TEXT_DISPLAY_NUMBER_OF_SEO_ZONES) . '</td>' . "\n" . 
-      '                    <td class="smallText" align="right">' . $zones_split->display_links(tep_get_all_get_params(array('zpage'))) . '</td>' . "\n" . 
-      '                  </tr>' . "\n" . 
-      '                </table></td>' . "\n" . 
-      '              </tr>' . "\n" . 
-      '            </table></div>' . "\n";
+      '          </table></div>' . "\n" . 
+      '          <div class="listArea splitLine">' . "\n" . 
+      '            <div class="floater">' . $zones_split->display_count(TEXT_DISPLAY_NUMBER_OF_ENTRIES) . '</div>' . "\n" . 
+      '            <div class="floatend">' . $zones_split->display_links(tep_get_all_get_params('zpage') ) . '</div>' . "\n" . 
+      '          </div>' . "\n";
       return $html_string;
     }
 
     function display_right_box() {
+      extract(tep_load('defs'));
+
       $html_string = '';
 
       if( !$this->is_top_level() ) {
@@ -219,12 +228,14 @@
           if (isset($this->m_zInfo) && is_object($this->m_zInfo) && tep_not_null($this->m_zID) ) {
             $heading[] = array('text' => '<b>' . $this->m_zInfo->seo_types_name . '</b>');
 
-            $contents[] = array('align' => 'center', 'text' => '<a href="' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=validate') . '">' . tep_image_button('button_validate.gif', 'Validate Entries for this type') . '</a> <a href="' . tep_href_link(FILENAME_SEO_ZONES, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=list') . '">' . tep_image_button('button_details.gif', IMAGE_DETAILS) . '</a>');
+            $contents[] = array('class' => 'infoBoxSection', 'section' => '<div>');
             $contents[] = array('text' => TEXT_INFO_ZONE_TYPE . '<br /><b>' . $this->m_zInfo->seo_types_name . '</b>');
             $contents[] = array('text' => TEXT_INFO_ZONE_CLASS . '<br /><b>' . $this->m_zInfo->seo_types_class . '.php</b>');
             $contents[] = array('text' => TEXT_INFO_ZONE_PREFIX . '<br /><b>' . $this->m_zInfo->seo_types_prefix . '</b>');
             $contents[] = array('text' => TEXT_INFO_ZONE_HANDLER . '<br /><b>' . $this->m_zInfo->seo_types_handler . '</b>');
             $contents[] = array('text' => TEXT_INFO_ZONE_SUBFIX . '<br /><b>' . $this->m_zInfo->seo_types_subfix . '</b>');
+            $contents[] = array('section' => '</div>');
+            $contents[] = array('class' => 'calign', 'text' => '<a href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=validate') . '">' . tep_image_button('button_validate.gif', 'Validate Entries for this type') . '</a><a href="' . tep_href_link($cDefs->script, 'zpage=' . $this->m_zpage . '&spage=1' . '&zID=' . $this->m_zInfo->seo_types_id . '&action=list') . '">' . tep_image_button('button_details.gif', IMAGE_DETAILS) . '</a>');
           } else { // create generic_text dummy info
             $heading[] = array('text' => '<b>' . EMPTY_GENERIC . '</b>');
             $contents[] = array('text' => TEXT_NO_GENERIC);

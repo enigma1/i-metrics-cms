@@ -16,6 +16,6 @@
 //----------------------------------------------------------------------------
 */
 ?>
-      <div class="leftsize floater" id="menucontainer">
+      <div id="menucontainer" class="bg1">
         <div class="css_menu"><?php echo $menu_string; ?></div>
       </div>

@@ -26,25 +26,25 @@
       // Load plugin configuration settings
       $this->options = $this->load_options();
 
-      $launcher = $this->web_path . 'fancybox/launcher.tpl';
+      $launcher = $this->web_path . 'launcher.tpl';
       if( !file_exists($launcher) ) $this->change(false);
     }
 
     function html_start() {
-      global $g_media, $g_script;
-      if( $this->options['front_all'] || isset($this->options['front_scripts'][$g_script]) ) {
-        $g_media[] = '<script type="text/javascript" src="' . $this->web_path . 'fancybox/jquery.fancybox-1.3.0.pack.js"></script>';
-        $g_media[] = '<script type="text/javascript" src="' . $this->web_path . 'fancybox/jquery.mousewheel-3.0.2.pack.js"></script>';
-        $g_media[] = '<link rel="stylesheet" type="text/css" href="' . $this->web_path . 'fancybox/jquery.fancybox-1.3.0.css" media="screen" />';
+      extract(tep_load('defs'));
+
+      if( $this->options['front_all'] || isset($this->options['front_scripts'][$cDefs->script]) ) {
+        tep_set_lightbox();
         return true;
       }
       return false;
     }
 
     function html_end() {
-      global $g_script, $g_media;
+      extract(tep_load('defs'));
+
       $result = false;
-      if( $this->options['front_all'] || isset($this->options['front_scripts'][$g_script]) ) {
+      if( $this->options['front_all'] || isset($this->options['front_scripts'][$cDefs->script]) ) {
 
         $contents = '';
         $launcher = $this->web_path . 'fancybox/launcher.tpl';
@@ -56,14 +56,14 @@
             $contents_array = array(
               'POPUP_IMAGE_SELECTOR' => $selector
             );
-            $g_media[] = tep_templates_replace_entities($contents, $contents_array);
+            $cDefs->media[] = tep_templates_replace_entities($contents, $contents_array);
           }
-          if( isset($this->options['front_scripts'][$g_script]) ) {
-            $selector = $this->options['front_scripts'][$g_script];
+          if( isset($this->options['front_scripts'][$cDefs->script]) ) {
+            $selector = $this->options['front_scripts'][$cDefs->script];
             $contents_array = array(
               'POPUP_IMAGE_SELECTOR' => $selector
             );
-            $g_media[] = tep_templates_replace_entities($contents, $contents_array);
+            $cDefs->media[] = tep_templates_replace_entities($contents, $contents_array);
           }
         }
       }

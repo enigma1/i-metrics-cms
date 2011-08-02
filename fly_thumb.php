@@ -20,7 +20,12 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-  require('includes/configure.php');
+  ini_set('error_reporting', E_ALL|E_STRICT);
+  ini_set('display_errors', 1);
+
+  $g_exit_path = true;
+  require('includes/application_top.php');
+  unset($g_exit_path);
 //
 // CONFIGURATION SETTINGS
 //
@@ -67,10 +72,10 @@ $pre_path = 'images/thumbs/';
   if( isset($_GET['no_cache']) ) {
     $tn_cache = false;
   }
-  $local_image = DIR_FS_CATALOG . $_GET['img'];
+  $local_image = tep_path($_GET['img']);
   $tmp_array = explode('.',basename($_GET['img']));
 
-  if( empty($_GET['w']) || empty($_GET['h']) || strpos($_GET['img'], 'images/') != 0 || !file_exists($local_image) || !is_array($tmp_array) || count($tmp_array) != 2 || strlen($tmp_array[0]) < 1 ) {
+  if( empty($_GET['w']) || empty($_GET['h']) || strpos($_GET['img'], 'images/') != 0 || !is_file($local_image) || !is_array($tmp_array) || count($tmp_array) != 2 || strlen($tmp_array[0]) < 1 ) {
     header('Content-type: image/jpeg');
     $src = imagecreate(75, 150); // Create a blank image
     $bgc = imagecolorallocate($src, 255, 255, 255);
@@ -83,6 +88,7 @@ $pre_path = 'images/thumbs/';
 
   $base_image = $pre_path . $tmp_array[0];
   $image = @getimagesize($local_image);
+
 // Check the input variables and decide what to do:
   if( empty($image) || (empty($allow_larger) && ($_GET['w'] > $image[0] || $_GET['h'] > $image[1]))) {
     if (empty($image) || empty($show_original)) {
@@ -104,6 +110,7 @@ $pre_path = 'images/thumbs/';
 
   $_GET['w'] = (int)$_GET['w'];
   $_GET['h'] = (int)$_GET['h'];
+
   if( !$_GET['w'] || !$_GET['h'] ) {
     header('Content-type: image/jpeg');
     $src = imagecreate(75, 150); // Create a blank image
@@ -115,9 +122,11 @@ $pre_path = 'images/thumbs/';
     exit();
   }
 
+  $image_name = $base_image . $pre_ext . $_GET['w'] . '-' . $_GET['h'];
+
   $image_time = filemtime($local_image);
-  $filename = DIR_FS_CATALOG . $base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.jpg';
-  if( file_exists($filename) ) {
+  $filename = tep_path($image_name . '.jpg');
+  if( is_file($filename) ) {
     $thumb_time = filemtime($filename);
     if($thumb_time < $image_time) {
       unlink($filename);
@@ -150,22 +159,20 @@ $pre_path = 'images/thumbs/';
 // Create appropriate image header:
   if ($image[2] == 2 || ($image[2] == 1 && $gif_as_jpeg)) {
     header('Content-type: image/jpeg');
-    if ($tn_cache) $filename = $base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.jpg';
+    if ($tn_cache) $filename = $image_name . '.jpg';
   } elseif ($image[2] == 1 && function_exists('imagegif')) {
     header('Content-type: image/gif');
 
-    if ($tn_cache) $filename = $base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.gif';
+    if ($tn_cache) $filename = $image_name . '.gif';
   } elseif ($image[2] == 3 || $image[2] == 1) {
     header('Content-type: image/png');
-    if ($tn_cache) $filename = $base_image . $pre_ext .$_GET['w'].'x'.$_GET['h'].'.png';
+    if ($tn_cache) $filename = $image_name . '.png';
   }
 
-// If you are required to set the full path for file_exists(), set this:
-// $filename = '/your/path/to/catalog/'.$filename;
 
   $cached_time = time() - 2592000;
 
-  if (file_exists($filename) && $tn_cache && filemtime($filename) > filemtime($local_image) && filemtime($filename) > $cached_time) {
+  if( is_file($filename) && $tn_cache && filemtime($filename) > filemtime($local_image) && filemtime($filename) > $cached_time) {
     if( $image[2] == 2 || ($image[2] == 1 && $gif_as_jpeg) ) {
       $src = imagecreatefromjpeg($filename);
       imagejpeg($src, '', 100);
@@ -230,13 +237,13 @@ $pre_path = 'images/thumbs/';
     // Output the image:
     if ($image[2] == 2 || ($image[2] == 1 && $gif_as_jpeg)) {
       imagejpeg($tmp_img, '', 100);
-      if ($tn_cache) imagejpeg($tmp_img,$base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.jpg', 100);
+      if ($tn_cache) imagejpeg($tmp_img, $image_name . '.jpg', 100);
     } elseif ($image[2] == 1 && function_exists('imagegif')) {
       imagegif($tmp_img);
-      if ($tn_cache) imagegif($tmp_img,$base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.gif');
+      if ($tn_cache) imagegif($tmp_img, $image_name . '.gif');
     } elseif ($image[2] == 3 || $image[2] == 1) {
       imagepng($tmp_img);
-      if ($tn_cache) imagepng($tmp_img,$base_image . $pre_ext . $_GET['w'].'x'.$_GET['h'].'.png');
+      if ($tn_cache) imagepng($tmp_img, $image_name . '.png');
     } else {
       $src = imagecreate($_GET['w'], $_GET['h']); // Create a blank image.
       $bgc = imagecolorallocate($src, 255, 255, 255);

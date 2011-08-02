@@ -109,10 +109,10 @@
       $this->common_width = '100%';
 
       $info_box_contents = array();
-      $info_box_contents[] = array(
-                                   array('params' => 'class="' . $class . '"',
-                                         'text' => $contents[0]['text'])
-                                  );
+      $info_box_contents[] = array(array(
+        'params' => 'class="' . $class . '"',
+        'text' => $contents[0]['text']
+      ));
 
       $this->commonBox($info_box_contents, true);
     }
@@ -132,11 +132,10 @@
       $this->common_width = '100%';
 
       $info_box_contents = array();
-      $info_box_contents[] = array(
-                                   array('params' => $contents['params'],
-                                         'text' => $contents['text']
-                                        )
-                                  );
+      $info_box_contents[] = array(array(
+        'params' => $contents['params'],
+        'text' => $contents['text']
+      ));
       $this->commonBox($info_box_contents, true);
     }
   }

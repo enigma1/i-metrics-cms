@@ -20,7 +20,6 @@
 */
 define('HEADING_TITLE', 'SEO-G Reports');
 
-define('TABLE_HEADING_SELECT', 'Select');
 define('TABLE_HEADING_ORIGINAL', 'osC URL');
 define('TABLE_HEADING_CONVERTED', 'SEO-G URL');
 define('TABLE_HEADING_PRIORITY', 'Priority');
@@ -36,6 +35,8 @@ define('TEXT_SORT_LAST_MODIFIED', 'Last Modified');
 define('TEXT_SORT_HITS', 'Hits');
 define('TEXT_SORT_FREQUENCY', 'Frequency');
 
+define('TEXT_PAGE_SELECT', 'Select URLs');
+
 define('TEXT_DISPLAY_NUMBER_OF_SEO_SCRIPTS', 'Displaying <b>%d</b> to <b>%d</b> (of <b>%d</b> SEO-G URLs)');
 
 define('TEXT_INFO_SEO_G', 'This list contains all URLs in use by SEO-G. The <b>delete all</b> button erases the current list. The regular <b>delete</b> button with the check boxes can be used to delete individual entries. Using the <b>edit</b> button you can edit entries those selected/ticked. The <b>google xml</b> button generates an xml file for the Google sitemap using the listed SEO-G urls. When the <b>notify google</b> checkbox is ticked, the sitemap file is automatically placed on the osCommerce catalog root folder and Google is notified. Otherwise the sitemap file becomes available for download. The <b>redirect</b> button moves the selected URLs into the redirection table. The <b>validate</b> button checks the recorded urls for original (osC URLs) duplicates. Also note, delete operations do not remove products, categories or other entities created by the G-Controller. Listed URLs are those used on the catalog end.');
@@ -47,6 +48,7 @@ define('TEXT_INFO_NO_SEO_ERRORS', 'No duplicated URLs found with the SEO friendl
 define('TEXT_INFO_DUPLICATED_URLS', 'Duplicated URLs found and are shown below. Use the tick-boxes select the URLs you want to delete then click the delete button.');
 
 define('WARNING_NOTHING_SELECTED', 'No entries selected. Use the checkboxes to select entries first');
+define('SUCCESS_URLS_MOVED', 'Entries moved to SEO-G redirection table');
 define('SUCCESS_CACHE_CLEARED', 'SEO-G Cache Flush Operation Complete');
 define('SUCCESS_URLS_CLEARED', 'All SEO-G URLs were removed');
 ?>

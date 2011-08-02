@@ -24,14 +24,7 @@
   $rows = 0;
   foreach($zones_array as $id => $zone) { 
     $zone_class = $cAbstract->get_zone_class($id);
-    $script = FILENAME_GENERIC_PAGES;
-    switch($zone_class) {
-      case 'image_zones':
-        $script = FILENAME_IMAGE_PAGES;
-        break;
-      default:
-        break;
-    }
+    $script = FILENAME_COLLECTIONS;
     $zone_entries = $cAbstract->get_entries($id);
     if( count($zone_entries) ) {
       echo '<div class="infoBox">' . "\n";

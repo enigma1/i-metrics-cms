@@ -22,10 +22,10 @@
   $module = (isset($_POST['module']) ? $g_db->prepare_input($_POST['module'], true) : '');
   $module = tep_create_safe_string($module, '', "[^0-9a-z\-_]");
   $file_module = 'js_' . $module . '.php';
-  if( !empty($module) && file_exists(DIR_WS_MODULES . $file_module) ) {
-    require(DIR_WS_MODULES . $file_module);
+  if( !empty($module) && is_file(DIR_FS_MODULES . $file_module) ) {
+    require(DIR_FS_MODULES . $file_module);
   } else {
     echo 'invalid module request ' . $module;
   }
 ?>
-<?php require(DIR_WS_INCLUDES . 'application_bottom.php'); ?>
+<?php require(DIR_FS_INCLUDES . 'application_bottom.php'); ?>

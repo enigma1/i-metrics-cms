@@ -78,8 +78,11 @@
 				src : tinymce._addVer(url)
 			});
 
-			// Add onload and readystate listeners
-			elm.onload = done;
+			// Add onload listener for non IE browsers since IE9
+			// fires onload event before the script is parsed and executed
+			if (!tinymce.isIE)
+				elm.onload = done;
+
 			elm.onreadystatechange = function() {
 				var state = elm.readyState;
 
@@ -173,6 +176,8 @@
 		 * @param {Object} scope Optional scope to execute callback in.
 		 */
 		this.loadScripts = function(scripts, callback, scope) {
+			var loadScripts;
+
 			function execScriptLoadedCallbacks(url) {
 				// Execute URL callback functions
 				tinymce.each(scriptLoadedCallbacks[url], function(callback) {
@@ -187,7 +192,7 @@
 				scope : scope || this
 			});
 
-			(function loadScripts() {
+			loadScripts = function() {
 				var loadingScripts = tinymce.grep(scripts);
 
 				// Current scripts has been handled
@@ -226,7 +231,9 @@
 
 					queueLoadedCallbacks.length = 0;
 				}
-			})();
+			};
+
+			loadScripts();
 		};
 	};
 

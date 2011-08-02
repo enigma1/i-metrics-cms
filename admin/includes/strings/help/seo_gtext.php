@@ -1,0 +1,11 @@
+  <div>
+    <h2>Customize Text Pages for SEO-G:</h2>
+    <p>
+<b>Name:</b> is the name of the type to be inserted. It\'s used for information purposes.<br />
+<b>Handler:</b> list of secondary scripts that can handle the same type. For example with products the product_info represents the primary handler where the SEO-G will apply the main prefix. Secondary Handler will be the product_reviews.php. Separate multiple handlers by coma eg: <em><b>product_reviews.php, products_reviews_write.php</b></em>. Do not include the primary handler.<br /><b>Subfix:</b> Each subfix is associated with a secondary handler. The order sub-fixes are entered correspond directly to the secondary handler. Subfixes must be separated with comas. Subfixes replace the secondary handlers when the SEO-G URLs are generated. eg: products_review.php is the secondary handler with "review" the subfix. This will make a product appear like products_name_review.html. Notice the subfix is appended at the end of the url.<br />
+<b>Class:</b> is the class .php file that generates the SEO-G names in osC Admin. Enter only the name of the file without the .php extension.<br /><b>Prefix:</b> This name represents the primary handler and it\'s appended with the URLs for each field.<br />
+<b>Sort Order:</b> is the order for SEO-G to process the parameters when it generates the URLs.<br /><b>Linkage:</b> When multiple parameters are encountered by SEO-G those with different linkage are overriden with the one with the lowest linkage value. Parameters that have the same linkage value are maintained. Typically Products should have the lowest linkage values. Default is 1.
+    </p>
+    <h2>Update selected SEO-G Types.</h2>
+    <p>In addition to the parameters explained above there is a <b>Status</b> for each class. When disabled the catalog SEO-G code does not process the converted names and instead uses the default osc parameters to generate the URL. Use the checkboxes to the left and mark the entries to update.</p>
+  </div>

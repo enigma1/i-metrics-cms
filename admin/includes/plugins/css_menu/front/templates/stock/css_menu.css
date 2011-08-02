@@ -16,24 +16,25 @@
 */
 #menucontainer {
   height: 28px;
-  margin: 130px 0px 0px 0px;
-  background: #999999;
-  color: #EEEEEE;
+  margin: 0px 0px 0px 0px;
+  color: #EEC;
+  z-index: 100;
+  border-top: 1px solid #CCC;
 }
 
 .css_menu {
   font-family: Verdana, Arial, sans-serif;
   font-size: 11px;
   line-height: 28px;
-  color: #EEEEEE;
+  color: #EEC;
   font-weight: bold;
-  background: #646C79;
+  background: #545E74;
 }
 
 .css_menu a {
   font-weight: bold;
   text-decoration: none;
-  color: #EEEEEE;
+  color: #EEC;
   letter-spacing: -0.05em;
   display: block;
 }
@@ -45,8 +46,13 @@
   text-align: left;
 }
 
-.css_top:hover .css_section .css_sub {
+.css_top:hover .css_section {
+  background: #545E74;
+}
+
+.css_top:hover .css_section, .css_top:hover .css_section .css_sub {
   visibility: visible;
+  width: inherit;
 }
 .css_sep {
   background: transparent;
@@ -55,9 +61,10 @@
 }
 
 .css_sub {
-  border-bottom: 1px outset #CCCCCC;
-  border-right: 1px outset #CCCCCC;
-  background: #646C79;
+  border-bottom: 1px outset #EEE;
+  border-right: 1px outset #EEE;
+  background: #545E74;
+  height: 28px;
 }
 
 .css_sub a {

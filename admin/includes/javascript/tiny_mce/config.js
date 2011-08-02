@@ -8,12 +8,14 @@ var tinymce_ifc = {
   launch: function() {
     tinyMCE.init({
       remove_linebreaks : false,
+      gecko_spellcheck : true,
       language: "en",
       entity_encoding : "raw",
       skin : "o2k7",
       mode : "exact",
       elements : tinymce_ifc.areas,
       baseURL: tinymce_ifc.baseURL,
+      init_instance_callback: tinymce_ifc.fixTinyMCETabIssue,
       // Location of TinyMCE script
       //script_url : tinymce_ifc.TinyMCE, //'../js/tinymce/jscripts/tiny_mce/tiny_mce.js',
       // General options
@@ -42,6 +44,34 @@ var tinymce_ifc = {
       template_replace_values : {
         username : "Some User",
         staffid : "991234"
+      }
+    });
+  },
+
+  fixTinyMCETabIssue: function (inst) {
+    inst.onKeyDown.add(function(inst, e) {
+      // Firefox uses the e.which event for keypress
+      // While IE and others use e.keyCode, so we look for both
+      if (e.keyCode) {
+        code = e.keyCode;
+      } else if (e.which) {
+        code = e.which;
+      }
+
+      if(code == 9 && !e.altKey && !e.ctrlKey) {
+        // toggle between Indent and Outdent command, depending on if SHIFT is pressed
+        if (e.shiftKey) {
+          inst.execCommand('Outdent');
+        } else {
+          //inst.execCommand('Indent');
+          inst.execCommand('mceInsertContent', false, '<span style="white-space: pre;">'+"\t"+'</span>');
+          //inst.execCommand('mceInsertContent', false, "&nbsp;&nbsp;&nbsp;&nbsp;");
+        }
+        // prevent tab key from leaving editor in some browsers
+        if(e.preventDefault) {
+          e.preventDefault();
+        }
+        return false;
       }
     });
   }

@@ -16,6 +16,7 @@
 // Released under the GNU General Public License
 //----------------------------------------------------------------------------
 */
-define('BOX_COMMENTS', 'Comments');
-define('BOX_ASSIGN_COMMENTS', 'Assign Pages');
+$BOX_COMMENTS         = 'Comments';
+$BOX_ASSIGN_COMMENTS  = 'Assign Pages';
+$TEXT_INFO_COMMENTS2  = 'Comments Posted';
 ?>
