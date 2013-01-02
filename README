@@ -1,0 +1,29 @@
+The I-Metrics CMS is an open source advanced content management platform to create and manage web pages. 
+This web package that can be used for start-up businesses, blogs even personal sites. The platform is scalable with the aid of plugin extensions can be configured to manage different site types.
+
+Built-in Features:
+    Full text pages management including word-processor and ready pages HTML code upload.
+    Content Collections management for text pages, images and other content collections
+    Advanced SEO features including meta-tags, friendly links, Search Engines Sitemap
+    Integrated advanced Helpdesk to send, receive and manage the website emails from the administration end.
+    Multilingual framework, independent language system any part of the content can become multiple-language capable.
+    Integrated templates general manager for emails and to assist with web content creation.
+    Includes a semi-template system very flexible and easy to customize the site's layout.
+    Integrated Cache manager for content and images.
+    File Manage, Database Backup and Monitor, Online Visitor listing,
+    Advanced SEO built-in tools with many configuration options offering great flexibility generating and managing meta-tags and friendly links.
+    Compatible with PHP4 and PHP5 versions.
+
+Bundled Plugins and Extensions with the I-Metrics CMS
+    Banners Manager includes jQuery interface for image transitions includes logging of impressions and clicks.
+    Complete Comments System extension can be attached to to blog and text page allows visitors to enter comments or reviews along with ratings.
+    Dynamic Drop-Down Menu extension provides alternative forms of navigation.
+    Using the Direct Management extension virtually every web page can be edited directly from the front-end via a popup editing mechanism.
+    The Files Download Manager associates individual or groups of file downloads with specific web pages.
+    Language Selection allows visitors to change the language for websites with multilingual content. Any number of languages is supported, includes language editor.
+    A Newsletter System can build newsletters with a template system allows visitor subscription, can send emails to subscribed visitors and can record clicks from within the email content.
+    Dynamic Popup Image system can attach to images in content pages and group images together.
+    Dynamic Left and Right Navigation Columns can significantly increase the content focus by configuring and exposing related content to each web page.
+    Voting System can link a votes form to any content page along with a configurable rating scale.
+
+Many other extensions are available including a history system to record administrator visits, developer code tags for page content, alternative page content layout.
